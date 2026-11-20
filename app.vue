@@ -1,44 +1,63 @@
 <template>
-  <div class="world" :class="`phase-${shownPhase}`" :style="theme">
-    <!-- fond de jeu derrière la console : dégradé vif à pois -->
-    <div class="outside">
-      <div class="wall" />
-      <div class="dots" />
-      <div class="night" />
+  <div class="world" :class="[`phase-${shownPhase}`, { dead }]">
+    <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
+    <div class="scene">
+      <SceneBackdrop :phase="shownPhase" :dead="dead" />
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" />
     </div>
 
-    <main class="console">
-      <ConsoleShell />
-      <ConsoleTop />
-      <StatPanel />
-      <div class="screen-slot">
-        <ConsoleScreen :phase="shownPhase" :dead="dead" />
+    <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
+    <main class="ui">
+      <TopBar class="hit" />
+      <StatPanel class="hit" />
+      <div ref="middle" class="middle">
+        <button class="arrow prev hit" :class="{ hint: arrowHint }" aria-label="Tourner vers la gauche" @click="gameCommand('rotate', -1)">
+          <Icon name="ph:caret-left-bold" class="chevron" />
+        </button>
+        <button class="arrow next hit" :class="{ hint: arrowHint }" aria-label="Tourner vers la droite" @click="gameCommand('rotate', 1)">
+          <Icon name="ph:caret-right-bold" class="chevron" />
+        </button>
       </div>
-      <ButtonDeck />
-      <ConsoleTray />
-
-      <GameToasts />
-      <GameSheet />
-      <WelcomeCard />
+      <JellyPad class="hit" />
+      <BottomTiles class="hit" />
     </main>
+
+    <GameToasts />
+    <GameSheet />
+    <WelcomeCard />
   </div>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
-import { dayPhase, shellVars } from "~/lib/gameUi";
+import { dayPhase } from "~/lib/gameUi";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
-// couleur de coque choisie dans les réglages
-const theme = computed(() => shellVars(store.shell));
+const arrowHint = computed(() => !(store.counters.tourner > 0));
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
 let phaseTimer = null;
 // quand elle dort, la nuit tombe sur la scène
 const shownPhase = computed(() => (store.isSleeping ? "night" : phase.value));
+
+// Cadrage : la créature se pose en bas de la zone libre entre les jauges et les boutons
+const middle = ref(null);
+const frame = ref(null);
+let ro = null;
+function measure() {
+  const el = middle.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  frame.value = {
+    ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
+    size: Math.round(Math.min(r.height * 0.66, window.innerWidth * 0.5)),
+    // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
+    minTop: Math.round(r.top + 52),
+  };
+}
 
 onMounted(() => {
   store.startDecay();
@@ -52,8 +71,16 @@ onMounted(() => {
   };
   phase.value = dayPhase(now());
   phaseTimer = setInterval(() => (phase.value = dayPhase(now())), 60000);
+  ro = new ResizeObserver(measure);
+  ro.observe(middle.value);
+  window.addEventListener("resize", measure);
+  measure();
 });
-onBeforeUnmount(() => clearInterval(phaseTimer));
+onBeforeUnmount(() => {
+  clearInterval(phaseTimer);
+  ro?.disconnect();
+  window.removeEventListener("resize", measure);
+});
 </script>
 
 <style>
@@ -61,7 +88,7 @@ html,
 body {
   margin: 0;
   height: 100%;
-  background: #2b1d14;
+  background: #7cc8ff;
   overscroll-behavior: none;
 }
 body {
@@ -80,67 +107,74 @@ body {
 .world {
   position: relative;
   height: 100%;
-  display: grid;
-  place-items: center;
   overflow: hidden;
-  /* tailles qui s'adaptent à la hauteur de l'écran */
-  --btn: clamp(42px, min(14vw, 6.6vh), 62px);
-  --big: clamp(48px, min(15vw, 7.6vh), 68px);
-  --ring: clamp(40px, min(12.5vw, 6.2vh), 56px);
-  --tile: clamp(32px, 4.8vh, 42px);
+  /* couleurs partagées par les panneaux */
+  --ink: #5a3a22;
+  --accent: #ff8a3d;
+  --accent-hi: #ffb070;
+  --accent-lo: #c25a12;
+  --plate-hi: #fffaf2;
+  --plate-lo: #f3e6d3;
+  --plate-shade: rgba(140, 100, 60, 0.35);
+  --knob-lo: #f1e3cf;
+  --knob-side: #d9bf98;
+  --shell-edge: #c9a77f;
+  /* tailles qui suivent la hauteur de l'écran */
+  --top: clamp(50px, 7.4vh, 62px);
+  --ring: clamp(44px, min(14vw, 7vh), 62px);
+  --jelly: clamp(64px, 10.6vh, 96px);
+  --tile: clamp(52px, 7.6vh, 70px);
+  --gap: clamp(10px, 1.6vh, 16px);
 }
-.outside {
+.scene {
   position: absolute;
   inset: 0;
 }
-.wall {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(90% 60% at 20% 10%, rgba(255, 255, 255, 0.35), transparent 60%),
-    linear-gradient(150deg, var(--wall-1), var(--wall-2));
-  transition: background 0.6s;
-}
-.dots {
-  position: absolute;
-  inset: 0;
-  opacity: 0.22;
-  background-image: radial-gradient(circle, #fff 2.5px, transparent 3px);
-  background-size: 34px 34px;
-  background-position: 0 0;
-}
-.night {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 10, 50, 0.45);
-  opacity: 0;
-  transition: opacity 1.2s;
-}
-.phase-night .night { opacity: 1; }
-/* la nuit, la coque s'assombrit aussi un peu */
-.phase-night :deep(.shell) { filter: brightness(0.86) saturate(1.05); }
-.phase-dusk .night { opacity: 0.35; }
+.dead .scene { filter: grayscale(0.6); }
 
-/* la console : coque en plastique crème brillant */
-.console {
+.ui {
   position: relative;
-  z-index: 1;
-  width: calc(100% - 6px);
-  max-width: 470px;
-  height: calc(100% - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-  max-height: 960px;
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-  gap: clamp(6px, 1.1vh, 12px);
-  padding: clamp(16px, 2.2vh, 20px) 14px clamp(22px, 3.2vh, 30px);
-  isolation: isolate;
+  z-index: 2;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 14px);
+  padding: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px)) 14px calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.8vh, 18px));
+  pointer-events: none;
 }
-.screen-slot {
+/* seuls les éléments d'interface captent le toucher, le reste va à la créature */
+.hit { pointer-events: auto; }
+.middle {
+  position: relative;
+  flex: 1;
   min-height: 0;
 }
-/* même marge pour toutes les rangées ; la barre du bas rentre dans l'arrondi */
-.console > :deep(.tray) { margin: 0 18px; }
-@media (min-width: 600px) and (min-height: 760px) {
-  .console { height: min(940px, calc(100% - 48px)); }
+.arrow {
+  position: absolute;
+  top: 56%;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  margin-top: -25px;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fffaf2, #ecd9bf);
+  box-shadow: 0 4px 0 #d2b48c, 0 8px 14px rgba(60, 40, 20, 0.28), inset 0 2px 0 #fff;
+  cursor: pointer;
+}
+.arrow:active { transform: translateY(3px); box-shadow: 0 1px 0 #d2b48c, inset 0 2px 0 #fff; }
+.prev { left: 0; }
+.next { right: 0; }
+.chevron { width: 24px; height: 24px; color: #a0703c; }
+.arrow.hint { animation: nudge 1.6s ease-in-out infinite; }
+@keyframes nudge {
+  0%, 100% { box-shadow: 0 4px 0 #d2b48c, 0 0 0 0 rgba(255, 170, 60, 0.6); }
+  50% { box-shadow: 0 4px 0 #d2b48c, 0 0 0 12px rgba(255, 170, 60, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrow.hint { animation: none; }
 }
 </style>

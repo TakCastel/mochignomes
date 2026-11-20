@@ -9,24 +9,6 @@
       <p v-if="saved" class="ok">C'est noté, elle s'appelle maintenant {{ store.name }}.</p>
     </form>
 
-    <div class="block">
-      <strong>Couleur de la console</strong>
-      <div class="swatches" role="radiogroup" aria-label="Couleur de la console">
-        <button
-          v-for="(t, key) in SHELLS"
-          :key="key"
-          class="swatch"
-          role="radio"
-          :aria-checked="store.shell === key"
-          :class="{ on: store.shell === key }"
-          @click="store.shell = key"
-        >
-          <span class="chip" :style="{ background: `linear-gradient(160deg, ${t.hi}, ${t.mid} 55%, ${t.lo})` }" />
-          <span>{{ t.label }}</span>
-        </button>
-      </div>
-    </div>
-
     <div class="block danger">
       <strong>Nouvelle partie</strong>
       <p>Une nouvelle créature remplace {{ store.name }} : jauges, caractère, niveau et succès repartent de zéro. Les photos restent dans la galerie.</p>
@@ -41,7 +23,6 @@
 
 <script setup>
 import { ref } from "vue";
-import { SHELLS } from "~/lib/gameUi";
 
 const { store } = useCreatureMood();
 const draft = ref("");

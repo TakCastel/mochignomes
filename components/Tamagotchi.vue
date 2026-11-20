@@ -32,6 +32,8 @@ import { STATS, SKY } from "~/lib/gameUi";
 const props = defineProps({
   phase: { type: String, default: "day" },
   dead: { type: Boolean, default: false },
+  // cadrage : { ground, size } en pixels (voir creature3d.setFrame)
+  frame: { type: Object, default: null },
 });
 const emit = defineEmits(["ground"]);
 const { store, mood, morph, sulking } = useCreatureMood();
@@ -76,6 +78,7 @@ const flash = ref(false);
 const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
 watch(() => [props.phase, props.dead], ([phase, dead]) => creature.value?.setScene({ phase, dead }));
+watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
 
 watch(mood, (m, old) => { if (old && !reaction.value) say(pick(MESSAGES[m])); });
 let chatter = null;
@@ -157,6 +160,7 @@ onMounted(async () => {
     });
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead });
+    if (props.frame) creature.value.setFrame(props.frame);
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {
       const firstTime = !(store.counters.chatouiller > 0);
