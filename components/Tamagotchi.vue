@@ -42,8 +42,8 @@ const fallback = ref(false);
 const fallbackMessage = ref("");
 const reaction = ref(null);
 
-function say(text) {
-  if (creature.value) creature.value.say(text);
+function say(text, ms) {
+  if (creature.value) creature.value.say(text, ms);
   else {
     fallbackMessage.value = text;
     setTimeout(() => { if (fallbackMessage.value === text) fallbackMessage.value = ""; }, 3000);
@@ -55,7 +55,10 @@ watch(() => gameBus.speech, (s) => s && say(s.text));
 const { addPhoto } = useGallery();
 watch(() => gameBus.command, (cmd) => {
   if (!cmd) return;
-  if (cmd.type === "rotate") creature.value?.rotateBy(cmd.value * Math.PI / 2);
+  if (cmd.type === "rotate") {
+    creature.value?.rotateBy(cmd.value * Math.PI / 2);
+    store.countGesture("tourner");
+  }
   if (cmd.type === "react") react(cmd.value);
   if (cmd.type === "photo") {
     if (!creature.value) return say("Pas de photo sans la 3D...");
@@ -146,10 +149,19 @@ onMounted(async () => {
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");
-    creature.value = createCreature(stage.value, { onPoke, onGround: (y) => emit("ground", y), world: true });
+    creature.value = createCreature(stage.value, {
+      onPoke,
+      onGround: (y) => emit("ground", y),
+      onSpin: () => store.countGesture("tourner"),
+      world: true,
+    });
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead });
-    setTimeout(() => say(pick(MESSAGES[mood.value])), 600);
+    // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
+    setTimeout(() => {
+      const firstTime = !(store.counters.chatouiller > 0);
+      say(firstTime ? "Touche-moi pour me chatouiller !" : pick(MESSAGES[mood.value]), firstTime ? 5000 : undefined);
+    }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);
     fallback.value = true;

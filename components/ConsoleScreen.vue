@@ -5,10 +5,10 @@
       <div ref="inner" class="screen">
         <SceneBackdrop :phase="phase" :dead="dead" />
         <Tamagotchi :phase="phase" :dead="dead" />
-        <button class="arrow prev" aria-label="Tourner vers la gauche" @click="gameCommand('rotate', -1)">
+        <button class="arrow prev" :class="{ hint }" aria-label="Tourner vers la gauche" @click="gameCommand('rotate', -1)">
           <span />
         </button>
-        <button class="arrow next" aria-label="Tourner vers la droite" @click="gameCommand('rotate', 1)">
+        <button class="arrow next" :class="{ hint }" aria-label="Tourner vers la droite" @click="gameCommand('rotate', 1)">
           <span />
         </button>
         <div class="glare" />
@@ -18,12 +18,16 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 defineProps({
   phase: { type: String, default: "day" },
   dead: { type: Boolean, default: false },
 });
+
+// les flèches pulsent tant qu'on n'a jamais fait tourner la créature
+const { store } = useCreatureMood();
+const hint = computed(() => !(store.counters.tourner > 0));
 
 const outer = ref(null);
 const mid = ref(null);
@@ -78,6 +82,14 @@ useSquircle([inner], (w, h) => Math.min(w, h) * 0.28, 0.85);
   background: linear-gradient(180deg, #ffffff 50%, var(--knob-lo));
   box-shadow: 0 3px 0 var(--knob-side), 0 6px 10px rgba(0, 0, 0, 0.22), inset 0 1px 0 #fff;
   cursor: pointer;
+}
+.arrow.hint { animation: nudge 1.6s ease-in-out infinite; opacity: 1; }
+@keyframes nudge {
+  0%, 100% { box-shadow: 0 3px 0 var(--knob-side), 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent); }
+  50% { box-shadow: 0 3px 0 var(--knob-side), 0 0 0 10px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrow.hint { animation: none; }
 }
 .arrow:active { transform: translateY(3px); box-shadow: 0 0 0 var(--knob-side); }
 .arrow span {

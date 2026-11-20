@@ -237,6 +237,10 @@ export const useTamagotchiStore = defineStore(
     function countPhoto() {
       count("photo");
     }
+    // gestes découverts (pour n'afficher les astuces qu'au début)
+    function countGesture(name) {
+      count(name);
+    }
 
     // Fait vivre la créature pendant `seconds` secondes.
     function decay(seconds) {
@@ -342,6 +346,7 @@ export const useTamagotchiStore = defineStore(
       rename,
       resetGame,
       countPhoto,
+      countGesture,
       shell,
       lastVisitDay,
       streak,

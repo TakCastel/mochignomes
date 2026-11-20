@@ -92,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 h2 {
   margin: 0;
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
 }
 .subtitle { margin: 2px 0 0; font-weight: 700; color: color-mix(in srgb, var(--ink) 72%, #fff); font-size: 14px; }

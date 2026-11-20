@@ -1,7 +1,7 @@
 <template>
   <div class="sheet-content">
     <ul class="list">
-      <li v-for="a in rows" :key="a.id" :class="{ done: a.done }">
+      <li v-for="a in rows" :key="a.id" :class="{ done: a.done }" :style="{ '--c': a.color }">
         <span class="medal">
           <Icon :name="a.icon" class="icon" />
         </span>
@@ -60,17 +60,17 @@ const rows = computed(() =>
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--knob-lo);
+  background: color-mix(in srgb, var(--c) 22%, #fff);
   box-shadow: inset 2px 2px 4px var(--plate-shade);
 }
 .done .medal { background: radial-gradient(circle at 40% 30%, #fff7c9, #ffc93c); box-shadow: 0 3px 0 #d39a00; }
-.icon { width: 28px; height: 28px; color: #b9a58e; }
-.done .icon { color: #fff; filter: drop-shadow(0 2px 0 #b07c00); }
+.icon { width: 28px; height: 28px; color: var(--c); opacity: 0.6; }
+.done .icon { color: #fff; opacity: 1; filter: drop-shadow(0 2px 0 #b07c00); }
 .text { display: grid; gap: 2px; min-width: 0; }
 .text strong { font-size: 15px; }
 .text span { font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-weight: 700; }
-.progress { height: 7px; margin-top: 4px; border-radius: 999px; background: var(--knob-lo); overflow: hidden; }
-.progress div { height: 100%; background: #ff9f1c; border-radius: 999px; }
+.progress { height: 8px; margin-top: 5px; border-radius: 999px; background: var(--plate-lo); overflow: hidden; }
+.progress div { height: 100%; background: var(--c); border-radius: 999px; }
 .count { font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-variant-numeric: tabular-nums; }
 .done .count { color: #2f9e44; font-size: 20px; }
 </style>

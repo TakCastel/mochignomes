@@ -10,6 +10,7 @@
       <span class="candy">
         <Icon :name="action.icon" class="icon" />
       </span>
+      <span v-if="action.reason" class="lock"><Icon name="ph:lock-simple-fill" class="lock-icon" /></span>
     </span>
     <span class="label">{{ action.label }}</span>
   </button>
@@ -110,6 +111,20 @@ defineEmits(["press"]);
   .label { display: none; }
   .candy-btn { gap: 0; }
 }
+.rim { position: relative; }
+.lock {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.lock-icon { width: 12px; height: 12px; color: var(--ink); }
 .locked .candy { filter: saturate(0.45) brightness(1.05); opacity: 0.8; }
 .locked .label { opacity: 0.5; }
 .highlight .rim { animation: beckon 1s ease-in-out infinite; }
