@@ -607,7 +607,7 @@ function deform(px, py, pz, P, out) {
   return out.set(x, y, z);
 }
 
-const bodyGeo = new THREE.SphereGeometry(1, 128, 96);
+const bodyGeo = new THREE.SphereGeometry(1, 96, 72);
 const basePos = bodyGeo.attributes.position.array.slice();
 const seamGroups = (() => {
   const map = new Map();
@@ -619,13 +619,38 @@ const seamGroups = (() => {
   return [...map.values()].filter((g) => g.length > 1);
 })();
 
+// « Flop » : la masse s'affaisse vers le sol comme une gelée.
+// down = direction du sol dans le repère du corps, f = intensité (peut dépasser 1 pendant le rebond)
+const DOWN = new THREE.Vector3(0, -1, 0);
+const _perp = new THREE.Vector3();
+function flop(q, down, f) {
+  const h = q.dot(down);
+  if (f <= 0.001) return h;
+  let hn = h * (1 - 0.2 * f);
+  const hc = 0.58;
+  if (hn > hc) hn = hc + (hn - hc) * Math.max(0.05, 1 - 0.85 * f);
+  _perp.copy(q).addScaledVector(down, -h).multiplyScalar(1 + 0.15 * f * (0.6 + 0.4 * Math.max(0, h)));
+  q.copy(_perp).addScaledVector(down, hn);
+  return hn;
+}
+function deformFull(px, py, pz, P, out) {
+  deform(px, py, pz, P, out);
+  flop(out, P.down || DOWN, P.flop || 0);
+  return out;
+}
+
 const tmp = new THREE.Vector3();
+let contactRest = -BOTTOM, contactNow = -BOTTOM;
 function rebuildBody(P) {
   const pos = bodyGeo.attributes.position;
+  let m0 = -Infinity, m1 = -Infinity;
   for (let i = 0; i < pos.count; i++) {
     deform(basePos[i * 3], basePos[i * 3 + 1], basePos[i * 3 + 2], P, tmp);
+    m0 = Math.max(m0, tmp.dot(P.down));
+    m1 = Math.max(m1, flop(tmp, P.down, P.flop));
     pos.setXYZ(i, tmp.x, tmp.y, tmp.z);
   }
+  contactRest = m0; contactNow = m1;
   pos.needsUpdate = true;
   bodyGeo.computeVertexNormals();
   const n = bodyGeo.attributes.normal;
@@ -738,10 +763,10 @@ scene.add(shadow);
 function placeAttachments(P) {
   for (const a of arms) {
     const d = new THREE.Vector3(a.s * 0.93, -0.1, 0.22).normalize();
-    deform(d.x, d.y, d.z, P, tmp);
+    deformFull(d.x, d.y, d.z, P, tmp);
     a.pivot.position.set(tmp.x * 0.9, tmp.y, tmp.z * 0.9);
   }
-  deform(0, 1, 0, P, tmp);
+  deformFull(0, 1, 0, P, tmp);
   tuftGroup.position.copy(tmp);
   halo.position.set(0, tmp.y + 0.45, 0);
 }
@@ -750,11 +775,11 @@ function placeAttachments(P) {
 // Postures et bras (valeurs numériques interpolées en douceur)
 // =====================================================================
 const POSTURES = {
-  stand:  { rx: 0,     rz: 0,    dy: 0,     lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1 },
-  sit:    { rx: -0.12, rz: 0,    dy: 0,     lift: 0,      footZ: 0.95, footY: 0.18, footRX: -0.9, squash: 0.95 },
-  crouch: { rx: 0.08,  rz: 0,    dy: 0,     lift: 0.06,   footZ: 0.28, footY: 0.12, footRX: 0,    squash: 0.8 },
-  side:   { rx: 0.1,   rz: 1.48, dy: 0.12,  lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1 },
-  back:   { rx: -0.55, rz: 1.5,  dy: 0.02,  lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1 },
+  stand:  { rx: 0,     rz: 0,    dy: 0,     lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1,    flop: 0 },
+  sit:    { rx: -0.12, rz: 0,    dy: 0,     lift: 0,      footZ: 0.95, footY: 0.18, footRX: -0.9, squash: 1,    flop: 0.4 },
+  crouch: { rx: 0.08,  rz: 0,    dy: 0,     lift: 0.06,   footZ: 0.28, footY: 0.12, footRX: 0,    squash: 0.9,  flop: 0.35 },
+  side:   { rx: 0.1,   rz: 1.48, dy: 0.1,   lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1,    flop: 1 },
+  back:   { rx: -0.55, rz: 1.5,  dy: 0.05,  lift: FOOT_H, footZ: 0.18, footY: 0.12, footRX: 0,    squash: 1,    flop: 1 },
 };
 const poseCur = { ...POSTURES.stand };
 
@@ -879,7 +904,7 @@ renderer.domElement.addEventListener("pointerup", (e) => {
   raycaster.setFromCamera(pointer, camera);
   if (!raycaster.intersectObject(char, true).length) return;
   if (morphCur.dead > 0.5) { say("..."); return; }
-  jigVel += 5;
+  if (poseCur.flop > 0.5) flopVel += 6; else jigVel += 5;
   if (state.posture === "stand") hop(0.25);
   const asleep = state.motion === "snore" || state.extras.has("zzz");
   if (!asleep) giggleUntil = clock.elapsedTime + 0.9;
@@ -890,7 +915,8 @@ renderer.domElement.addEventListener("pointerup", (e) => {
 // Boucle d'animation
 // =====================================================================
 const clock = new THREE.Clock();
-let jig = 0, jigVel = 0;
+let jig = 0, jigVel = 0, flopJig = 0, flopVel = 0;
+const downLocal = new THREE.Vector3(0, -1, 0), invQ = new THREE.Quaternion();
 let hopStart = -10, hopPower = 0, nextHop = 2;
 let nextBlink = 2, blinkUntil = 0;
 let lastSig = "", lastMorphSig = "";
@@ -925,9 +951,27 @@ function frame() {
   const t = clock.elapsedTime;
   const k = Math.min(1, dt * 5);
 
+  // posture (interpolée) et direction du sol vue depuis le corps
+  const P = POSTURES[state.posture];
+  const kp = Math.min(1, dt * 4);
+  const prevFlop = poseCur.flop;
+  for (const key in poseCur) poseCur[key] = approach(poseCur[key], P[key], kp);
+  poseGroup.rotation.set(poseCur.rx, 0, poseCur.rz);
+  downLocal.set(0, -1, 0).applyQuaternion(invQ.copy(poseGroup.quaternion).invert());
+  // « blop » : quand il s'étale, la gelée rebondit
+  if (P.flop > 0.5 && prevFlop < 0.75 && poseCur.flop >= 0.75) flopVel += 7;
+  if (P.flop < 0.5 && prevFlop > 0.6 && poseCur.flop <= 0.6) flopVel -= 4;
+  flopVel += (-140 * flopJig - 7 * flopVel) * dt;
+  flopJig += flopVel * dt;
+  const lying = poseCur.flop > 0.5;
+  const flopBreath = lying && morphCur.dead < 0.5 ? Math.sin(t * (state.motion === "snore" ? 1.3 : 2.2)) * 0.08 : 0;
+
   // morphing
   for (const key of MKEYS) morphCur[key] = approach(morphCur[key], morphTarget[key], k);
-  const morphSig = MKEYS.map((key) => morphCur[key].toFixed(3)).join();
+  morphCur.down = downLocal;
+  morphCur.flop = clamp(poseCur.flop + flopJig + flopBreath, 0, 1.5);
+  const morphSig = MKEYS.map((key) => morphCur[key].toFixed(3)).join() + morphCur.flop.toFixed(3) +
+    downLocal.x.toFixed(2) + downLocal.y.toFixed(2) + downLocal.z.toFixed(2);
   if (morphSig !== lastMorphSig) { lastMorphSig = morphSig; rebuildBody(morphCur); placeAttachments(morphCur); }
   tint.copy(WHITE).lerp(SICK, morphCur.sick).lerp(DEAD, morphCur.dead);
   bodyMat.color.copy(tint);
@@ -948,11 +992,8 @@ function frame() {
     face.blink, Math.round(face.muscle * 20), Math.round(face.dirt * 20)].join("|");
   if (sig !== lastSig) { lastSig = sig; drawSkin(face); }
 
-  // posture
-  const P = POSTURES[state.posture];
-  const kp = Math.min(1, dt * 4);
-  for (const key in poseCur) poseCur[key] = approach(poseCur[key], P[key], kp);
-  poseGroup.position.y = CENTER + poseCur.dy;
+  // le corps reste posé au sol même quand il s'écrase
+  poseGroup.position.y = CENTER + poseCur.dy - (contactRest - contactNow);
   bodyGroup.position.y = poseCur.lift;
   for (const { s, foot } of feet) {
     foot.position.set(0.42 * s, poseCur.footY, poseCur.footZ);
@@ -965,7 +1006,7 @@ function frame() {
 
   const dead = morphCur.dead > 0.5;
   const motion = state.motion;
-  const breathe = dead ? 0 : Math.sin(t * (motion === "snore" ? 1.3 : 2.4)) * (motion === "snore" ? 0.04 : 0.018);
+  const breathe = dead || lying ? 0 : Math.sin(t * (motion === "snore" ? 1.3 : 2.4)) * (motion === "snore" ? 0.04 : 0.018);
 
   if (motion === "hop" && t > nextHop && !dead) { hop(0.3); nextHop = t + 2 + Math.random() * 1.5; }
   let y = 0, sy = 1;
@@ -993,7 +1034,6 @@ function frame() {
   char.position.set(mx, y + my, 0);
   char.rotation.z = approach(char.rotation.z, mrz, Math.min(1, dt * 6));
   char.rotation.y = approach(char.rotation.y, mry, Math.min(1, dt * 4));
-  poseGroup.rotation.set(poseCur.rx, 0, poseCur.rz);
   shadow.scale.setScalar(1 - Math.min(0.5, (y + my) * 0.6));
 
   // bras
