@@ -8,7 +8,12 @@
       :aria-label="t.label"
       @click="t.run"
     >
-      <Icon :name="t.icon" class="ic" />
+      <svg v-if="t.center" class="ic star" viewBox="0 0 32 56" aria-hidden="true">
+        <path d="M16 0Q18.6 21 29 28Q18.6 35 16 56Q13.4 35 3 28Q13.4 21 16 0z" fill="var(--mood, #52c234)" />
+        <path d="M16 0Q13.4 21 3 28L16 28z" fill="#fff" opacity=".45" />
+        <path d="M16 56Q18.6 35 29 28L16 28z" fill="#000" opacity=".14" />
+      </svg>
+      <Icon v-else :name="t.icon" class="ic" />
       <span v-if="t.badge" class="badge" />
     </button>
   </nav>
@@ -66,7 +71,7 @@ const items = computed(() => [
 .on { background: linear-gradient(180deg, #e9fadf, #d6f3c4); }
 .on .ic { color: #3c9a22; }
 /* au centre, l'éclat d'humeur, à la couleur de l'humeur */
-.center .ic { width: 36px; height: 36px; color: var(--mood, #52c234); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mood, #52c234) 55%, transparent)); }
+.center .star { width: 24px; height: 42px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mood, #52c234) 60%, transparent)); }
 .badge {
   position: absolute;
   top: 8px;

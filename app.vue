@@ -67,7 +67,7 @@ function measure() {
   const r = el.getBoundingClientRect();
   frame.value = {
     ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
-    size: Math.round(Math.min(r.height * 0.5, window.innerWidth * 0.42)),
+    size: Math.round(Math.min(r.height * 0.54, window.innerWidth * 0.46)),
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
@@ -135,7 +135,7 @@ body {
   --plate-shade: rgba(140, 100, 60, 0.35);
   --shell-edge: #c9a77f;
   /* tailles qui suivent la hauteur de l'écran */
-  --tile: clamp(56px, 10vh, 84px);
+  --tile: clamp(52px, 8.4vh, 72px);
   --gap: clamp(8px, 1.4vh, 12px);
 }
 .scene {

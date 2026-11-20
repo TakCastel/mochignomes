@@ -65,15 +65,16 @@ onMounted(() => store.initName());
   min-width: 0;
   flex: 1;
   max-width: 236px;
-  padding: 6px 12px 6px 6px;
+  padding: 6px 14px 6px 6px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 6px 20px rgba(40, 55, 80, 0.16);
 }
 .avatar {
   flex: none;
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   padding: 0;
   border: 3px solid #fff;
   border-radius: 14px;
@@ -83,8 +84,8 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
-.info { min-width: 0; flex: 1; display: grid; gap: 6px; }
-.name-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.info { min-width: 0; flex: 1; display: grid; gap: 5px; }
+.name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .name {
   font: 700 18px/1.1 "Fredoka", "Nunito", system-ui, sans-serif;
   color: var(--ink);
@@ -96,8 +97,8 @@ onMounted(() => store.initName());
   flex: none;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -106,6 +107,7 @@ onMounted(() => store.initName());
 }
 .edit-ic { width: 14px; height: 14px; color: #5b6676; }
 .level {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -115,11 +117,11 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .sprout { flex: none; width: 18px; height: 18px; color: #52b83a; }
-.lvl { font: 800 13px "Nunito", system-ui, sans-serif; color: #5b6676; white-space: nowrap; }
+.lvl { font: 800 12.5px "Nunito", system-ui, sans-serif; color: #5b6676; white-space: nowrap; }
 .track {
   flex: 1;
   min-width: 40px;
-  height: 9px;
+  height: 10px;
   border-radius: 999px;
   background: #dfe5ec;
   overflow: hidden;

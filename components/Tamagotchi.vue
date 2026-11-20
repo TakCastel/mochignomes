@@ -79,7 +79,24 @@ watch(() => gameBus.command, (cmd) => {
 const flash = ref(false);
 
 // Apparence finale = humeur de fond + réaction en cours + morphing des jauges
-const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value, mark: MOOD_LABELS[mood.value]?.[1] }));
+// Nuage de pensée : le besoin le plus pressant, sinon un cœur
+const THOUGHTS = {
+  heart: '<svg viewBox="0 0 34 30"><defs><radialGradient id="th-h" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#ff9ec0"/><stop offset=".6" stop-color="#f2457f"/><stop offset="1" stop-color="#cf2862"/></radialGradient></defs><path d="M17 29C9 23 1 17 1 9.5 1 4.5 5 1 9.5 1c3.2 0 5.8 2 7.5 4.5C18.7 3 21.3 1 24.5 1 29 1 33 4.5 33 9.5 33 17 25 23 17 29z" fill="url(#th-h)"/><ellipse cx="9" cy="8" rx="4" ry="2.4" fill="#fff" opacity=".6" transform="rotate(-30 9 8)"/></svg>',
+  hunger: '<svg viewBox="0 0 34 30"><path d="M2 14h30l-3 9c-1 3-3 5-6 5H11c-3 0-5-2-6-5z" fill="#b8c0ca"/><circle cx="10" cy="12" r="4" fill="#b8642a"/><circle cx="17" cy="10" r="4.5" fill="#c97733"/><circle cx="24" cy="12" r="4" fill="#a95720"/><rect x="1" y="13" width="32" height="3.5" rx="1.7" fill="#dfe4ea"/></svg>',
+  cleanliness: '<svg viewBox="0 0 34 30"><path d="M17 1C12 9 8 14 8 19a9 9 0 0 0 18 0c0-5-4-10-9-18z" fill="#4aa6f0"/><ellipse cx="13" cy="18" rx="2.2" ry="4" fill="#fff" opacity=".6"/></svg>',
+  fun: '<svg viewBox="0 0 34 30"><circle cx="17" cy="15" r="13.5" fill="#fff" stroke="#2b2f36" stroke-width="1.5"/><path d="M17 9l5 3.5-2 5.5h-6l-2-5.5z" fill="#2b2f36"/><path d="M5 11l3 2-1 5-3 1M29 11l-3 2 1 5 3 1M11 26l2-4h8l2 4" fill="#2b2f36"/></svg>',
+  energy: '<svg viewBox="0 0 34 30"><path d="M22 2a13 13 0 1 0 10 19A11 11 0 0 1 22 2z" fill="#8b7bf0"/><path d="M26 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#ffd34d"/></svg>',
+  health: '<svg viewBox="0 0 34 30"><path d="M12 2h10v8h9v10h-9v8H12v-8H3V10h9z" fill="#ec3b3b"/></svg>',
+};
+const thought = computed(() => {
+  if (props.dead || store.isSleeping) return null;
+  let key = "heart", low = 40;
+  for (const k of ["hunger", "cleanliness", "fun", "energy", "health"]) {
+    if (store[k] < low) { low = store[k]; key = k; }
+  }
+  return THOUGHTS[key];
+});
+const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value, mark: MOOD_LABELS[mood.value]?.[1], thought: thought.value }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
 watch(() => [props.phase, props.dead, props.sky, props.theme], ([phase, dead, sky, theme]) => creature.value?.setScene({ phase, dead, sky, theme }));
 watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
@@ -153,7 +170,7 @@ function onPoke({ dead, asleep }) {
 
 onMounted(async () => {
   listenToActions();
-  chatter = setInterval(() => { if (!reaction.value) say(pick(MESSAGES[mood.value])); }, 14000);
+  chatter = setInterval(() => { if (!reaction.value) say(pick(MESSAGES[mood.value])); }, 40000);
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");
