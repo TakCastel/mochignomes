@@ -54,16 +54,16 @@ onMounted(() => store.initName());
 /* plastique crème bombé, avec une tranche dessous */
 .knob {
   border: 0;
-  background: linear-gradient(180deg, #fffaf2 0%, #f6e8d4 60%, #ecd6b8 100%);
+  background: linear-gradient(180deg, var(--knob-hi) 0%, var(--knob-lo) 100%);
   box-shadow:
-    0 5px 0 #d2b48c,
+    0 5px 0 var(--knob-side),
     0 9px 16px rgba(90, 60, 30, 0.28),
     inset 0 2px 0 #fff,
-    inset 0 -3px 4px rgba(180, 140, 90, 0.25);
+    inset 0 -3px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.knob:active { transform: translateY(3px); box-shadow: 0 2px 0 #d2b48c, 0 4px 8px rgba(90, 60, 30, 0.25), inset 0 2px 0 #fff; }
+.knob:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--knob-side), 0 4px 8px rgba(90, 60, 30, 0.25), inset 0 2px 0 #fff; }
 .square {
   width: var(--top, 62px);
   height: var(--top, 62px);

@@ -1,8 +1,8 @@
 <template>
-  <div class="world" :class="[`phase-${shownPhase}`, { dead }]">
+  <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" />
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
@@ -31,9 +31,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
+import { PALETTES, DEFAULT_PALETTE, paletteVars } from "~/lib/palettes";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
+const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
+const paletteStyle = computed(() => paletteVars(store.palette));
 const arrowHint = computed(() => !(store.counters.tourner > 0));
 
 // moment de la journée réel, mis à jour chaque minute
@@ -60,6 +63,9 @@ function measure() {
 
 onMounted(() => {
   store.startDecay();
+  // ?palette=lagon : essayer une palette
+  const wanted = new URLSearchParams(window.location.search).get("palette");
+  if (wanted && PALETTES[wanted]) store.palette = wanted;
   // ?heure=22 force l'heure affichée (pratique pour voir le décor de nuit)
   const params = new URLSearchParams(window.location.search);
   const forced = Number(params.get("heure"));
@@ -108,15 +114,10 @@ body {
   height: 100%;
   overflow: hidden;
   /* couleurs partagées par les panneaux */
-  --ink: #5a3a22;
   --accent: #ff8a3d;
   --accent-hi: #ffb070;
   --accent-lo: #c25a12;
-  --plate-hi: #fffaf2;
-  --plate-lo: #f3e6d3;
   --plate-shade: rgba(140, 100, 60, 0.35);
-  --knob-lo: #f1e3cf;
-  --knob-side: #d9bf98;
   --shell-edge: #c9a77f;
   /* tailles qui suivent la hauteur de l'écran */
   --top: clamp(50px, 7.4vh, 62px);
@@ -136,8 +137,8 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(70% 40% at 75% 28%, rgba(255, 214, 120, 0.28), transparent 70%),
-    radial-gradient(130% 90% at 50% 45%, transparent 55%, rgba(120, 60, 20, 0.22) 100%);
+    radial-gradient(70% 40% at 75% 28%, var(--glow), transparent 70%),
+    radial-gradient(130% 90% at 50% 45%, transparent 55%, var(--edge) 100%);
 }
 
 .ui {
@@ -169,14 +170,14 @@ body {
   margin-top: -25px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(180deg, #fffaf2, #ecd9bf);
-  box-shadow: 0 4px 0 #d2b48c, 0 8px 14px rgba(60, 40, 20, 0.28), inset 0 2px 0 #fff;
+  background: linear-gradient(180deg, var(--knob-hi), var(--knob-lo));
+  box-shadow: 0 4px 0 var(--knob-side), 0 8px 14px rgba(40, 20, 50, 0.28), inset 0 2px 0 #fff;
   cursor: pointer;
 }
-.arrow:active { transform: translateY(3px); box-shadow: 0 1px 0 #d2b48c, inset 0 2px 0 #fff; }
+.arrow:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side), inset 0 2px 0 #fff; }
 .prev { left: 0; }
 .next { right: 0; }
-.chevron { width: 24px; height: 24px; color: #a0703c; }
+.chevron { width: 24px; height: 24px; color: var(--ink); }
 /* pulsation en transform : animée par le navigateur sans redessiner la page */
 .arrow.hint { animation: nudge 1.6s ease-in-out infinite; }
 @keyframes nudge { 50% { transform: scale(1.12); } }

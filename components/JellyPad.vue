@@ -18,6 +18,8 @@
 <script setup>
 import { computed, ref } from "vue";
 
+import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+
 const { store } = useCreatureMood();
 
 const BASE = [
@@ -39,7 +41,9 @@ function reasonFor(key) {
 }
 
 const actions = computed(() =>
-  BASE.map((a) => {
+  BASE.map((base) => {
+    const [color, dark] = (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).jelly[base.key];
+    const a = { ...base, color, dark };
     const wake = a.key === "coucher" && store.isSleeping;
     return {
       ...a,
@@ -76,7 +80,7 @@ function press(a) {
   gap: var(--gap, 12px) 14px;
   padding: 16px 16px 20px;
   border-radius: 36px;
-  background: linear-gradient(180deg, #ffeccf 0%, #f6c995 100%);
+  background: linear-gradient(180deg, var(--panel-top) 0%, var(--panel-bottom) 100%);
   box-shadow:
     0 10px 26px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,

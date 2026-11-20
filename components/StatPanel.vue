@@ -29,6 +29,8 @@ const EMOJI = {
   energy: "ph:lightning-fill",
   health: "ph:heart-fill",
 };
+import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+
 const { store } = useCreatureMood();
 const CIRC = 2 * Math.PI * 27;
 const rings = computed(() =>
@@ -36,6 +38,7 @@ const rings = computed(() =>
     const value = store[s.key];
     return {
       ...s,
+      color: (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).stats[s.key],
       emoji: EMOJI[s.key],
       value,
       need: value < 25 ? "urgent" : value < 50 ? "soon" : null,
@@ -58,7 +61,7 @@ const rings = computed(() =>
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   border-radius: 34px;
-  background: linear-gradient(180deg, #fff3e2, #f9d8ae);
+  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
   box-shadow:
     0 10px 24px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,

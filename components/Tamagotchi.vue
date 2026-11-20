@@ -34,6 +34,8 @@ const props = defineProps({
   dead: { type: Boolean, default: false },
   // cadrage : { ground, size } en pixels (voir creature3d.setFrame)
   frame: { type: Object, default: null },
+  // couleurs du ciel de jour imposées par la palette
+  sky: { type: Object, default: null },
 });
 const emit = defineEmits(["ground"]);
 const { store, mood, morph, sulking } = useCreatureMood();
@@ -77,7 +79,7 @@ const flash = ref(false);
 // Apparence finale = humeur de fond + réaction en cours + morphing des jauges
 const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
-watch(() => [props.phase, props.dead], ([phase, dead]) => creature.value?.setScene({ phase, dead }));
+watch(() => [props.phase, props.dead, props.sky], ([phase, dead, sky]) => creature.value?.setScene({ phase, dead, sky }));
 watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
 
 watch(mood, (m, old) => { if (old && !reaction.value) say(pick(MESSAGES[m])); });
@@ -159,7 +161,7 @@ onMounted(async () => {
       world: true,
     });
     creature.value.setLook(look.value);
-    creature.value.setScene({ phase: props.phase, dead: props.dead });
+    creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky });
     if (props.frame) creature.value.setFrame(props.frame);
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {

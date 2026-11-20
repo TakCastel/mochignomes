@@ -63,7 +63,8 @@ export const useTamagotchiStore = defineStore(
     const bornAt = ref(0);
     const counters = ref({}); // nombre de fois que chaque chose a été faite
     const unlocked = ref([]); // succès débloqués
-    const shell = ref("lavande"); // couleur de la coque
+    const shell = ref("lavande"); // (ancienne couleur de coque, inutilisée)
+    const palette = ref("bonbon"); // palette de couleurs de l'interface
     // Visites : série de jours d'affilée et bonus du jour
     const lastVisitDay = ref("");
     const streak = ref(0);
@@ -348,6 +349,7 @@ export const useTamagotchiStore = defineStore(
       countPhoto,
       countGesture,
       shell,
+      palette,
       lastVisitDay,
       streak,
       pendingBonus,
@@ -362,7 +364,7 @@ export const useTamagotchiStore = defineStore(
   },
   {
     persist: {
-      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked", "shell", "lastVisitDay", "streak", "pendingBonus"],
+      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked", "shell", "palette", "lastVisitDay", "streak", "pendingBonus"],
     },
   }
 );

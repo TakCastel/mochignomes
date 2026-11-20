@@ -10,6 +10,8 @@
 <script setup>
 import { computed } from "vue";
 
+import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+
 const { store } = useCreatureMood();
 const { photos } = useGallery();
 
@@ -21,11 +23,12 @@ function dance() {
   store.applyAction("danser");
 }
 
+const tint = computed(() => (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).tiles);
 const tiles = computed(() => [
-  { key: "journal", label: "Journal", icon: "ph:backpack-fill", color: "#f0812a", run: () => (gameBus.sheet = "journal") },
-  { key: "danser", label: "Danser", icon: "ph:disco-ball-fill", color: "#9a4dff", run: dance },
-  { key: "photo", label: "Prendre une photo", icon: "ph:camera-fill", color: "#14b8c8", run: () => gameCommand("photo") },
-  { key: "galerie", label: "Galerie photos", icon: "ph:images-fill", color: "#f0479b", badge: photos.value.length || null, run: () => (gameBus.sheet = "galerie") },
+  { key: "journal", label: "Journal", icon: "ph:backpack-fill", color: tint.value[0], run: () => (gameBus.sheet = "journal") },
+  { key: "danser", label: "Danser", icon: "ph:disco-ball-fill", color: tint.value[1], run: dance },
+  { key: "photo", label: "Prendre une photo", icon: "ph:camera-fill", color: tint.value[2], run: () => gameCommand("photo") },
+  { key: "galerie", label: "Galerie photos", icon: "ph:images-fill", color: tint.value[3], badge: photos.value.length || null, run: () => (gameBus.sheet = "galerie") },
 ]);
 </script>
 
@@ -36,7 +39,7 @@ const tiles = computed(() => [
   gap: 12px;
   padding: 12px 14px 14px;
   border-radius: 34px;
-  background: linear-gradient(180deg, #ffe6c6 0%, #f2c088 100%);
+  background: linear-gradient(180deg, var(--panel-top) 0%, var(--panel-bottom) 100%);
   box-shadow:
     0 10px 24px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,
@@ -51,17 +54,17 @@ const tiles = computed(() => [
   padding: 0;
   border: 0;
   border-radius: 24px;
-  background: linear-gradient(180deg, #fffaf2 0%, #f3e3cc 70%, #e9d2b2 100%);
+  background: linear-gradient(180deg, var(--knob-hi) 0%, var(--knob-lo) 100%);
   box-shadow:
-    0 5px 0 #d2b48c,
+    0 5px 0 var(--knob-side),
     0 9px 14px rgba(90, 60, 30, 0.25),
     inset 0 2px 0 #fff,
-    inset 0 -3px 5px rgba(180, 140, 90, 0.3);
+    inset 0 -3px 5px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.tile:active { transform: translateY(4px); box-shadow: 0 1px 0 #d2b48c, 0 3px 6px rgba(90, 60, 30, 0.25), inset 0 2px 0 #fff; }
+.tile:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--knob-side), 0 3px 6px rgba(90, 60, 30, 0.25), inset 0 2px 0 #fff; }
 .emoji { width: 58%; height: 58%; max-width: 42px; max-height: 42px; color: var(--c); filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--c) 55%, #000)); }
 .badge {
   position: absolute;
