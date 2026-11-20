@@ -27,6 +27,10 @@ import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vu
 import { MOODS, MESSAGES, REACTIONS, POKE_MESSAGES, pick } from "~/lib/creatureLook";
 import { STATS } from "~/lib/gameUi";
 
+const props = defineProps({
+  phase: { type: String, default: "day" },
+  dead: { type: Boolean, default: false },
+});
 const emit = defineEmits(["ground"]);
 const { store, mood, morph, sulking } = useCreatureMood();
 
@@ -48,6 +52,7 @@ watch(() => gameBus.speech, (s) => s && say(s.text));
 // Apparence finale = humeur de fond + réaction en cours + morphing des jauges
 const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
+watch(() => [props.phase, props.dead], ([phase, dead]) => creature.value?.setScene({ phase, dead }));
 
 watch(mood, (m, old) => { if (old && !reaction.value) say(pick(MESSAGES[m])); });
 let chatter = null;
@@ -121,8 +126,9 @@ onMounted(async () => {
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");
-    creature.value = createCreature(stage.value, { onPoke, onGround: (y) => emit("ground", y) });
+    creature.value = createCreature(stage.value, { onPoke, onGround: (y) => emit("ground", y), world: true });
     creature.value.setLook(look.value);
+    creature.value.setScene({ phase: props.phase, dead: props.dead });
     setTimeout(() => say(pick(MESSAGES[mood.value])), 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);

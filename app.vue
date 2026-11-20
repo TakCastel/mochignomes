@@ -1,10 +1,10 @@
 <template>
   <div class="world">
     <main class="phone">
-      <SceneBackdrop :phase="phase" :sleeping="store.isSleeping" :dead="store.health <= 0" :ground="ground" />
+      <SceneBackdrop :phase="shownPhase" :dead="store.health <= 0" />
       <GameHud />
-      <div ref="play" class="play">
-        <Tamagotchi @ground="onGround" />
+      <div class="play">
+        <Tamagotchi :phase="shownPhase" :dead="store.health <= 0" />
       </div>
       <ActionDock />
       <CreatureSheet />
@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
 
@@ -23,12 +23,8 @@ const store = useTamagotchiStore();
 const phase = ref("day");
 let phaseTimer = null;
 
-// position du sol à l'écran, pour poser la colline sous la créature
-const play = ref(null);
-const ground = ref(520);
-function onGround(y) {
-  ground.value = (play.value?.offsetTop || 0) + y;
-}
+// quand elle dort, la nuit tombe sur la scène
+const shownPhase = computed(() => (store.isSleeping ? "night" : phase.value));
 
 onMounted(() => {
   store.startDecay();

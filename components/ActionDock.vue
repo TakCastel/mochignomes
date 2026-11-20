@@ -81,9 +81,10 @@ function press(a) {
   grid-template-columns: repeat(5, 1fr);
   gap: 8px;
   padding: 12px 12px calc(env(safe-area-inset-bottom, 0px) + 14px);
-  background: linear-gradient(180deg, rgba(255, 248, 238, 0.92), #fff3e2);
+  background: linear-gradient(180deg, #fff6e6, #ffe2b8);
+  border-top: 3px solid #fff;
   border-radius: 28px 28px 0 0;
-  box-shadow: 0 -6px 24px rgba(60, 30, 10, 0.15);
+  box-shadow: 0 -4px 0 rgba(74, 36, 16, 0.12), 0 -10px 30px rgba(30, 20, 60, 0.22);
 }
 .action {
   display: flex;
@@ -104,7 +105,8 @@ function press(a) {
   max-width: 64px;
   aspect-ratio: 1;
   border-radius: 20px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, #fff), var(--c) 55%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 62%, #fff), var(--c) 50%, color-mix(in srgb, var(--c) 85%, #000) 100%);
+  border: 2.5px solid color-mix(in srgb, var(--c-dark) 70%, #000);
   box-shadow: 0 6px 0 var(--c-dark), 0 9px 14px rgba(60, 30, 10, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.55);
   transition: transform 0.08s, box-shadow 0.08s, filter 0.2s;
 }

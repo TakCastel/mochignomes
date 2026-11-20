@@ -92,7 +92,9 @@ onMounted(() => store.initName());
   line-height: 1;
   color: #fff;
   letter-spacing: 0.01em;
-  text-shadow: 0 2px 0 rgba(60, 30, 10, 0.35), 0 0 18px rgba(60, 30, 10, 0.15);
+  -webkit-text-stroke: 1.5px #4a2410;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #4a2410;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,19 +106,22 @@ onMounted(() => store.initName());
   gap: 6px;
   padding: 3px 10px 3px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.85);
-  color: #4a2410;
+  background: var(--mc);
+  color: #fff;
   font-weight: 800;
   font-size: 13px;
-  box-shadow: 0 2px 0 rgba(60, 30, 10, 0.12);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mc) 60%, #000), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: background 0.4s;
 }
 .dot {
-  width: 9px;
-  height: 9px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--mc);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc) 25%, transparent);
+  background: #fff;
+  animation: pulse 1.6s ease-in-out infinite;
 }
+@keyframes pulse { 50% { transform: scale(0.6); opacity: 0.7; } }
 .speed {
   font-weight: 800;
   font-size: 12px;
@@ -132,14 +137,15 @@ onMounted(() => store.initName());
   padding: 8px 12px 8px 9px;
   border: 0;
   border-radius: 16px;
-  background: #fff;
-  color: #4a2410;
+  background: linear-gradient(180deg, #b896ff, #8b5cf6);
+  color: #fff;
   font: 800 14px "Nunito", system-ui, sans-serif;
-  box-shadow: 0 4px 0 rgba(60, 30, 10, 0.18);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 0 #5b33b8, inset 0 2px 0 rgba(255, 255, 255, 0.45);
   cursor: pointer;
   transition: transform 0.1s, box-shadow 0.1s;
 }
-.sheet-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(60, 30, 10, 0.18); }
+.sheet-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #5b33b8, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
 .sheet-icon { width: 20px; height: 20px; }
 
 .rings {
@@ -149,11 +155,12 @@ onMounted(() => store.initName());
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
-  background: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 244, 228, 0.92));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-radius: 22px;
-  box-shadow: 0 4px 0 rgba(60, 30, 10, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 5px 0 rgba(74, 36, 16, 0.22), 0 10px 24px rgba(30, 20, 60, 0.18);
 }
 .rings li {
   display: flex;
@@ -167,7 +174,7 @@ onMounted(() => store.initName());
   height: 52px;
   padding: 0;
   border: 0;
-  background: #fff;
+  background: radial-gradient(circle at 50% 35%, #fff, color-mix(in srgb, var(--c) 14%, #fff));
   border-radius: 50%;
   cursor: pointer;
   box-shadow: 0 3px 0 rgba(60, 30, 10, 0.12);
@@ -182,7 +189,7 @@ onMounted(() => store.initName());
   stroke-width: 5;
   stroke-linecap: round;
 }
-.track { stroke: color-mix(in srgb, var(--c) 18%, #f3e6d6); }
+.track { stroke: color-mix(in srgb, var(--c) 22%, #efe2d2); }
 .fill { stroke: var(--c); transition: stroke-dasharray 0.6s cubic-bezier(0.3, 1.4, 0.5, 1); }
 .extra { stroke: #ffd23f; stroke-width: 3; transition: stroke-dasharray 0.6s; }
 .ring-icon {
