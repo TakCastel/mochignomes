@@ -1,10 +1,5 @@
 <template>
-  <BaseSheet
-    :open="gameBus.sheet === 'succes'"
-    title="Succès"
-    :subtitle="`${done} sur ${ACHIEVEMENTS.length} débloqués`"
-    icon="ph:trophy-fill"
-  >
+  <div class="sheet-content">
     <ul class="list">
       <li v-for="a in rows" :key="a.id" :class="{ done: a.done }">
         <span class="medal">
@@ -20,7 +15,7 @@
         <span class="count">{{ a.done ? "✓" : `${a.value}/${a.goal}` }}</span>
       </li>
     </ul>
-  </BaseSheet>
+  </div>
 </template>
 
 <script setup>

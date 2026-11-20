@@ -82,7 +82,7 @@ const rings = computed(() =>
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
-  border-radius: 28px;
+  border-radius: 44px;
   background: linear-gradient(180deg, #fffdf9, #efe2d1);
   box-shadow:
     inset 0 2px 0 #fff,

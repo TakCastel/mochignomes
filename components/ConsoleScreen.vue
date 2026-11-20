@@ -29,23 +29,23 @@ const outer = ref(null);
 const mid = ref(null);
 const inner = ref(null);
 // rayon proportionnel à la taille de l'écran, un peu plus serré à chaque couche
-useSquircle([outer], (w, h) => Math.min(w, h) * 0.2);
-useSquircle([mid], (w, h) => Math.min(w, h) * 0.19);
-useSquircle([inner], (w, h) => Math.min(w, h) * 0.18);
+useSquircle([outer], (w, h) => Math.min(w, h) * 0.3, 0.85);
+useSquircle([mid], (w, h) => Math.min(w, h) * 0.29, 0.85);
+useSquircle([inner], (w, h) => Math.min(w, h) * 0.28, 0.85);
 </script>
 
 <style scoped>
 .frame {
   position: relative;
   height: 100%;
-  padding: 4px;
+  padding: 3px;
   /* liseré crème bombé : clair en haut, plus sombre en bas */
   background: linear-gradient(180deg, #ffffff 0%, #efe2cf 55%, #d8c2a4 100%);
 }
 .bezel {
   position: relative;
   height: 100%;
-  padding: 6px;
+  padding: 5px;
   background: linear-gradient(180deg, #5c5180 0%, #2b2442 55%, #1b1630 100%);
 }
 .screen {

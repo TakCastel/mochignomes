@@ -15,14 +15,9 @@
         <ConsoleScreen :phase="shownPhase" :dead="dead" />
       </div>
       <ButtonDeck />
-      <ConsoleTray />
 
       <GameToasts />
-      <CreatureSheet />
-      <GallerySheet />
-      <AchievementsSheet />
-      <JournalSheet />
-      <SettingsSheet />
+      <GameSheet />
     </main>
   </div>
 </template>
@@ -134,10 +129,10 @@ body {
   height: calc(100% - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   max-height: 960px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: clamp(6px, 1.1vh, 12px);
   padding: clamp(8px, 1.3vh, 14px) 8px;
-  border-radius: 44px;
+  border-radius: 60px;
   background:
     radial-gradient(120% 60% at 15% 0%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%),
     linear-gradient(180deg, #fffaf2 0%, #f3e6d4 50%, #e6d3ba 100%);

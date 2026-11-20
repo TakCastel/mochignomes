@@ -1,5 +1,5 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'reglages'" title="Réglages" icon="ph:gear-six-fill">
+  <div class="sheet-content">
     <form class="block" @submit.prevent="save">
       <label for="pet-name">Son nom</label>
       <div class="row">
@@ -18,20 +18,19 @@
         <button class="btn" @click="confirming = false">Annuler</button>
       </div>
     </div>
-  </BaseSheet>
+  </div>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 
 const { store } = useCreatureMood();
 const draft = ref("");
 const saved = ref(false);
 const confirming = ref(false);
 
-watch(() => gameBus.sheet, (s) => {
-  if (s === "reglages") { draft.value = store.name; saved.value = false; confirming.value = false; }
-});
+// à chaque ouverture : champ prérempli, messages remis à zéro
+draft.value = store.name;
 
 function save() {
   store.rename(draft.value);

@@ -5,12 +5,13 @@
     </div>
 
     <div class="center">
-      <button class="big" aria-label="Fiche de la créature" @click="gameBus.sheet = 'fiche'">
+      <button class="big" aria-label="Ouvrir le carnet : fiche, succès, photos, journal" @click="gameBus.sheet = 'fiche'">
         <span class="big-face">
-          <Icon name="ph:sparkle-fill" class="big-icon" />
+          <Icon name="ph:book-open-text-fill" class="big-icon" />
         </span>
+        <span v-if="newUnlocked" class="badge">!</span>
       </button>
-      <span class="label">Fiche</span>
+      <span class="label">Carnet</span>
       <div class="grill" aria-hidden="true">
         <span /><span /><span />
       </div>
@@ -26,6 +27,7 @@
 import { computed, ref } from "vue";
 
 const { store } = useCreatureMood();
+const newUnlocked = computed(() => store.unlocked.length > gameBus.seenUnlocked);
 
 const BASE = [
   { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffa51f", dark: "#c45a00" },
@@ -88,8 +90,8 @@ function press(a) {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 4px;
-  padding: 8px 4px 9px;
-  border-radius: 28px;
+  padding: 10px 6px 11px;
+  border-radius: 44px;
   background: linear-gradient(180deg, #f1e6d7, #f8f0e5);
   box-shadow: inset 0 3px 5px rgba(140, 110, 80, 0.35), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 rgba(140, 110, 80, 0.25);
 }
@@ -106,6 +108,7 @@ function press(a) {
   gap: 4px;
 }
 .big {
+  position: relative;
   width: var(--big, 70px);
   height: var(--big, 70px);
   padding: 7px;
@@ -128,6 +131,20 @@ function press(a) {
   transition: transform 0.08s;
 }
 .big:active .big-face { transform: scale(0.92); }
+.badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff4d4d;
+  color: #fff;
+  font: 900 13px "Nunito", system-ui, sans-serif;
+  box-shadow: 0 2px 0 #b52020, 0 0 0 2px #fff;
+}
 .big-icon { width: 50%; height: 50%; color: #fff; filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.2)) drop-shadow(0 2px 1px #7a3d08); }
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
@@ -145,6 +162,9 @@ function press(a) {
 }
 @media (min-height: 820px) {
   .grill { display: flex; }
+}
+@media (max-height: 740px) {
+  .label { display: none; }
 }
 .grill span {
   width: 46px;

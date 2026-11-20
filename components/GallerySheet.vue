@@ -1,10 +1,5 @@
 <template>
-  <BaseSheet
-    :open="gameBus.sheet === 'galerie'"
-    title="Galerie"
-    :subtitle="photos.length ? `${photos.length} photo${photos.length > 1 ? 's' : ''} sur ${max}` : 'Aucune photo pour l\'instant'"
-    icon="ph:images-fill"
-  >
+  <div class="sheet-content">
     <div v-if="!photos.length" class="empty">
       <Icon name="ph:camera-fill" class="empty-icon" />
       <p>Appuie sur le bouton <strong>Photo</strong> pour immortaliser {{ store.name }}. Les photos restent dans ce navigateur.</p>
@@ -29,7 +24,7 @@
         </div>
       </figure>
     </div>
-  </BaseSheet>
+  </div>
 </template>
 
 <script setup>

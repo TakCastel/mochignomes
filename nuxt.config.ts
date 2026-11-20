@@ -33,7 +33,7 @@ export default defineNuxtConfig({
         "ph:lightning-fill", "ph:heart-fill", "ph:hand-heart-fill", "ph:moon-stars-fill",
         "ph:sun-fill", "ph:music-notes-fill", "ph:syringe-fill", "ph:camera-fill",
         "ph:sparkle-fill", "ph:images-fill", "ph:trophy-fill", "ph:calendar-fill",
-        "ph:gear-six-fill", "ph:star-fill",
+        "ph:gear-six-fill", "ph:star-fill", "ph:book-open-text-fill",
       ],
     },
   },

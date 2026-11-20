@@ -1,5 +1,5 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'fiche'" :title="store.name" :subtitle="summary" icon="ph:sparkle-fill">
+  <div class="sheet-content">
     <p v-if="sulking" class="sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
 
     <h3>Jauges</h3>
@@ -30,7 +30,7 @@
     </details>
 
     <p class="tip">Astuces : touche-la pour la chatouiller, glisse le doigt pour la faire tourner.</p>
-  </BaseSheet>
+  </div>
 </template>
 
 <script setup>

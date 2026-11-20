@@ -106,6 +106,10 @@ defineEmits(["press"]);
   color: #5a3a24;
   text-shadow: 0 1px 0 #fff;
 }
+@media (max-height: 740px) {
+  .label { display: none; }
+  .candy-btn { gap: 0; }
+}
 .locked .candy { filter: grayscale(0.9) brightness(1.1) opacity(0.65); }
 .locked .label { opacity: 0.5; }
 .highlight .rim { animation: beckon 1s ease-in-out infinite; }

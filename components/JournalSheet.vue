@@ -1,5 +1,5 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'journal'" title="Journal" :subtitle="ageText" icon="ph:calendar-fill">
+  <div class="sheet-content">
     <div class="cards">
       <div class="card big">
         <Icon name="ph:star-fill" class="icon" />
@@ -13,7 +13,7 @@
       </div>
     </div>
     <p class="born">Née le {{ born }}.</p>
-  </BaseSheet>
+  </div>
 </template>
 
 <script setup>

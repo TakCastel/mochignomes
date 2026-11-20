@@ -11,6 +11,7 @@ export const gameBus = reactive({
   sheet: null, // panneau ouvert : "fiche" | "galerie" | "succes" | "journal" | "reglages"
   toasts: [], // notifications { id, text, icon }
   phase: "day",
+  seenUnlocked: 0, // succès déjà vus dans le carnet
 });
 
 export function gameSay(text) {
