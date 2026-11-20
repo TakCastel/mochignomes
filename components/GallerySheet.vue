@@ -31,7 +31,7 @@
 import { ref } from "vue";
 
 const { store } = useCreatureMood();
-const { photos, removePhoto, max } = useGallery();
+const { photos, removePhoto } = useGallery();
 const selected = ref(null);
 
 const fmt = (t) => new Date(t).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });

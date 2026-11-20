@@ -30,7 +30,6 @@ const rows = computed(() =>
     return { ...a, value: Math.min(value, goal), goal, done, pct: Math.min(100, (value / goal) * 100) };
   }).sort((a, b) => Number(b.done) - Number(a.done))
 );
-const done = computed(() => rows.value.filter((r) => r.done).length);
 </script>
 
 <style scoped>

@@ -45,11 +45,6 @@ const statRows = computed(() =>
 const traitRows = computed(() =>
   Object.entries(TRAIT_INFO).map(([key, info]) => ({ key, ...info, value: store.traits[key] || 0 }))
 );
-const summary = computed(() => {
-  const strong = traitRows.value.filter((t) => t.value >= 0.35).sort((a, b) => b.value - a.value);
-  if (!strong.length) return "Son caractère est encore en train de se former.";
-  return `Elle devient ${strong.slice(0, 2).map((t) => t.label.toLowerCase()).join(" et ")}.`;
-});
 </script>
 
 <style scoped>

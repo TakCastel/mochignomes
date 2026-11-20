@@ -19,14 +19,9 @@
 <script setup>
 import { computed } from "vue";
 import { levelInfo } from "~/stores/useTamagotchiStore";
-import { ageInDays } from "~/lib/achievements";
 
 const { store } = useCreatureMood();
 const lvl = computed(() => levelInfo(store.xp));
-const days = computed(() => (store.lastUpdate, ageInDays(store)));
-const ageText = computed(() =>
-  days.value < 1 ? `${store.name} est née aujourd'hui` : `${store.name} a ${days.value} jour${days.value > 1 ? "s" : ""}`
-);
 const born = computed(() =>
   store.bornAt ? new Date(store.bornAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "aujourd'hui"
 );

@@ -20,7 +20,7 @@ export function squirclePath(w, h, r, s = 0.6) {
   const b = (p - l - c - d) / 3;
   const a = 2 * b;
   const f = (n) => Math.round(n * 100) / 100;
-  const [A, B, C, D, L, R] = [a, b, c, d, l, r].map(f);
+  const [A, C, D, L, R] = [a, c, d, l, r].map(f);
   return [
     `M ${f(w - p)} 0`,
     `c ${A} 0 ${f(a + b)} 0 ${f(a + b + c)} ${D} a ${R} ${R} 0 0 1 ${L} ${L} c ${D} ${C} ${D} ${f(b + c)} ${D} ${f(a + b + c)}`,
