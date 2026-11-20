@@ -90,10 +90,14 @@ function press(a) {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 4px;
-  padding: 10px 6px 11px;
-  border-radius: 44px;
+  padding: 10px 6px 14px;
+  /* bas plus arrondi : la plaque suit la courbe de la coque */
+  border-radius: 44px 44px 50% 50% / 44px 44px 70px 70px;
   background: linear-gradient(180deg, #f1e6d7, #f8f0e5);
   box-shadow: inset 0 3px 5px rgba(140, 110, 80, 0.35), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 rgba(140, 110, 80, 0.25);
+  /* le bas de la console vient vers nous */
+  transform: perspective(650px) rotateX(10deg);
+  transform-origin: 50% 0;
 }
 .side {
   display: grid;

@@ -39,15 +39,17 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 
 <style scoped>
 .overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 20;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   background: rgba(40, 20, 60, 0.4);
 }
 .sheet {
   width: 100%;
+  max-width: 480px;
   max-height: 88%;
   overflow-y: auto;
   background: linear-gradient(180deg, #fffaf2, #f6ecdf);

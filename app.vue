@@ -9,6 +9,7 @@
     </div>
 
     <main class="console">
+      <ConsoleShell />
       <ConsoleTop />
       <StatPanel />
       <div class="screen-slot">
@@ -124,51 +125,15 @@ body {
 .console {
   position: relative;
   z-index: 1;
-  width: calc(100% - 10px);
+  width: calc(100% - 6px);
   max-width: 470px;
   height: calc(100% - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   max-height: 960px;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: clamp(6px, 1.1vh, 12px);
-  padding: clamp(8px, 1.3vh, 14px) 8px;
-  border-radius: 60px;
-  background:
-    radial-gradient(120% 60% at 15% 0%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%),
-    linear-gradient(180deg, #fffaf2 0%, #f3e6d4 50%, #e6d3ba 100%);
-  box-shadow:
-    inset 0 4px 0 #fff,
-    inset 4px 0 6px rgba(255, 255, 255, 0.8),
-    inset -6px 0 10px rgba(170, 125, 85, 0.25),
-    inset 0 -12px 18px rgba(170, 125, 85, 0.35),
-    0 0 0 3px #dcc6a8,
-    0 0 0 6px rgba(255, 255, 255, 0.35),
-    0 22px 45px rgba(40, 20, 60, 0.5);
-  overflow: hidden;
+  padding: clamp(14px, 2vh, 20px) 18px clamp(26px, 3.6vh, 38px);
   isolation: isolate;
-}
-/* grain mat du plastique + reflet sur l'arête du haut */
-.console::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: -1;
-  opacity: 0.35;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.console::after {
-  content: "";
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: 4px;
-  height: 18px;
-  border-radius: 999px;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
 }
 .screen-slot {
   min-height: 0;
