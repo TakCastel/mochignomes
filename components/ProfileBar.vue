@@ -9,11 +9,11 @@
         <div class="name-row">
           <span class="name">{{ store.name || "..." }}</span>
           <button class="edit" aria-label="Renommer" @click="gameBus.sheet = 'reglages'">
-            <Icon name="ph:pencil-simple-fill" class="edit-ic" />
+            <Icon name="solar:pen-bold" class="edit-ic" />
           </button>
         </div>
         <button class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`" @click="explainLevel">
-          <Icon name="ph:plant-fill" class="sprout" />
+          <Icon name="solar:leaf-bold-duotone" class="sprout" />
           <span class="lvl">Niv. {{ lvl.level }}</span>
           <span class="track"><span :style="{ width: pct + '%' }" /></span>
         </button>
@@ -23,14 +23,14 @@
     <!-- boutons ronds : succès, photos, réglages -->
     <div class="rounds">
       <button class="round" aria-label="Succès" @click="gameBus.sheet = 'succes'">
-        <Icon name="ph:bell-fill" class="ic" />
+        <Icon name="solar:bell-bold" class="ic" />
         <span v-if="newUnlocked" class="dot" />
       </button>
       <button class="round" aria-label="Galerie photos" @click="gameBus.sheet = 'galerie'">
-        <Icon name="ph:users-fill" class="ic" />
+        <Icon name="solar:users-group-two-rounded-bold" class="ic" />
       </button>
       <button class="round" aria-label="Réglages" @click="gameBus.sheet = 'reglages'">
-        <Icon name="ph:gear-six-fill" class="ic" />
+        <Icon name="solar:settings-bold" class="ic" />
       </button>
     </div>
   </header>
@@ -45,7 +45,7 @@ const lvl = computed(() => levelInfo(store.xp));
 const pct = computed(() => Math.max(6, Math.round((lvl.value.into / lvl.value.need) * 100)));
 const newUnlocked = computed(() => store.unlocked.length > gameBus.seenUnlocked);
 function explainLevel() {
-  gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "ph:plant-fill");
+  gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "solar:leaf-bold-duotone");
 }
 onMounted(() => store.initName());
 </script>

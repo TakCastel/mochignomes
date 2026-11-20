@@ -8,12 +8,7 @@
       :aria-label="t.label"
       @click="t.run"
     >
-      <svg v-if="t.center" class="ic star" viewBox="0 0 32 56" aria-hidden="true">
-        <path d="M16 0Q18.6 21 29 28Q18.6 35 16 56Q13.4 35 3 28Q13.4 21 16 0z" fill="var(--mood, #52c234)" />
-        <path d="M16 0Q13.4 21 3 28L16 28z" fill="#fff" opacity=".45" />
-        <path d="M16 56Q18.6 35 29 28L16 28z" fill="#000" opacity=".14" />
-      </svg>
-      <Icon v-else :name="t.icon" class="ic" />
+      <Icon :name="t.icon" class="ic" />
       <span v-if="t.badge" class="badge" />
     </button>
   </nav>
@@ -27,11 +22,11 @@ const { store } = useCreatureMood();
 const active = computed(() => gameBus.sheet || "accueil");
 
 const items = computed(() => [
-  { key: "accueil", label: "Accueil", icon: "ph:house-bold", run: () => (gameBus.sheet = null) },
-  { key: "journal", label: "Journal", icon: "ph:calendar-dots-fill", run: () => (gameBus.sheet = "journal") },
-  { key: "fiche", label: "Humeur et caractère", icon: "ph:sparkle-fill", center: true, run: () => (gameBus.sheet = "fiche") },
-  { key: "galerie", label: "Photos", icon: "ph:images-fill", run: () => (gameBus.sheet = "galerie") },
-  { key: "succes", label: "Succès", icon: "ph:chart-bar-fill", badge: store.unlocked.length > gameBus.seenUnlocked, run: () => (gameBus.sheet = "succes") },
+  { key: "accueil", label: "Accueil", icon: "solar:home-2-linear", run: () => (gameBus.sheet = null) },
+  { key: "journal", label: "Journal", icon: "solar:calendar-bold", run: () => (gameBus.sheet = "journal") },
+  { key: "fiche", label: "Humeur et caractère", icon: "solar:stars-bold", center: true, run: () => (gameBus.sheet = "fiche") },
+  { key: "galerie", label: "Photos", icon: "solar:gallery-bold", run: () => (gameBus.sheet = "galerie") },
+  { key: "succes", label: "Succès", icon: "solar:chart-2-bold", badge: store.unlocked.length > gameBus.seenUnlocked, run: () => (gameBus.sheet = "succes") },
 ]);
 </script>
 
@@ -71,7 +66,7 @@ const items = computed(() => [
 .on { background: linear-gradient(180deg, #e9fadf, #d6f3c4); }
 .on .ic { color: #3c9a22; }
 /* au centre, l'éclat d'humeur, à la couleur de l'humeur */
-.center .star { width: 24px; height: 42px; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mood, #52c234) 60%, transparent)); }
+.center .ic { width: 36px; height: 36px; color: var(--mood, #52c234); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--mood, #52c234) 55%, transparent)); }
 .badge {
   position: absolute;
   top: 8px;

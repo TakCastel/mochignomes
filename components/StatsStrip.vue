@@ -12,11 +12,11 @@ import { computed } from "vue";
 
 const { store } = useCreatureMood();
 const NEEDS = [
-  { key: "hunger", label: "Ventre", icon: "ph:bowl-food-duotone", color: "#6b7482" },
-  { key: "cleanliness", label: "Propreté", icon: "ph:drop-duotone", color: "#3b9cf0" },
-  { key: "fun", label: "Jeu", icon: "ph:soccer-ball-duotone", color: "#2fae4a" },
-  { key: "energy", label: "Énergie", icon: "ph:lightning-duotone", color: "#7a5ce6" },
-  { key: "health", label: "Santé", icon: "ph:heart-duotone", color: "#ef5b9a" },
+  { key: "hunger", label: "Ventre", icon: "solar:donut-bitten-bold-duotone", color: "#e8892a" },
+  { key: "cleanliness", label: "Propreté", icon: "solar:waterdrop-bold-duotone", color: "#3b9cf0" },
+  { key: "fun", label: "Jeu", icon: "solar:football-bold-duotone", color: "#2fae4a" },
+  { key: "energy", label: "Énergie", icon: "solar:bolt-bold-duotone", color: "#7a5ce6" },
+  { key: "health", label: "Santé", icon: "solar:heart-bold-duotone", color: "#ef5b9a" },
 ];
 // la barre verte devient jaune, orange puis rouge quand le besoin monte
 const rows = computed(() =>
@@ -49,7 +49,7 @@ const rows = computed(() =>
   cursor: pointer;
 }
 .cell:first-child { border-left: 0; }
-.ic { width: 30px; height: 30px; }
+.ic { width: 28px; height: 28px; }
 .track {
   width: 100%;
   height: 10px;

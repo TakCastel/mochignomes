@@ -8,8 +8,8 @@
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : a.key === best ? ' (conseillé)' : '')"
       @click="press(a)"
     >
-      <ActionArt :name="a.art" class="ic" />
-      <Icon v-if="a.reason" name="ph:lock-simple-fill" class="lock" />
+      <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
+      <Icon v-if="a.reason" name="solar:lock-keyhole-bold" class="lock" />
     </button>
   </section>
 </template>
@@ -20,14 +20,14 @@ import { computed, ref } from "vue";
 const { store } = useCreatureMood();
 
 const BASE = [
-  { key: "nourrir", label: "Manger", need: "hunger" },
-  { key: "laver", label: "Laver", need: "cleanliness" },
-  { key: "jouer", label: "Jouer", need: "fun" },
-  { key: "calin", label: "Câlin" },
-  { key: "coucher", label: "Dodo", need: "energy" },
-  { key: "soigner", label: "Soigner", need: "health" },
-  { key: "danser", label: "Danser" },
-  { key: "photo", label: "Photo" },
+  { key: "nourrir", label: "Manger", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
+  { key: "laver", label: "Laver", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
+  { key: "jouer", label: "Jouer", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
+  { key: "calin", label: "Câlin", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
+  { key: "coucher", label: "Dodo", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
+  { key: "soigner", label: "Soigner", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
+  { key: "danser", label: "Danser", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
+  { key: "photo", label: "Photo", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
 ];
 
 // Pourquoi une action n'est pas possible : la créature le dit elle-même
@@ -46,7 +46,8 @@ const actions = computed(() =>
     return {
       ...a,
       label: wake ? "Réveil" : a.label,
-      art: wake ? "reveil" : a.key,
+      icon: wake ? "solar:sun-bold-duotone" : a.icon,
+      color: wake ? ["#ffe58a", "#f29400"] : a.color,
       reason: reasonFor(a.key),
     };
   })
@@ -109,20 +110,23 @@ function press(a) {
   transition: transform 0.08s, box-shadow 0.08s;
 }
 .tile:active { transform: scale(0.95); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
-/* illustration en relief */
+/* icône Solar bicolore : ton clair pour le fond de l'objet, ton soutenu pour le dessin */
 .ic {
-  width: auto;
-  height: 90%;
-  max-height: 66px;
-  aspect-ratio: 1;
+  width: 62%;
+  height: 62%;
+  max-width: 50px;
+  max-height: 50px;
+  color: var(--c2);
+  filter: drop-shadow(0 3px 3px rgba(40, 55, 80, 0.16));
 }
+.ic :deep([opacity]) { opacity: 1; color: var(--c1); }
 /* action conseillée : fond vert tendre et liseré vert */
 .best {
   border-color: #8fdc6a;
   background: linear-gradient(180deg, #f3fdec, #e2f7d4);
   box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), inset 0 1px 0 #fff;
 }
-.locked .ic { opacity: 0.55; }
+.locked .ic { opacity: 0.5; }
 .lock {
   position: absolute;
   top: 7px;

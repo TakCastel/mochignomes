@@ -26,7 +26,7 @@ export default defineNuxtConfig({
 
   // Icônes embarquées dans l'appli : aucun appel réseau pour les afficher
   icon: {
-    serverBundle: { collections: ["ph"] },
+    serverBundle: { collections: ["ph", "solar"] },
     clientBundle: {
       scan: true,
       icons: [
@@ -42,6 +42,7 @@ export default defineNuxtConfig({
         "ph:smiley-meh-fill", "ph:moon-fill", "ph:barbell-fill", "ph:cookie-fill", "ph:fire-fill",
         "ph:gift-fill", "ph:hand-waving-fill", "ph:chef-hat-fill", "ph:crown-fill", "ph:calendar-check-fill",
         "ph:egg-crack-fill",
+        "solar:donut-bitten-bold-duotone", "solar:bath-bold-duotone", "solar:football-bold-duotone", "solar:hand-heart-bold-duotone", "solar:bed-bold-duotone", "solar:medical-kit-bold-duotone", "solar:music-notes-bold-duotone", "solar:camera-bold-duotone", "solar:sun-bold-duotone", "solar:waterdrop-bold-duotone", "solar:bolt-bold-duotone", "solar:heart-bold-duotone", "solar:leaf-bold-duotone", "solar:bell-bing-bold-duotone", "solar:users-group-two-rounded-bold-duotone", "solar:settings-bold-duotone", "solar:home-2-bold-duotone", "solar:calendar-bold-duotone", "solar:stars-bold-duotone", "solar:gallery-bold-duotone", "solar:chart-2-bold-duotone", "solar:pen-bold", "solar:home-2-linear", "solar:calendar-bold", "solar:gallery-bold", "solar:chart-2-bold", "solar:stars-bold", "solar:bell-bold", "solar:users-group-two-rounded-bold", "solar:settings-bold", "solar:lock-keyhole-bold",
         "ph:bowl-food-duotone", "ph:bathtub-duotone", "ph:soccer-ball-duotone", "ph:hand-heart-duotone",
         "ph:bed-duotone", "ph:first-aid-kit-duotone", "ph:music-notes-duotone", "ph:camera-duotone",
         "ph:sun-duotone", "ph:drop-duotone", "ph:lightning-duotone", "ph:heart-duotone",
