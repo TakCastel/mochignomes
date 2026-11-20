@@ -36,7 +36,7 @@ const tiles = computed(() => [
   gap: 12px;
   padding: 12px 14px 14px;
   border-radius: 34px;
-  background: linear-gradient(180deg, #f8ebdc 0%, #f0d8bd 100%);
+  background: linear-gradient(180deg, #ffe6c6 0%, #f2c088 100%);
   box-shadow:
     0 10px 24px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,

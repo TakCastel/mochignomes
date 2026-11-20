@@ -58,7 +58,7 @@ const rings = computed(() =>
   grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   border-radius: 34px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(250, 242, 232, 0.8));
+  background: linear-gradient(180deg, #fff3e2, #f9d8ae);
   box-shadow:
     0 10px 24px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,

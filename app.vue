@@ -129,6 +129,16 @@ body {
   position: absolute;
   inset: 0;
 }
+/* lumière chaude fixe par-dessus la scène : halo doré en haut, bords plus profonds */
+.scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 40% at 75% 28%, rgba(255, 214, 120, 0.28), transparent 70%),
+    radial-gradient(130% 90% at 50% 45%, transparent 55%, rgba(120, 60, 20, 0.22) 100%);
+}
 
 .ui {
   position: relative;

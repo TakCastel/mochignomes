@@ -21,12 +21,12 @@ import { computed, ref } from "vue";
 const { store } = useCreatureMood();
 
 const BASE = [
-  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffad42", dark: "#d9710f" },
-  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#58a8ff", dark: "#2a66d6" },
-  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#77d548", dark: "#3c9420" },
-  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#a36cf0", dark: "#6534c2" },
-  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff6f9f", dark: "#d4386b" },
-  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#3fd2bf", dark: "#159488" },
+  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ff9a12", dark: "#d25a00" },
+  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#2f86ff", dark: "#1447c9" },
+  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#4fcc1f", dark: "#23860c" },
+  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#9450f5", dark: "#5317c2" },
+  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff4d8a", dark: "#c81858" },
+  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#14cdb8", dark: "#04887e" },
 ];
 
 // Pourquoi une action n'est pas possible : la créature le dit elle-même
@@ -76,7 +76,7 @@ function press(a) {
   gap: var(--gap, 12px) 14px;
   padding: 16px 16px 20px;
   border-radius: 36px;
-  background: linear-gradient(180deg, #fbf1e6 0%, #f6e3cf 100%);
+  background: linear-gradient(180deg, #ffeccf 0%, #f6c995 100%);
   box-shadow:
     0 10px 26px rgba(60, 40, 20, 0.22),
     inset 0 2px 0 #fff,
