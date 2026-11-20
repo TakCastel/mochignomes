@@ -1,14 +1,13 @@
 <template>
-  <div class="world" :class="[`phase-${shownPhase}`, { dead, 'ui-dark': UI_THEMES[store.ui]?.dark }]" :style="paletteStyle">
+  <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" @tap="openWheel" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
     <main class="ui">
-      <TopBar class="hit" />
-      <StatPanel class="hit" />
+      <HudTop class="hit" />
       <div ref="middle" class="middle">
         <button class="arrow prev hit" :class="{ hint: arrowHint }" aria-label="Tourner vers la gauche" @click="gameCommand('rotate', -1)">
           <Icon name="ph:caret-left-bold" class="chevron" />
@@ -17,9 +16,12 @@
           <Icon name="ph:caret-right-bold" class="chevron" />
         </button>
       </div>
-      <JellyPad class="hit" />
-      <BottomTiles class="hit" />
+      <NeedsCard class="hit" />
+      <NavBar class="hit" @actions="openWheel" />
     </main>
+
+    <!-- menu d'actions en cercle autour de la créature -->
+    <ActionWheel :open="wheelOpen" :center="wheelCenter" :radius="wheelRadius" @close="wheelOpen = false" />
 
     <GameToasts />
     <GameSheet />
@@ -31,12 +33,41 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
-import { PALETTES, DEFAULT_PALETTE, UI_THEMES, paletteVars } from "~/lib/palettes";
+import { PALETTES, DEFAULT_PALETTE, paletteVars } from "~/lib/palettes";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
 const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
-const paletteStyle = computed(() => paletteVars(store.palette, store.ui));
+// interface claire : panneaux blancs, un seul accent turquoise
+const paletteStyle = computed(() => ({
+  ...paletteVars(store.palette),
+  "--ink": "#23324a",
+  "--accent": "#13b0ac",
+  "--accent-hi": "#4fd8cf",
+  "--accent-lo": "#0b8481",
+  "--panel-top": "#ffffff",
+  "--panel-bottom": "#f4f7fb",
+  "--plate-hi": "#ffffff",
+  "--plate-lo": "#eef3f8",
+  "--plate-shade": "rgba(30, 50, 80, 0.18)",
+  "--knob-hi": "#ffffff",
+  "--knob-lo": "#eef3f8",
+  "--knob-side": "#cfd9e4",
+}));
+
+// Menu d'actions : s'ouvre au centre de la zone de la créature
+const wheelOpen = ref(false);
+const wheelCenter = ref({ x: 200, y: 400 });
+const wheelRadius = ref(118);
+function openWheel() {
+  const r = middle.value?.getBoundingClientRect();
+  if (r) {
+    wheelCenter.value = { x: r.left + r.width / 2, y: r.top + r.height * 0.55 };
+    wheelRadius.value = Math.min(124, r.width * 0.36, r.height * 0.42);
+  }
+  wheelOpen.value = true;
+  store.countGesture("menu");
+}
 const arrowHint = computed(() => !(store.counters.tourner > 0));
 
 // moment de la journée réel, mis à jour chaque minute
@@ -55,7 +86,7 @@ function measure() {
   const r = el.getBoundingClientRect();
   frame.value = {
     ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
-    size: Math.round(Math.min(r.height * 0.66, window.innerWidth * 0.5)),
+    size: Math.round(Math.min(r.height * 0.62, window.innerWidth * 0.48)),
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 52),
   };
@@ -168,19 +199,19 @@ body {
   top: 56%;
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  margin-top: -25px;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(180deg, var(--knob-hi), var(--knob-lo));
-  box-shadow: 0 4px 0 var(--knob-side), 0 8px 14px rgba(40, 20, 50, 0.28), inset 0 2px 0 #fff;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(25, 45, 80, 0.22);
   cursor: pointer;
 }
-.arrow:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side), inset 0 2px 0 #fff; }
+.arrow:active { transform: scale(0.94); }
 .prev { left: 0; }
 .next { right: 0; }
-.chevron { width: 24px; height: 24px; color: var(--ink); }
+.chevron { width: 22px; height: 22px; color: var(--accent); }
 /* pulsation en transform : animée par le navigateur sans redessiner la page */
 .arrow.hint { animation: nudge 1.6s ease-in-out infinite; }
 @keyframes nudge { 50% { transform: scale(1.12); } }

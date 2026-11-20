@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
-import { MOODS, MESSAGES, REACTIONS, POKE_MESSAGES, pick } from "~/lib/creatureLook";
+import { MOODS, MESSAGES, REACTIONS, pick } from "~/lib/creatureLook";
 import { STATS, SKY } from "~/lib/gameUi";
 
 const props = defineProps({
@@ -39,7 +39,7 @@ const props = defineProps({
   // couleurs du décor (herbe, arbres, collines) imposées par la palette
   theme: { type: Object, default: null },
 });
-const emit = defineEmits(["ground"]);
+const emit = defineEmits(["ground", "tap"]);
 const { store, mood, morph, sulking } = useCreatureMood();
 
 const stage = ref(null);
@@ -142,12 +142,11 @@ function listenToActions() {
   });
 }
 
+// Toucher la créature ouvre le menu d'actions autour d'elle
 function onPoke({ dead, asleep }) {
-  if (dead) return say("...");
-  if (asleep) return say("Mmh... laisse-moi dormir");
   navigator.vibrate?.(8);
-  store.applyAction("chatouiller");
-  say(pick(POKE_MESSAGES));
+  if (asleep && !dead) say("Mmh... laisse-moi dormir");
+  emit("tap");
 }
 
 onMounted(async () => {
@@ -167,8 +166,8 @@ onMounted(async () => {
     if (props.frame) creature.value.setFrame(props.frame);
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {
-      const firstTime = !(store.counters.chatouiller > 0);
-      say(firstTime ? "Touche-moi pour me chatouiller !" : pick(MESSAGES[mood.value]), firstTime ? 5000 : undefined);
+      const firstTime = !(store.counters.menu > 0);
+      say(firstTime ? "Touche-moi pour t'occuper de moi !" : pick(MESSAGES[mood.value]), firstTime ? 6000 : undefined);
     }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);
