@@ -22,6 +22,20 @@ const MAX_CATCH_UP = 7 * 24 * 3600; // au-delà d'une semaine, on arrête de com
 export const TRAITS = ["joueuse", "gourmande", "caline", "rancuniere", "coquette"];
 const TRAIT_FADE_PER_DAY = 0.04;
 
+// Expérience gagnée par action : elle fait monter le niveau
+const XP = { nourrir: 4, laver: 4, jouer: 6, danser: 3, calin: 2, chatouiller: 1, soigner: 3 };
+
+// Niveau atteint pour un total d'expérience, et progression vers le suivant
+export function levelInfo(xp) {
+  let level = 1, rest = xp, need = 40;
+  while (rest >= need) { rest -= need; level++; need = 40 + 15 * (level - 1); }
+  return { level, into: rest, need };
+}
+
+const freshState = () => ({
+  hunger: 75, cleanliness: 75, fun: 80, energy: 100, health: 100, isSleeping: false,
+});
+
 let decayTimer = null;
 let neglectedDuringDecay = false;
 
@@ -45,6 +59,27 @@ export const useTamagotchiStore = defineStore(
     const lastUpdate = ref(0); // horodatage (ms) du dernier calcul
     const traits = ref(Object.fromEntries(TRAITS.map((t) => [t, 0])));
     const neglectedAt = ref(0); // dernière fois qu'il a manqué de quelque chose
+    const xp = ref(0);
+    const bornAt = ref(0);
+    const counters = ref({}); // nombre de fois que chaque chose a été faite
+    const unlocked = ref([]); // succès débloqués
+    const count = (key, n = 1) => { counters.value[key] = (counters.value[key] || 0) + n; };
+
+    function rename(newName) {
+      const clean = String(newName || "").trim().slice(0, 16);
+      if (clean) name.value = clean;
+    }
+
+    // Nouvelle partie : nouvelle créature, tout repart de zéro
+    function resetGame() {
+      const f = freshState();
+      hunger.value = f.hunger; cleanliness.value = f.cleanliness; fun.value = f.fun;
+      energy.value = f.energy; health.value = f.health; isSleeping.value = f.isSleeping;
+      traits.value = Object.fromEntries(TRAITS.map((t) => [t, 0]));
+      neglectedAt.value = 0; xp.value = 0; counters.value = {}; unlocked.value = [];
+      bornAt.value = Date.now(); lastUpdate.value = Date.now();
+      name.value = generateRandomName();
+    }
 
     // rapproche un trait de 1 (nudge) ou de 0 (soothe), sans jamais dépasser
     function nudge(trait, amount) {
@@ -87,6 +122,12 @@ export const useTamagotchiStore = defineStore(
       const decrease = 2;
       const playCost = health.value > 100 ? 2 : 5;
 
+      // Danser comme jouer : il faut un minimum d'énergie
+      if (["jouer", "danser"].includes(action) && energy.value < 10) return;
+      if (health.value <= 0 && action === "soigner") count("revive");
+      count(action);
+      xp.value += XP[action] || 0;
+
       // Ce que l'on fait façonne son caractère
       switch (action) {
         case "nourrir":
@@ -103,6 +144,14 @@ export const useTamagotchiStore = defineStore(
           break;
         case "chatouiller":
           nudge("caline", 0.015);
+          soothe("rancuniere", 0.01);
+          break;
+        case "calin":
+          nudge("caline", 0.025);
+          soothe("rancuniere", 0.02);
+          break;
+        case "danser":
+          nudge("joueuse", 0.015);
           soothe("rancuniere", 0.01);
           break;
         case "soigner":
@@ -148,7 +197,20 @@ export const useTamagotchiStore = defineStore(
         case "chatouiller":
           fun.value = Math.min(fun.value + 2, 100);
           break;
+
+        case "calin":
+          fun.value = Math.min(fun.value + 4, 100);
+          break;
+
+        case "danser":
+          fun.value = Math.min(fun.value + 6, 100);
+          energy.value = Math.max(energy.value - 3, 0);
+          break;
       }
+    }
+
+    function countPhoto() {
+      count("photo");
     }
 
     // Fait vivre la créature pendant `seconds` secondes.
@@ -209,6 +271,7 @@ export const useTamagotchiStore = defineStore(
     }
 
     function startDecay() {
+      if (!bornAt.value) bornAt.value = Date.now();
       if (decayTimer) return;
       if (typeof window !== "undefined") {
         const s = Number(new URLSearchParams(window.location.search).get("vitesse"));
@@ -245,6 +308,13 @@ export const useTamagotchiStore = defineStore(
       traits,
       neglectedAt,
       isSulking,
+      xp,
+      bornAt,
+      counters,
+      unlocked,
+      rename,
+      resetGame,
+      countPhoto,
       applyAction,
       wakeUp,
       startSleeping,
@@ -254,7 +324,7 @@ export const useTamagotchiStore = defineStore(
   },
   {
     persist: {
-      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt"],
+      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked"],
     },
   }
 );

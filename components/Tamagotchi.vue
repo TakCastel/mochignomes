@@ -8,6 +8,8 @@
     >
     <div v-if="fallback && fallbackMessage" class="fallback-bubble">{{ fallbackMessage }}</div>
 
+    <div class="flash" :class="{ on: flash }" />
+
     <!-- gains et pertes qui s'envolent après une action -->
     <div class="deltas">
       <div
@@ -25,7 +27,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { MOODS, MESSAGES, REACTIONS, POKE_MESSAGES, pick } from "~/lib/creatureLook";
-import { STATS } from "~/lib/gameUi";
+import { STATS, SKY } from "~/lib/gameUi";
 
 const props = defineProps({
   phase: { type: String, default: "day" },
@@ -49,6 +51,24 @@ function say(text) {
 }
 watch(() => gameBus.speech, (s) => s && say(s.text));
 
+// Commandes venues des boutons de la console
+const { addPhoto } = useGallery();
+watch(() => gameBus.command, (cmd) => {
+  if (!cmd) return;
+  if (cmd.type === "rotate") creature.value?.rotateBy(cmd.value * Math.PI / 2);
+  if (cmd.type === "react") react(cmd.value);
+  if (cmd.type === "photo") {
+    if (!creature.value) return say("Pas de photo sans la 3D...");
+    const sky = SKY[props.phase] || SKY.day;
+    addPhoto(creature.value.snapshot({ top: sky.top, bottom: sky.bottom }));
+    store.countPhoto();
+    flash.value = true;
+    setTimeout(() => (flash.value = false), 350);
+    say(pick(["Cheese !", "Je suis photogénique ?", "Clic clac !"]));
+  }
+});
+const flash = ref(false);
+
 // Apparence finale = humeur de fond + réaction en cours + morphing des jauges
 const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
@@ -59,7 +79,7 @@ let chatter = null;
 
 let reactionTimer = null;
 function react(key) {
-  if (sulking.value && ["nourrir", "laver", "jouer", "soigner"].includes(key)) key = "bouderie";
+  if (sulking.value && ["nourrir", "laver", "jouer", "soigner", "danser", "calin"].includes(key)) key = "bouderie";
   const r = REACTIONS[key];
   if (!r) return;
   clearTimeout(reactionTimer);
@@ -174,6 +194,16 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   color: #3b2210;
 }
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+  z-index: 3;
+}
+.flash.on { opacity: 0.85; transition: none; }
 .deltas {
   position: absolute;
   inset: 0;

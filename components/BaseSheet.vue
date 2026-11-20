@@ -1,0 +1,104 @@
+<template>
+  <Transition name="sheet">
+    <div v-if="open" class="overlay" @click.self="close">
+      <section class="sheet" role="dialog" aria-modal="true" :aria-label="title">
+        <div class="grab" />
+        <header class="head">
+          <div class="title">
+            <Icon v-if="icon" :name="icon" class="title-icon" />
+            <div>
+              <h2>{{ title }}</h2>
+              <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
+            </div>
+          </div>
+          <button class="close" aria-label="Fermer" @click="close">✕</button>
+        </header>
+        <slot />
+      </section>
+    </div>
+  </Transition>
+</template>
+
+<script setup>
+import { onBeforeUnmount, onMounted } from "vue";
+
+defineProps({
+  open: { type: Boolean, default: false },
+  title: { type: String, required: true },
+  subtitle: { type: String, default: "" },
+  icon: { type: String, default: "" },
+});
+
+function close() {
+  gameBus.sheet = null;
+}
+const onKey = (e) => e.key === "Escape" && close();
+onMounted(() => window.addEventListener("keydown", onKey));
+onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
+</script>
+
+<style scoped>
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(40, 20, 60, 0.4);
+}
+.sheet {
+  width: 100%;
+  max-height: 88%;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #fffaf2, #f6ecdf);
+  color: #4a2410;
+  border-radius: 32px 32px 0 0;
+  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.35), inset 0 2px 0 #fff;
+}
+.grab {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #e2cfb6;
+  margin: 0 auto 14px;
+}
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.title-icon { width: 42px; height: 42px; flex: none; }
+h2 {
+  margin: 0;
+  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+}
+.subtitle { margin: 2px 0 0; font-weight: 700; color: #8a5a3a; font-size: 14px; }
+.close {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1e4d3;
+  color: #4a2410;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 3px 6px rgba(140, 110, 80, 0.35), -2px -2px 5px #fff;
+}
+.sheet-enter-active, .sheet-leave-active { transition: background 0.25s; }
+.sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }
+.sheet-enter-from, .sheet-leave-to { background: rgba(40, 20, 60, 0); }
+.sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
+</style>
