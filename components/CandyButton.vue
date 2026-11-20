@@ -28,7 +28,7 @@ defineEmits(["press"]);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 4px;
   padding: 0;
   border: 0;
   background: none;
@@ -44,7 +44,7 @@ defineEmits(["press"]);
   border-radius: 50%;
   background: radial-gradient(circle at 35% 25%, #ffffff, var(--knob-lo) 80%);
   /* épaisseur du plastique sous le bouton */
-  box-shadow: 0 6px 0 var(--knob-side), 0 8px 12px var(--plate-shade), -3px -3px 8px #fff, inset 0 1px 0 #fff;
+  box-shadow: 0 6px 0 var(--knob-side), 0 8px 12px var(--plate-shade), inset 0 1px 0 #fff;
   transition: box-shadow 0.08s, transform 0.08s;
 }
 /* bonbon brillant */
@@ -88,8 +88,8 @@ defineEmits(["press"]);
 .icon {
   position: relative;
   z-index: 1;
-  width: 50%;
-  height: 50%;
+  width: 62%;
+  height: 62%;
   color: #fff;
   filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.18)) drop-shadow(0 2px 1px color-mix(in srgb, var(--d) 75%, #000));
 }
@@ -98,7 +98,7 @@ defineEmits(["press"]);
   box-shadow: 0 1px 0 var(--knob-side), 0 2px 4px var(--plate-shade), inset 0 1px 0 #fff;
 }
 .candy-btn:active .candy { transform: scale(0.92); }
-.candy-btn:focus-visible .rim { outline: 3px solid #6f4fe0; outline-offset: 2px; }
+.candy-btn:focus-visible .rim { outline: 3px solid var(--accent); outline-offset: 2px; }
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
@@ -106,11 +106,11 @@ defineEmits(["press"]);
   color: var(--ink);
   text-shadow: 0 1px 0 #fff;
 }
-@media (max-height: 740px) {
+@media (max-height: 600px) {
   .label { display: none; }
   .candy-btn { gap: 0; }
 }
-.locked .candy { filter: grayscale(0.9) brightness(1.1) opacity(0.65); }
+.locked .candy { filter: saturate(0.45) brightness(1.05); opacity: 0.8; }
 .locked .label { opacity: 0.5; }
 .highlight .rim { animation: beckon 1s ease-in-out infinite; }
 @keyframes beckon { 50% { transform: translateY(-4px) scale(1.06); } }

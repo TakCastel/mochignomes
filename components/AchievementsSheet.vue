@@ -48,8 +48,8 @@ const done = computed(() => rows.value.filter((r) => r.done).length);
   gap: 12px;
   padding: 10px 12px;
   border-radius: 20px;
-  background: var(--plate-lo);
-  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--plate-lo), 0 6px 14px var(--plate-shade);
 }
 .list li.done {
   background: linear-gradient(180deg, #fff6d6, #ffe9a8);

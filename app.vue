@@ -84,7 +84,7 @@ body {
   place-items: center;
   overflow: hidden;
   /* tailles qui s'adaptent à la hauteur de l'écran */
-  --btn: clamp(42px, min(13.5vw, 6.8vh), 62px);
+  --btn: clamp(42px, min(14vw, 6.6vh), 62px);
   --big: clamp(48px, min(15vw, 7.6vh), 68px);
   --ring: clamp(40px, min(12.5vw, 6.2vh), 56px);
   --tile: clamp(32px, 4.8vh, 42px);
@@ -117,6 +117,8 @@ body {
   transition: opacity 1.2s;
 }
 .phase-night .night { opacity: 1; }
+/* la nuit, la coque s'assombrit aussi un peu */
+.phase-night :deep(.shell) { filter: brightness(0.86) saturate(1.05); }
 .phase-dusk .night { opacity: 0.35; }
 
 /* la console : coque en plastique crème brillant */
@@ -130,18 +132,14 @@ body {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: clamp(6px, 1.1vh, 12px);
-  padding: clamp(16px, 2.2vh, 22px) 18px clamp(30px, 4vh, 42px);
+  padding: clamp(16px, 2.2vh, 20px) 14px clamp(22px, 3.2vh, 30px);
   isolation: isolate;
 }
 .screen-slot {
   min-height: 0;
-  margin: 0 2px;
 }
-/* chaque rangée rentre un peu plus que la précédente, comme la coque */
-.console > :deep(.top) { margin: 0 6px; }
-.console > :deep(.panel) { margin: 0 4px; }
-.console > :deep(.deck) { margin: 0 8px; }
-.console > :deep(.tray) { margin: 0 30px; }
+/* même marge pour toutes les rangées ; la barre du bas rentre dans l'arrondi */
+.console > :deep(.tray) { margin: 0 18px; }
 @media (min-width: 600px) and (min-height: 760px) {
   .console { height: min(940px, calc(100% - 48px)); }
 }

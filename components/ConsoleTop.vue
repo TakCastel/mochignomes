@@ -8,15 +8,17 @@
       </span>
     </button>
 
-    <div class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`">
+    <button class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`" @click="explainLevel">
       <span class="badge">
         <Icon name="ph:star-fill" class="star" />
         <span class="num">{{ lvl.level }}</span>
       </span>
-      <span class="segments">
-        <span v-for="i in 8" :key="i" class="seg" :class="{ on: i <= filled }" />
+      <!-- progression vers le niveau suivant, avec le chiffre écrit dedans -->
+      <span class="progress">
+        <span class="progress-fill" :style="{ width: pct + '%' }" />
+        <span class="progress-text">{{ lvl.into }} / {{ lvl.need }}</span>
       </span>
-    </div>
+    </button>
 
     <div class="corner">
       <span v-if="store.speed > 1" class="speed">×{{ store.speed }}</span>
@@ -37,7 +39,11 @@ const moodLabel = computed(() => MOOD_LABELS[mood.value]?.[0] || "");
 const moodIcon = computed(() => MOOD_ICONS[mood.value] || "ph:smiley-fill");
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#3ccf6e");
 const lvl = computed(() => levelInfo(store.xp));
-const filled = computed(() => Math.floor((lvl.value.into / lvl.value.need) * 8));
+const pct = computed(() => Math.round((lvl.value.into / lvl.value.need) * 100));
+
+function explainLevel() {
+  gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "ph:star-fill");
+}
 
 onMounted(() => store.initName());
 </script>
@@ -45,7 +51,7 @@ onMounted(() => store.initName());
 <style scoped>
 .top {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 8px;
 }
@@ -98,15 +104,21 @@ onMounted(() => store.initName());
   white-space: nowrap;
 }
 .mood {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  opacity: 0.7;
+  opacity: 0.85;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .level {
+  justify-self: stretch;
+  min-width: 0;
+  height: 46px;
+  box-sizing: border-box;
+  border: 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -125,27 +137,36 @@ onMounted(() => store.initName());
   position: absolute;
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 12px;
-  color: #6b3a00;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 0 #b36b00;
   padding-top: 2px;
 }
-.segments {
-  display: flex;
-  gap: clamp(2px, 0.6vw, 3px);
-  padding: 3px;
+.progress {
+  position: relative;
+  flex: 1;
+  height: 20px;
   border-radius: 999px;
+  overflow: hidden;
   background: var(--plate-lo);
   box-shadow: inset 0 1px 3px var(--plate-shade);
 }
-.seg {
-  width: clamp(5px, 1.6vw, 8px);
-  height: 12px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--knob-side) 60%, #fff);
+.progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 20px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe680, #ffb800);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 6px rgba(255, 190, 20, 0.6);
+  transition: width 0.6s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
-.seg.on {
-  background: linear-gradient(180deg, #fff1a0, #ffb800);
-  box-shadow: 0 0 5px rgba(255, 190, 20, 0.7);
+.progress-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font: 800 11px/20px "Nunito", system-ui, sans-serif;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .corner {
@@ -165,17 +186,16 @@ onMounted(() => store.initName());
 .round {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 46px;
+  height: 46px;
   border: 0;
   border-radius: 50%;
   cursor: pointer;
 }
 .round:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side); }
-.gear { width: 24px; height: 24px; color: var(--shell-edge); }
+.gear { width: 24px; height: 24px; color: var(--accent); }
 /* écran étroit : le niveau se réduit à l'étoile, pour laisser la place au nom */
 @media (max-width: 380px) {
-  .segments { display: none; }
-  .level { padding: 4px; }
+  .progress-text { font-size: 10px; }
 }
 </style>

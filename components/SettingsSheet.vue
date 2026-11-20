@@ -70,8 +70,8 @@ function restart() {
   margin-top: 12px;
   padding: 14px;
   border-radius: 20px;
-  background: var(--plate-lo);
-  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--plate-lo), 0 6px 14px var(--plate-shade);
 }
 label, .block strong { font-weight: 800; font-size: 15px; }
 .block p { margin: 0; font-size: 14px; color: color-mix(in srgb, var(--ink) 78%, #fff); font-weight: 700; }
@@ -88,7 +88,7 @@ input {
   box-shadow: inset 2px 2px 5px var(--plate-shade);
   user-select: text;
 }
-input:focus { outline: 3px solid #a68cff; }
+input:focus { outline: 3px solid var(--accent-hi); }
 .btn {
   padding: 10px 16px;
   border: 0;
@@ -100,7 +100,7 @@ input:focus { outline: 3px solid #a68cff; }
   cursor: pointer;
 }
 .btn:disabled { opacity: 0.5; cursor: default; }
-.btn.primary { background: linear-gradient(180deg, #a68cff, #6f4fe0); color: #fff; box-shadow: 0 3px 0 #4b2fb0; }
+.btn.primary { background: linear-gradient(180deg, var(--accent-hi), var(--accent)); color: #fff; box-shadow: 0 3px 0 var(--accent-lo); }
 .btn.red { background: linear-gradient(180deg, #ff7a7a, #e04848); color: #fff; box-shadow: 0 3px 0 #a82727; }
 .ok { color: #2f9e44 !important; }
 .swatches {
@@ -127,5 +127,5 @@ input:focus { outline: 3px solid #a68cff; }
   border-radius: 50%;
   box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.15);
 }
-.swatch.on .chip { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #6f4fe0; }
+.swatch.on .chip { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent); }
 </style>

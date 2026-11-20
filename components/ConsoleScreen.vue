@@ -65,29 +65,29 @@ useSquircle([inner], (w, h) => Math.min(w, h) * 0.28, 0.85);
 }
 .arrow {
   position: absolute;
-  top: 50%;
+  top: 64%;
   z-index: 5;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  margin-top: -20px;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  opacity: 0.85;
   border: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 30%, #fffaf2, #ead9c2);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 4px 0 #b99b78, 0 6px 10px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, #ffffff 50%, var(--knob-lo));
+  box-shadow: 0 3px 0 var(--knob-side), 0 6px 10px rgba(0, 0, 0, 0.22), inset 0 1px 0 #fff;
   cursor: pointer;
-  opacity: 0.88;
 }
-.arrow:active { transform: translateY(3px); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 1px 0 #b99b78; }
+.arrow:active { transform: translateY(3px); box-shadow: 0 0 0 var(--knob-side); }
 .arrow span {
   width: 0;
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
 }
-.prev { left: 8px; }
-.next { right: 8px; }
-.prev span { border-right: 12px solid #9a5a1c; margin-right: 3px; }
-.next span { border-left: 12px solid #9a5a1c; margin-left: 3px; }
+.prev { left: 10px; }
+.next { right: 10px; }
+.prev span { border-right: 12px solid var(--accent); margin-right: 3px; }
+.next span { border-left: 12px solid var(--accent); margin-left: 3px; }
 </style>

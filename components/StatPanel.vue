@@ -3,7 +3,7 @@
     <li v-for="s in rings" :key="s.key" :style="s.vars">
       <button
         class="ring"
-        :class="{ low: s.low, bonus: s.bonus }"
+        :class="{ low: s.need === 'urgent', bonus: s.bonus }"
         :aria-label="`${s.label} : ${Math.round(s.value)} sur 100`"
         @click="gameBus.sheet = 'fiche'"
       >
@@ -41,10 +41,10 @@
         <span class="core">
           <Icon :name="s.icon" class="icon" />
         </span>
+        <!-- besoin qui monte (orange) ou urgent (rouge) -->
+        <span v-if="s.need" class="need" :class="s.need">!</span>
       </button>
-      <span class="bars" aria-hidden="true">
-        <span v-for="i in 5" :key="i" :class="{ on: i <= s.segments }" />
-      </span>
+      <span class="name">{{ s.short }}</span>
     </li>
   </ul>
 </template>
@@ -58,17 +58,16 @@ const CIRC = 2 * Math.PI * 24;
 const rings = computed(() =>
   STATS.map((s) => {
     const value = store[s.key];
-    const low = value < 25;
-    const c = low ? "#ff3b3b" : s.color;
+    // mêmes seuils que l'humeur : elle se plaint dès 50, c'est urgent sous 25
+    const need = value < 25 ? "urgent" : value < 50 ? "soon" : null;
     return {
       ...s,
       value,
-      low,
+      need,
       dash: Math.max(0.01, (Math.min(value, 100) / 100) * CIRC),
       bonus: value > 100,
       extraDash: (Math.min(value - 100, 100) / 100) * CIRC,
-      segments: Math.ceil(Math.min(value, 100) / 20),
-      vars: { "--c": c },
+      vars: { "--c": s.color },
     };
   })
 );
@@ -120,7 +119,7 @@ const rings = computed(() =>
 .stop-dark { stop-color: var(--c-dark); }
 /* partie vide : la même couleur en pastel, légèrement creusée */
 .groove {
-  stroke: color-mix(in srgb, var(--c) 26%, #fff4e8);
+  stroke: color-mix(in srgb, var(--c) 38%, #fff4e8);
   stroke-width: 10;
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
 }
@@ -146,7 +145,7 @@ const rings = computed(() =>
 /* disque blanc brillant au centre */
 .core {
   position: absolute;
-  inset: 25%;
+  inset: 22%;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -154,37 +153,40 @@ const rings = computed(() =>
   box-shadow: 0 2px 3px rgba(90, 60, 30, 0.35), inset 0 -2px 3px var(--plate-shade);
 }
 .icon {
-  width: 66%;
-  height: 66%;
+  width: 72%;
+  height: 72%;
   color: var(--c);
   filter: drop-shadow(0 1.5px 0 var(--c-dark));
 }
 .ring.low { animation: alarm 1.1s ease-in-out infinite; }
+.need {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  color: #fff;
+  font: 900 13px "Nunito", system-ui, sans-serif;
+  box-shadow: 0 0 0 2px #fff, 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.need.soon { background: #ff9f1c; }
+.need.urgent { background: #ff2d4b; }
+.name {
+  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1;
+  color: color-mix(in srgb, var(--c) 70%, #000);
+}
 @keyframes alarm {
   0%, 100% { transform: scale(1); box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 0 0 rgba(255, 59, 59, 0.6); }
   50% { transform: scale(1.08) rotate(-5deg); box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 0 9px rgba(255, 59, 59, 0); }
 }
 .ring.bonus { box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 16px 2px rgba(255, 210, 40, 0.9); }
 
-/* barre à crans, comme une pile */
-.bars {
-  display: flex;
-  gap: 2px;
-  padding: 2px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--ink) 80%, #000);
-  box-shadow: 0 1px 0 #fff, inset 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.bars span {
-  width: 7px;
-  height: 7px;
-  border-radius: 2.5px;
-  background: color-mix(in srgb, var(--ink) 55%, #000);
-}
-.bars span.on {
-  background: linear-gradient(180deg, var(--c-light), var(--c) 60%, var(--c-dark));
-  box-shadow: 0 0 4px color-mix(in srgb, var(--c) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
 @media (prefers-reduced-motion: reduce) {
   .ring.low { animation: none; }
 }

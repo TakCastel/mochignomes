@@ -64,10 +64,10 @@ let ro = null;
 const outline = computed(() => {
   const W = w.value, H = h.value;
   if (!W) return "";
-  const m = Math.min(16, W * 0.04);
-  const r = Math.min(48, W * 0.12);
-  const rb = Math.min(80, W * 0.2);
-  const bb = Math.min(34, H * 0.038);
+  const m = 0; // côtés droits : le contenu garde la même marge partout
+  const r = Math.min(56, W * 0.14);
+  const rb = Math.min(110, W * 0.28);
+  const bb = Math.min(14, H * 0.016); // léger arc en bas
   const f = (n) => Math.round(n * 10) / 10;
   return [
     `M ${f(m + r)} 0`,

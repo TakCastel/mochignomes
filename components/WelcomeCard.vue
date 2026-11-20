@@ -20,7 +20,7 @@
           </div>
           <p class="streak-text">
             <strong>{{ store.streak }} jour{{ store.streak > 1 ? "s" : "" }} d'affilée</strong>
-            <span v-if="store.streak < 7"> · reviens demain pour un plus gros bonus</span>
+            <span v-if="store.streak < 7"> · plus gros demain</span>
           </p>
         </div>
 
@@ -106,13 +106,15 @@ onMounted(() => {
   z-index: 40;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 24px;
+  grid-template-columns: minmax(0, 360px);
+  justify-content: center;
   background: rgba(30, 15, 60, 0.45);
 }
 .card {
   position: relative;
   width: 100%;
-  max-width: 360px;
+  max-width: 340px;
   padding: 54px 22px 22px;
   border-radius: 34px;
   text-align: center;
@@ -151,22 +153,22 @@ h2 {
   background: var(--plate-lo);
   box-shadow: inset 0 2px 5px var(--plate-shade), inset 0 -2px 2px #fff;
 }
-.days { display: flex; justify-content: center; gap: 6px; }
+.days { display: flex; justify-content: center; gap: 4px; }
 .day {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: min(34px, 9vw);
+  height: min(34px, 9vw);
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 2px 0 var(--knob-side);
+  box-shadow: 0 0 0 2px var(--knob-side);
 }
-.fire { width: 20px; height: 20px; color: color-mix(in srgb, var(--knob-side) 70%, #fff); }
+.fire { width: 20px; height: 20px; color: #c9c3d6; }
 .day.on { background: radial-gradient(circle at 38% 30%, #ffd27a, #ff7a1a); box-shadow: 0 2px 0 #c2470a; }
 .day.on .fire { color: #fff; }
 .day.today { animation: glow 1.4s ease-in-out infinite; }
 @keyframes glow { 50% { transform: scale(1.15); box-shadow: 0 2px 0 #c2470a, 0 0 14px rgba(255, 140, 30, 0.8); } }
-.streak-text { margin: 10px 0 0; font-size: 13px; font-weight: 700; }
+.streak-text { margin: 10px 0 0; font-size: 14px; font-weight: 700; }
 .cta {
   display: inline-flex;
   align-items: center;
@@ -177,13 +179,13 @@ h2 {
   padding: 14px 18px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #8f74ff, #6a4be6);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
   color: #fff;
   font: 700 18px "Fredoka", "Nunito", system-ui, sans-serif;
-  box-shadow: 0 5px 0 #4a2fb8, 0 10px 18px rgba(74, 47, 184, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 5px 0 var(--accent-lo), 0 10px 18px var(--plate-shade), inset 0 2px 0 rgba(255, 255, 255, 0.35);
   cursor: pointer;
 }
-.cta:active { transform: translateY(4px); box-shadow: 0 1px 0 #4a2fb8, inset 0 2px 0 rgba(255, 255, 255, 0.35); }
+.cta:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--accent-lo), inset 0 2px 0 rgba(255, 255, 255, 0.35); }
 .reward {
   display: inline-flex;
   align-items: center;

@@ -11,7 +11,7 @@
         @click="gameBus.sheet = t.key"
       >
         <Icon :name="t.icon" class="tab-icon" />
-        <span>{{ t.label }}</span>
+        <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.key === 'succes' && fresh" class="dot" />
       </button>
     </nav>
@@ -102,9 +102,9 @@ const meta = computed(() => {
   cursor: pointer;
 }
 .tab.active {
-  background: linear-gradient(180deg, #a68cff, #6f4fe0);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
   color: #fff;
-  box-shadow: 0 3px 0 #4b2fb0, inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 3px 0 var(--accent-lo), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .tab-icon { width: 17px; height: 17px; flex: none; }
 .dot {
@@ -117,7 +117,10 @@ const meta = computed(() => {
   background: #ff4d4d;
   box-shadow: 0 0 0 2px var(--plate-lo);
 }
-@media (max-width: 360px) {
-  .tab span:not(.dot) { display: none; }
+.tab { min-height: 44px; }
+@media (max-width: 380px) {
+  .tab { flex-direction: column; gap: 2px; padding: 6px 2px; }
+  .tab-label { font-size: 11px; }
+  .tab-icon { width: 20px; height: 20px; }
 }
 </style>

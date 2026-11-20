@@ -55,8 +55,8 @@ const cards = computed(() => [
   gap: 2px;
   padding: 12px 14px;
   border-radius: 20px;
-  background: var(--plate-lo);
-  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--plate-lo), 0 6px 14px var(--plate-shade);
 }
 .card.big {
   grid-column: 1 / -1;

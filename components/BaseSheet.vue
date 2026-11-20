@@ -52,7 +52,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   max-width: 480px;
   max-height: 88%;
   overflow-y: auto;
-  background: linear-gradient(180deg, #ffffff, var(--plate-lo));
+  background: linear-gradient(180deg, #ffffff 60%, var(--plate-hi));
   color: var(--ink);
   border-radius: 32px 32px 0 0;
   padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
@@ -85,8 +85,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #c3adff, #6f4fe0 70%);
-  box-shadow: 0 4px 0 #4b2fb0, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  background: radial-gradient(circle at 38% 30%, var(--accent-hi), var(--accent) 70%);
+  box-shadow: 0 4px 0 var(--accent-lo), inset 0 2px 0 rgba(255, 255, 255, 0.4);
 }
 .title-icon { width: 26px; height: 26px; color: #fff; }
 h2 {

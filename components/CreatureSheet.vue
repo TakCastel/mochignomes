@@ -29,7 +29,7 @@
       </ul>
     </details>
 
-    <p class="tip">Astuces : touche-la pour la chatouiller, glisse le doigt pour la faire tourner.</p>
+    <p class="tip">Astuces : touche-la pour la chatouiller, glisse le doigt pour la faire tourner. Un anneau doré autour d'une jauge veut dire qu'elle dépasse 100.</p>
   </div>
 </template>
 
@@ -63,11 +63,11 @@ const summary = computed(() => {
   font-size: 14px;
 }
 h3 {
-  margin: 18px 0 10px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: color-mix(in srgb, var(--ink) 58%, #fff);
+  margin: 20px 0 10px;
+  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
 }
 .bars {
   list-style: none;
@@ -76,8 +76,8 @@ h3 {
   display: grid;
   gap: 10px;
   border-radius: 20px;
-  background: var(--plate-lo);
-  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--plate-lo), 0 6px 14px var(--plate-shade);
 }
 .bars li {
   display: grid;

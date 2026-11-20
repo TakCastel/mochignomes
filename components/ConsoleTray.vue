@@ -22,7 +22,7 @@ const tiles = computed(() => [
     label: "Succès",
     icon: "ph:trophy-fill",
     color: "#ffb300",
-    badge: `${store.unlocked.length}/${ACHIEVEMENTS.length}`,
+    badge: store.unlocked.length ? `${store.unlocked.length}/${ACHIEVEMENTS.length}` : null,
     alert: store.unlocked.length > gameBus.seenUnlocked,
   },
   { key: "journal", label: "Journal", icon: "ph:calendar-fill", color: "#21b8d6", badge: null },
@@ -66,8 +66,8 @@ const tiles = computed(() => [
 }
 .icon {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   color: var(--c);
   filter: drop-shadow(0 1.5px 0 color-mix(in srgb, var(--c) 55%, #000));
 }
@@ -94,6 +94,11 @@ const tiles = computed(() => [
 }
 .badge.alert { background: #ff3d5a; }
 @media (max-width: 360px) {
+  .label { font-size: 12px; }
+  .chip { gap: 4px; padding: 9px 4px; }
+}
+@media (max-width: 340px) {
   .label { display: none; }
+  .icon { width: 26px; height: 26px; }
 }
 </style>

@@ -116,7 +116,7 @@ function press(a) {
   border: 0;
   border-radius: 50%;
   background: linear-gradient(145deg, #ffffff, var(--knob-lo));
-  box-shadow: 0 6px 0 var(--knob-side), 0 8px 14px var(--plate-shade), -4px -4px 10px #fff, inset 0 1px 0 #fff;
+  box-shadow: 0 6px 0 var(--knob-side), 0 8px 14px var(--plate-shade), inset 0 1px 0 #fff;
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
@@ -164,7 +164,7 @@ function press(a) {
 @media (min-height: 820px) {
   .grill { display: flex; }
 }
-@media (max-height: 740px) {
+@media (max-height: 600px) {
   .label { display: none; }
 }
 .grill span {
