@@ -1,8 +1,8 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'journal'" title="Journal" :subtitle="ageText" icon="fluent-emoji-flat:spiral-calendar">
+  <BaseSheet :open="gameBus.sheet === 'journal'" title="Journal" :subtitle="ageText" icon="ph:calendar-fill">
     <div class="cards">
       <div class="card big">
-        <Icon name="fluent-emoji-flat:star" class="icon" />
+        <Icon name="ph:star-fill" class="icon" />
         <strong>Niveau {{ lvl.level }}</strong>
         <span>{{ lvl.into }} / {{ lvl.need }} points vers le niveau {{ lvl.level + 1 }}</span>
       </div>
@@ -32,13 +32,13 @@ const born = computed(() =>
 );
 const n = (k) => store.counters[k] || 0;
 const cards = computed(() => [
-  { label: "repas", value: n("nourrir"), icon: "fluent-emoji-flat:bread" },
-  { label: "bains", value: n("laver"), icon: "fluent-emoji-flat:bathtub" },
-  { label: "parties", value: n("jouer"), icon: "fluent-emoji-flat:soccer-ball" },
-  { label: "danses", value: n("danser"), icon: "fluent-emoji-flat:musical-notes" },
-  { label: "câlins", value: n("calin") + n("chatouiller"), icon: "fluent-emoji-flat:two-hearts" },
-  { label: "soins", value: n("soigner"), icon: "fluent-emoji-flat:syringe" },
-  { label: "photos", value: n("photo"), icon: "fluent-emoji-flat:camera-with-flash" },
+  { label: "repas", value: n("nourrir"), icon: "ph:bowl-food-fill" },
+  { label: "bains", value: n("laver"), icon: "ph:bathtub-fill" },
+  { label: "parties", value: n("jouer"), icon: "ph:soccer-ball-fill" },
+  { label: "danses", value: n("danser"), icon: "ph:music-notes-fill" },
+  { label: "câlins", value: n("calin") + n("chatouiller"), icon: "ph:hand-heart-fill" },
+  { label: "soins", value: n("soigner"), icon: "ph:syringe-fill" },
+  { label: "photos", value: n("photo"), icon: "ph:camera-fill" },
 ]);
 </script>
 
@@ -63,7 +63,8 @@ const cards = computed(() => [
   background: linear-gradient(180deg, #fff6d6, #ffe9a8);
   box-shadow: 3px 4px 8px rgba(160, 120, 40, 0.3), -2px -2px 6px #fff;
 }
-.icon { width: 30px; height: 30px; }
+.icon { width: 28px; height: 28px; color: #d9822b; }
+.card.big .icon { color: #ffb300; }
 .card strong { font-family: "Fredoka", "Nunito", system-ui, sans-serif; font-size: 24px; line-height: 1.1; }
 .card span { font-size: 13px; font-weight: 700; color: #8a5a3a; }
 .born { margin: 16px 0 0; font-weight: 700; color: #a2775a; font-size: 14px; }

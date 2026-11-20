@@ -1,5 +1,6 @@
 <template>
   <div class="bezel">
+    <span v-for="c in ['tl', 'tr', 'bl', 'br']" :key="c" class="screw" :class="c" />
     <span class="light left" />
     <span class="light right" />
     <div class="screen">
@@ -49,6 +50,34 @@ defineProps({
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 28%);
   box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.25);
 }
+/* petites vis cruciformes dans les coins */
+.screw {
+  position: absolute;
+  z-index: 6;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffdf8, #cbb79c 75%);
+  box-shadow: inset 0 -1px 1px rgba(90, 60, 30, 0.4), 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+.screw::before,
+.screw::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 1.6px;
+  margin: -0.8px 0 0 -3.5px;
+  background: #9b8466;
+  border-radius: 1px;
+  transform: rotate(35deg);
+}
+.screw::after { transform: rotate(125deg); }
+.tl { top: -8px; left: -8px; }
+.tr { top: -8px; right: -8px; }
+.bl { bottom: -8px; left: -8px; }
+.br { bottom: -8px; right: -8px; }
 .light {
   position: absolute;
   top: 18%;

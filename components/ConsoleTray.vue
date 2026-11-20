@@ -18,9 +18,9 @@ const { store } = useCreatureMood();
 const { photos } = useGallery();
 
 const tiles = computed(() => [
-  { key: "galerie", label: "Galerie", icon: "fluent-emoji-flat:framed-picture", badge: photos.value.length || null },
-  { key: "succes", label: "Succès", icon: "fluent-emoji-flat:trophy", badge: `${store.unlocked.length}/${ACHIEVEMENTS.length}` },
-  { key: "journal", label: "Journal", icon: "fluent-emoji-flat:spiral-calendar", badge: null },
+  { key: "galerie", label: "Galerie", icon: "ph:images-fill", badge: photos.value.length || null },
+  { key: "succes", label: "Succès", icon: "ph:trophy-fill", badge: `${store.unlocked.length}/${ACHIEVEMENTS.length}` },
+  { key: "journal", label: "Journal", icon: "ph:calendar-fill", badge: null },
 ]);
 </script>
 
@@ -56,7 +56,7 @@ const tiles = computed(() => [
   transition: transform 0.08s;
 }
 .tile:active .well { transform: translateY(2px) scale(0.96); }
-.icon { width: 70%; height: 70%; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.3)); }
+.icon { width: 56%; height: 56%; color: #fff3e0; filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.25)) drop-shadow(0 2px 1px rgba(60, 30, 10, 0.5)); }
 .badge {
   position: absolute;
   top: -6px;

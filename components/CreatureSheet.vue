@@ -1,11 +1,11 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'fiche'" :title="store.name" :subtitle="summary" icon="fluent-emoji-flat:sparkles">
+  <BaseSheet :open="gameBus.sheet === 'fiche'" :title="store.name" :subtitle="summary" icon="ph:sparkle-fill">
     <p v-if="sulking" class="sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
 
     <h3>Jauges</h3>
     <ul class="bars">
       <li v-for="s in statRows" :key="s.key">
-        <Icon :name="s.icon" class="bar-icon" />
+        <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
         <span class="bar-label">{{ s.label }}</span>
         <div class="bar"><div class="bar-fill" :style="{ width: s.width + '%', background: s.color }" /></div>
         <span class="bar-value" :class="{ bonus: s.value > 100 }">{{ Math.round(s.value) }}</span>

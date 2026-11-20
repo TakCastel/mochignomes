@@ -22,7 +22,7 @@ export function gameCommand(type, value) {
 }
 
 let toastId = 0;
-export function gameToast(text, icon = "fluent-emoji-flat:sparkles") {
+export function gameToast(text, icon = "ph:sparkle-fill") {
   const id = ++toastId;
   gameBus.toasts.push({ id, text, icon });
   setTimeout(() => {

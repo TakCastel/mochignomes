@@ -7,7 +7,7 @@
 
     <div class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`">
       <span class="badge">
-        <Icon name="fluent-emoji-flat:star" class="star" />
+        <Icon name="ph:star-fill" class="star" />
         <span class="num">{{ lvl.level }}</span>
       </span>
       <span class="segments">
@@ -18,7 +18,7 @@
     <div class="corner">
       <span v-if="store.speed > 1" class="speed">×{{ store.speed }}</span>
       <button class="round" aria-label="Réglages" @click="gameBus.sheet = 'reglages'">
-        <Icon name="fluent-emoji-flat:gear" class="gear" />
+        <Icon name="ph:gear-six-fill" class="gear" />
       </button>
     </div>
   </div>
@@ -106,7 +106,7 @@ onMounted(() => store.initName());
   width: 34px;
   height: 34px;
 }
-.star { width: 34px; height: 34px; filter: drop-shadow(0 2px 0 rgba(150, 90, 0, 0.35)); }
+.star { width: 34px; height: 34px; color: #ffc21a; filter: drop-shadow(0 2px 0 #c98a00) drop-shadow(0 0 4px rgba(255, 200, 40, 0.6)); }
 .num {
   position: absolute;
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
@@ -160,5 +160,5 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .round:active { transform: scale(0.94); }
-.gear { width: 28px; height: 28px; }
+.gear { width: 26px; height: 26px; color: #fff; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.3)); }
 </style>

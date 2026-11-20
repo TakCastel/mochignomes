@@ -20,7 +20,7 @@ const level = computed(() => levelInfo(store.xp).level);
 
 watch(level, (lvl, old) => {
   if (old && lvl > old) {
-    gameToast(`Niveau ${lvl} !`, "fluent-emoji-flat:glowing-star");
+    gameToast(`Niveau ${lvl} !`, "ph:star-fill");
     gameCommand("react", "niveau");
   }
 });
@@ -63,7 +63,16 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
   font-size: 16px;
   box-shadow: 0 4px 0 #d9a400, 0 10px 24px rgba(60, 30, 0, 0.3);
 }
-.icon { width: 30px; height: 30px; }
+.icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  color: #fff;
+  background: radial-gradient(circle at 38% 30%, #ffe27a, #f0a500 70%);
+  box-shadow: 0 2px 0 #b07c00;
+}
 .toast-enter-active { transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.3s; }
 .toast-leave-active { transition: transform 0.3s, opacity 0.3s; }
 .toast-enter-from { transform: translateY(-20px) scale(0.6); opacity: 0; }

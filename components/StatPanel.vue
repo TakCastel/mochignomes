@@ -101,7 +101,7 @@ const rings = computed(() =>
   background: radial-gradient(circle at 40% 30%, #fff, #f3eadf);
   box-shadow: inset -1px -2px 4px rgba(140, 110, 80, 0.3);
 }
-.icon { width: 64%; height: 64%; }
+.icon { width: 60%; height: 60%; color: var(--c); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9)); }
 .ring.low { animation: alarm 1.2s ease-in-out infinite; }
 .ring.low .fill { stroke: #ff4d4d; }
 @keyframes alarm {

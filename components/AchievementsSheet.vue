@@ -3,7 +3,7 @@
     :open="gameBus.sheet === 'succes'"
     title="Succès"
     :subtitle="`${done} sur ${ACHIEVEMENTS.length} débloqués`"
-    icon="fluent-emoji-flat:trophy"
+    icon="ph:trophy-fill"
   >
     <ul class="list">
       <li v-for="a in rows" :key="a.id" :class="{ done: a.done }">
@@ -70,8 +70,8 @@ const done = computed(() => rows.value.filter((r) => r.done).length);
   box-shadow: inset 2px 2px 4px rgba(120, 90, 60, 0.35);
 }
 .done .medal { background: radial-gradient(circle at 40% 30%, #fff7c9, #ffc93c); box-shadow: 0 3px 0 #d39a00; }
-.icon { width: 32px; height: 32px; }
-li:not(.done) .icon { filter: grayscale(1) opacity(0.5); }
+.icon { width: 28px; height: 28px; color: #b9a58e; }
+.done .icon { color: #fff; filter: drop-shadow(0 2px 0 #b07c00); }
 .text { display: grid; gap: 2px; min-width: 0; }
 .text strong { font-size: 15px; }
 .text span { font-size: 13px; color: #8a5a3a; font-weight: 700; }

@@ -1,5 +1,5 @@
 <template>
-  <BaseSheet :open="gameBus.sheet === 'reglages'" title="Réglages" icon="fluent-emoji-flat:gear">
+  <BaseSheet :open="gameBus.sheet === 'reglages'" title="Réglages" icon="ph:gear-six-fill">
     <form class="block" @submit.prevent="save">
       <label for="pet-name">Son nom</label>
       <div class="row">
@@ -41,7 +41,7 @@ function restart() {
   store.resetGame();
   confirming.value = false;
   gameBus.sheet = null;
-  gameToast(`Bienvenue à ${store.name} !`, "fluent-emoji-flat:hatching-chick");
+  gameToast(`Bienvenue à ${store.name} !`, "ph:egg-crack-fill");
 }
 </script>
 

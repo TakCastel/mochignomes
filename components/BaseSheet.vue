@@ -5,7 +5,7 @@
         <div class="grab" />
         <header class="head">
           <div class="title">
-            <Icon v-if="icon" :name="icon" class="title-icon" />
+            <span v-if="icon" class="title-badge"><Icon :name="icon" class="title-icon" /></span>
             <div>
               <h2>{{ title }}</h2>
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
@@ -76,7 +76,17 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   gap: 12px;
   min-width: 0;
 }
-.title-icon { width: 42px; height: 42px; flex: none; }
+.title-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 30%, #c3adff, #6f4fe0 70%);
+  box-shadow: 0 4px 0 #4b2fb0, inset 0 2px 0 rgba(255, 255, 255, 0.4);
+}
+.title-icon { width: 26px; height: 26px; color: #fff; }
 h2 {
   margin: 0;
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;

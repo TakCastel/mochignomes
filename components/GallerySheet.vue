@@ -3,10 +3,10 @@
     :open="gameBus.sheet === 'galerie'"
     title="Galerie"
     :subtitle="photos.length ? `${photos.length} photo${photos.length > 1 ? 's' : ''} sur ${max}` : 'Aucune photo pour l\'instant'"
-    icon="fluent-emoji-flat:framed-picture"
+    icon="ph:images-fill"
   >
     <div v-if="!photos.length" class="empty">
-      <Icon name="fluent-emoji-flat:camera-with-flash" class="empty-icon" />
+      <Icon name="ph:camera-fill" class="empty-icon" />
       <p>Appuie sur le bouton <strong>Photo</strong> pour immortaliser {{ store.name }}. Les photos restent dans ce navigateur.</p>
     </div>
 
@@ -73,7 +73,7 @@ function remove(p) {
   color: #7a5236;
   font-weight: 700;
 }
-.empty-icon { width: 64px; height: 64px; }
+.empty-icon { width: 60px; height: 60px; color: #ff8a3d; }
 .grid {
   list-style: none;
   margin: 8px 0 0;

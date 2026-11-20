@@ -7,7 +7,7 @@
     <div class="center">
       <button class="big" aria-label="Fiche de la créature" @click="gameBus.sheet = 'fiche'">
         <span class="big-face">
-          <Icon name="fluent-emoji-flat:sparkles" class="big-icon" />
+          <Icon name="ph:sparkle-fill" class="big-icon" />
         </span>
       </button>
       <span class="label">Fiche</span>
@@ -28,14 +28,14 @@ import { computed, ref } from "vue";
 const { store } = useCreatureMood();
 
 const BASE = [
-  { key: "nourrir", label: "Manger", icon: "fluent-emoji-flat:bread", color: "#ffb02e", dark: "#c46a00" },
-  { key: "laver", label: "Laver", icon: "fluent-emoji-flat:bathtub", color: "#3d9bff", dark: "#1258c4" },
-  { key: "calin", label: "Câlin", icon: "fluent-emoji-flat:two-hearts", color: "#ff5c8a", dark: "#c2185b" },
-  { key: "coucher", label: "Dodo", icon: "fluent-emoji-flat:crescent-moon", color: "#5b5fd6", dark: "#2e2f94" },
-  { key: "jouer", label: "Jouer", icon: "fluent-emoji-flat:soccer-ball", color: "#3ccf5a", dark: "#16862f" },
-  { key: "danser", label: "Danser", icon: "fluent-emoji-flat:musical-notes", color: "#b16cff", dark: "#6a2fc4" },
-  { key: "soigner", label: "Soigner", icon: "fluent-emoji-flat:syringe", color: "#2ec5d8", dark: "#0b7f92" },
-  { key: "photo", label: "Photo", icon: "fluent-emoji-flat:camera-with-flash", color: "#ff8a3d", dark: "#c24f0a" },
+  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffb02e", dark: "#c46a00" },
+  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#3d9bff", dark: "#1258c4" },
+  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff5c8a", dark: "#c2185b" },
+  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#5b5fd6", dark: "#2e2f94" },
+  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#3ccf5a", dark: "#16862f" },
+  { key: "danser", label: "Danser", icon: "ph:music-notes-fill", color: "#b16cff", dark: "#6a2fc4" },
+  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#2ec5d8", dark: "#0b7f92" },
+  { key: "photo", label: "Photo", icon: "ph:camera-fill", color: "#ff8a3d", dark: "#c24f0a" },
 ];
 
 // Pourquoi une action n'est pas possible : la créature le dit elle-même
@@ -54,7 +54,7 @@ const actions = computed(() =>
     return {
       ...a,
       label: wake ? "Réveil" : a.label,
-      icon: wake ? "fluent-emoji-flat:sun-with-face" : a.icon,
+      icon: wake ? "ph:sun-fill" : a.icon,
       color: wake ? "#ffc93c" : a.color,
       dark: wake ? "#c98a00" : a.dark,
       reason: reasonFor(a.key),
@@ -82,11 +82,16 @@ function press(a) {
 </script>
 
 <style scoped>
+/* plaque biseautée encastrée dans la coque */
 .deck {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 6px;
+  padding: 10px 6px 12px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, #f1e6d7, #f8f0e5);
+  box-shadow: inset 0 3px 5px rgba(140, 110, 80, 0.35), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 rgba(140, 110, 80, 0.25);
 }
 .side {
   display: grid;
@@ -107,9 +112,11 @@ function press(a) {
   border: 0;
   border-radius: 50%;
   background: linear-gradient(145deg, #fffaf3, #eadfcf);
-  box-shadow: 4px 6px 12px rgba(140, 110, 80, 0.45), -4px -4px 10px #fff, inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 6px 0 #d6c3a9, 0 8px 14px rgba(120, 90, 60, 0.45), -4px -4px 10px #fff, inset 0 1px 0 #fff;
   cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
 }
+.big:active { transform: translateY(5px); box-shadow: 0 1px 0 #d6c3a9, 0 2px 4px rgba(120, 90, 60, 0.4), inset 0 1px 0 #fff; }
 .big-face {
   display: grid;
   place-items: center;
@@ -121,7 +128,7 @@ function press(a) {
   transition: transform 0.08s;
 }
 .big:active .big-face { transform: scale(0.92); }
-.big-icon { width: 58%; height: 58%; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2)); }
+.big-icon { width: 50%; height: 50%; color: #fff; filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.2)) drop-shadow(0 2px 1px #7a3d08); }
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 600;

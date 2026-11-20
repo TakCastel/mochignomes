@@ -225,8 +225,9 @@ onBeforeUnmount(() => {
   animation: rise 1.3s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
 }
 .delta-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
+  color: var(--c);
 }
 @keyframes rise {
   0% { transform: translate(-50%, 10px) scale(0.6); opacity: 0; }
