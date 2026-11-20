@@ -1,58 +1,144 @@
 <template>
-  <div class="flex flex-col items-center space-y-4">
-    <TamagotchiSpeech :emotion="currentEmotion" />
-
+  <div ref="stage" class="stage relative w-full max-w-md">
     <img
-      :src="images[currentEmotion]"
-      alt="Tamagoshi"
-      class="w-48 h-48 object-contain mx-auto transition-transform duration-300"
-    />
+      v-if="fallback"
+      :src="`/images/${MOODS[mood].image}.png`"
+      alt="Tamagotchi"
+      class="absolute inset-0 m-auto w-48 h-48 object-contain"
+    >
+    <div v-if="fallback && fallbackMessage" class="fallback-bubble">{{ fallbackMessage }}</div>
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useTamagotchiStore } from "@/stores/useTamagotchiStore";
+import {
+  MOODS, MESSAGES, REACTIONS, POKE_MESSAGES, moodFromStats, morphFromStats, pick,
+} from "~/lib/creatureLook";
 
 const store = useTamagotchiStore();
-const { hunger, cleanliness, fun, energy, health, isSleeping } =
-  storeToRefs(store);
+const { hunger, cleanliness, fun, energy, health, isSleeping } = storeToRefs(store);
 
-const images = {
-  heureuse: "/images/heureuse.png",
-  musclée: "/images/musclee.png",
-  triste: "/images/triste.png",
-  fatiguée: "/images/fatiguee.png",
-  malade: "/images/malade.png",
-  grognon: "/images/grognon.png",
-  cracra: "/images/cracra.png",
-  bienMangee: "/images/bienmangee.png",
-  endormie: "/images/endormie.png",
-  morte: "/images/morte.png",
-};
+const stats = computed(() => ({
+  hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
+  energy: energy.value, health: health.value, isSleeping: isSleeping.value,
+}));
+const mood = computed(() => moodFromStats(stats.value));
+const morph = computed(() => morphFromStats(stats.value));
 
-const currentEmotion = computed(() => {
-  if (health.value <= 0) return "morte";
-  if (isSleeping.value) return "endormie";
-  if (health.value < 30) return "malade";
-  if (energy.value < 30) return "fatiguée";
+const stage = ref(null);
+const creature = shallowRef(null);
+const fallback = ref(false);
+const fallbackMessage = ref("");
+const reaction = ref(null); // { look, until }
 
-  const lowStats = {
-    hunger: hunger.value < 50,
-    cleanliness: cleanliness.value < 50,
-    fun: fun.value < 50,
-  };
+function say(text) {
+  if (creature.value) creature.value.say(text);
+  else {
+    fallbackMessage.value = text;
+    setTimeout(() => { if (fallbackMessage.value === text) fallbackMessage.value = ""; }, 3000);
+  }
+}
 
-  const lowCount = Object.values(lowStats).filter(Boolean).length;
+// Apparence finale = humeur de fond + réaction en cours + morphing des jauges
+const look = computed(() => {
+  const base = MOODS[mood.value];
+  const r = reaction.value;
+  return { ...base, ...(r ? r.look : {}), morph: morph.value };
+});
+watch(look, (l) => creature.value?.setLook(l), { deep: true });
 
-  if (lowCount >= 2) return "triste";
-  if (lowCount === 1 && lowStats.cleanliness) return "cracra";
-  if (lowCount === 1) return "grognon";
+// Une phrase quand l'humeur change, puis de temps en temps
+watch(mood, (m, old) => { if (old && !reaction.value) say(pick(MESSAGES[m])); });
+let chatter = null;
 
-  if (hunger.value > 100) return "bienMangee"; // Cas spécial : a trop mangé !
-  if (health.value > 100) return "musclée";
+let reactionTimer = null;
+function react(key) {
+  const r = REACTIONS[key];
+  if (!r) return;
+  clearTimeout(reactionTimer);
+  if (r.duration > 0) {
+    reaction.value = { look: r.look };
+    reactionTimer = setTimeout(() => (reaction.value = null), r.duration);
+  }
+  if (r.hop) creature.value?.hop(r.hop);
+  else creature.value?.blop();
+  say(pick(r.say));
+}
 
-  return "heureuse";
+// Les boutons d'action passent par le store : on écoute ses actions
+let stopListening = null;
+function listenToActions() {
+  stopListening = store.$onAction(({ name, args, after }) => {
+    const wasDead = store.health <= 0;
+    const wasSleeping = store.isSleeping;
+    after(() => {
+      if (name === "applyAction") {
+        const action = args[0];
+        if (action === "chatouiller") return;
+        if (action === "soigner" && wasDead) react("revivre");
+        else if (action === "coucher") react(wasSleeping ? "reveil" : "coucher");
+        else react(action);
+      }
+      if (name === "startSleeping") react("coucher");
+      if (name === "wakeUp" && wasSleeping) react("reveil");
+    });
+  });
+}
+
+function onPoke({ dead, asleep }) {
+  if (dead) return say("...");
+  if (asleep) return say("Mmh... laisse-moi dormir");
+  store.applyAction("chatouiller");
+  say(pick(POKE_MESSAGES));
+}
+
+onMounted(async () => {
+  listenToActions();
+  chatter = setInterval(() => { if (!reaction.value) say(pick(MESSAGES[mood.value])); }, 12000);
+  try {
+    const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
+    if (!webglAvailable()) throw new Error("WebGL indisponible");
+    creature.value = createCreature(stage.value, { onPoke });
+    creature.value.setLook(look.value);
+    say(pick(MESSAGES[mood.value]));
+  } catch (e) {
+    console.warn("Affichage 3D impossible, retour aux images :", e);
+    fallback.value = true;
+  }
+});
+
+onBeforeUnmount(() => {
+  clearInterval(chatter);
+  clearTimeout(reactionTimer);
+  stopListening?.();
+  creature.value?.dispose();
 });
 </script>
+
+<style scoped>
+.stage {
+  height: 330px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (min-height: 820px) {
+  .stage { height: 390px; }
+}
+.fallback-bubble {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 3px solid #5a2e14;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 800;
+  font-style: italic;
+  white-space: nowrap;
+  color: #3b2210;
+}
+</style>

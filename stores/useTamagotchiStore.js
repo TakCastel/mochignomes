@@ -2,6 +2,23 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
+// Vitesse de vie, en points par heure réelle.
+// La créature vit même quand l'appli est fermée : à l'ouverture,
+// on rattrape le temps écoulé depuis la dernière visite.
+const RATES = {
+  hunger: 6, // 75 → 0 en un peu plus de 12 h
+  cleanliness: 4,
+  fun: 5,
+  energyAwake: 5,
+  energySleeping: 20, // une bonne nuit recharge l'énergie en quelques heures
+  healthStarving: 5, // perte de santé quand la faim est à 0
+};
+const SLEEP_FACTOR = 0.5; // pendant le sommeil, tout s'use moitié moins vite
+const CATCH_UP_STEP = 60; // secondes simulées par pas de rattrapage
+const MAX_CATCH_UP = 7 * 24 * 3600; // au-delà d'une semaine, on arrête de compter
+
+let decayTimer = null;
+
 export const useTamagotchiStore = defineStore(
   "tamagotchi",
   () => {
@@ -18,11 +35,11 @@ export const useTamagotchiStore = defineStore(
     const fun = ref(80);
     const energy = ref(100);
     const health = ref(100);
-
-    const DECAY_INTERVAL = 1000;
-    const DECAY_AMOUNT = 1;
-
     const isSleeping = ref(false);
+    const lastUpdate = ref(0); // horodatage (ms) du dernier calcul
+
+    // Accélérateur pour tester : ?vitesse=60 fait passer une heure par minute
+    const speed = ref(1);
 
     function generateRandomName() {
       const prefixes = ["Mo", "Chi", "Ba", "Lu", "Ki", "Zo", "Po", "Ni"];
@@ -79,39 +96,69 @@ export const useTamagotchiStore = defineStore(
             health.value = Math.min(health.value + increase, 200);
           }
           break;
+
+        case "chatouiller":
+          fun.value = Math.min(fun.value + 2, 100);
+          break;
       }
     }
 
-    function decay() {
-      const decayRate = health.value > 100 ? DECAY_AMOUNT / 2 : DECAY_AMOUNT;
-      const recoveryRate = health.value > 100 ? 2 : 1;
+    // Fait vivre la créature pendant `seconds` secondes.
+    function decay(seconds) {
+      if (health.value <= 0) return;
+      const hours = seconds / 3600;
+      const boosted = health.value > 100; // en pleine forme, tout s'use moins vite
+      const wear = hours * (boosted ? 0.5 : 1) * (isSleeping.value ? SLEEP_FACTOR : 1);
 
-      hunger.value = Math.max(hunger.value - decayRate, 0);
-      cleanliness.value = Math.max(cleanliness.value - decayRate, 0);
-      fun.value = Math.max(fun.value - decayRate, 0);
+      hunger.value = Math.max(hunger.value - RATES.hunger * wear, 0);
+      cleanliness.value = Math.max(cleanliness.value - RATES.cleanliness * wear, 0);
+      fun.value = Math.max(fun.value - RATES.fun * wear, 0);
 
       if (isSleeping.value) {
-        // Pendant le sommeil, l'énergie remonte
-        energy.value = Math.min(energy.value + recoveryRate, 100);
-
-        if (energy.value >= 100) {
-          isSleeping.value = false; // Réveil automatique
-        }
+        energy.value = Math.min(energy.value + RATES.energySleeping * hours * (boosted ? 2 : 1), 100);
+        if (energy.value >= 100) isSleeping.value = false; // Réveil automatique
       } else {
-        energy.value = Math.max(energy.value - decayRate, 0);
-
-        if (energy.value === 0) {
-          isSleeping.value = true; // Sommeil forcé
-        }
+        energy.value = Math.max(energy.value - RATES.energyAwake * wear, 0);
+        if (energy.value === 0) isSleeping.value = true; // Sommeil forcé
       }
 
       if (hunger.value === 0) {
-        health.value = Math.max(health.value - decayRate, 0);
+        health.value = Math.max(health.value - RATES.healthStarving * hours, 0);
       }
     }
 
+    // Rattrape le temps passé depuis la dernière visite, puis continue en direct.
+    function catchUp() {
+      const now = Date.now();
+      if (!lastUpdate.value || lastUpdate.value > now) {
+        lastUpdate.value = now;
+        return 0;
+      }
+      let elapsed = Math.min(((now - lastUpdate.value) / 1000) * speed.value, MAX_CATCH_UP);
+      const total = elapsed;
+      while (elapsed > 0) {
+        const step = Math.min(CATCH_UP_STEP, elapsed);
+        decay(step);
+        elapsed -= step;
+      }
+      lastUpdate.value = now;
+      return total;
+    }
+
     function startDecay() {
-      setInterval(decay, DECAY_INTERVAL);
+      if (decayTimer) return;
+      if (typeof window !== "undefined") {
+        const s = Number(new URLSearchParams(window.location.search).get("vitesse"));
+        speed.value = s > 0 ? Math.min(s, 3600) : 1;
+      }
+      catchUp();
+      decayTimer = setInterval(catchUp, 1000);
+      if (typeof document !== "undefined") {
+        // au retour sur l'onglet, on rattrape tout de suite
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") catchUp();
+        });
+      }
     }
 
     function startSleeping() {
@@ -130,6 +177,8 @@ export const useTamagotchiStore = defineStore(
       fun,
       energy,
       health,
+      lastUpdate,
+      speed,
       applyAction,
       wakeUp,
       startSleeping,
@@ -138,6 +187,8 @@ export const useTamagotchiStore = defineStore(
     };
   },
   {
-    persist: true,
+    persist: {
+      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate"],
+    },
   }
 );

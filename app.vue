@@ -4,8 +4,12 @@
   >
     <NameGenerator />
 
+    <p v-if="store.speed > 1" class="text-sm text-[#5c2e10] opacity-70">
+      Temps accéléré : une heure passe en {{ Math.round(3600 / store.speed) }} s
+    </p>
+
     <!-- Tamagoshi -->
-    <Tamagotchi :emotion="emotion" />
+    <Tamagotchi />
 
     <!-- Jauges -->
     <div
@@ -34,10 +38,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { onMounted } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 
-const emotion = ref("heureuse");
 const store = useTamagotchiStore();
 
 onMounted(() => {

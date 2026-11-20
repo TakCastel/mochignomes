@@ -10,7 +10,7 @@
       <div
         class="h-5 rounded-full transition-all duration-300"
         :style="{
-          width: value + '%',
+          width: Math.min(value, 100) + '%',
           backgroundColor: colorMap[color] || colorMap.default,
         }"
       />
