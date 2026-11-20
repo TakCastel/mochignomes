@@ -173,4 +173,9 @@ onMounted(() => store.initName());
 }
 .round:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side); }
 .gear { width: 24px; height: 24px; color: var(--shell-edge); }
+/* écran étroit : le niveau se réduit à l'étoile, pour laisser la place au nom */
+@media (max-width: 380px) {
+  .segments { display: none; }
+  .level { padding: 4px; }
+}
 </style>

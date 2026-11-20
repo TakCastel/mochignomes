@@ -88,7 +88,7 @@ function press(a) {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 4px;
-  padding: 10px 6px 11px;
+  padding: 12px 14px 13px;
   border-radius: 44px;
   background: linear-gradient(180deg, var(--plate-lo), var(--plate-hi));
   box-shadow: inset 0 3px 5px var(--plate-shade), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 var(--plate-shade);

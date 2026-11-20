@@ -130,12 +130,18 @@ body {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: clamp(6px, 1.1vh, 12px);
-  padding: clamp(14px, 2vh, 20px) 18px clamp(26px, 3.6vh, 38px);
+  padding: clamp(16px, 2.2vh, 22px) 18px clamp(30px, 4vh, 42px);
   isolation: isolate;
 }
 .screen-slot {
   min-height: 0;
+  margin: 0 2px;
 }
+/* chaque rangée rentre un peu plus que la précédente, comme la coque */
+.console > :deep(.top) { margin: 0 6px; }
+.console > :deep(.panel) { margin: 0 4px; }
+.console > :deep(.deck) { margin: 0 8px; }
+.console > :deep(.tray) { margin: 0 30px; }
 @media (min-width: 600px) and (min-height: 760px) {
   .console { height: min(940px, calc(100% - 48px)); }
 }
