@@ -19,14 +19,16 @@ import {
 } from "~/lib/creatureLook";
 
 const store = useTamagotchiStore();
-const { hunger, cleanliness, fun, energy, health, isSleeping } = storeToRefs(store);
+const { hunger, cleanliness, fun, energy, health, isSleeping, traits, lastUpdate } = storeToRefs(store);
 
 const stats = computed(() => ({
   hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
   energy: energy.value, health: health.value, isSleeping: isSleeping.value,
 }));
-const mood = computed(() => moodFromStats(stats.value));
-const morph = computed(() => morphFromStats(stats.value));
+// lastUpdate avance chaque seconde : il sert d'horloge pour savoir s'il boude encore
+const sulking = computed(() => store.isSulking(lastUpdate.value || Date.now()));
+const mood = computed(() => moodFromStats(stats.value, traits.value, sulking.value));
+const morph = computed(() => morphFromStats(stats.value, traits.value));
 
 const stage = ref(null);
 const creature = shallowRef(null);
@@ -56,6 +58,8 @@ let chatter = null;
 
 let reactionTimer = null;
 function react(key) {
+  // une créature qui boude accueille les soins du bout des lèvres
+  if (sulking.value && ["nourrir", "laver", "jouer", "soigner"].includes(key)) key = "bouderie";
   const r = REACTIONS[key];
   if (!r) return;
   clearTimeout(reactionTimer);

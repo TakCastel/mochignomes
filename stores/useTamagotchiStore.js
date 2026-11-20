@@ -17,7 +17,13 @@ const SLEEP_FACTOR = 0.5; // pendant le sommeil, tout s'use moitié moins vite
 const CATCH_UP_STEP = 60; // secondes simulées par pas de rattrapage
 const MAX_CATCH_UP = 7 * 24 * 3600; // au-delà d'une semaine, on arrête de compter
 
+// Personnalité : chaque trait va de 0 à 1 et se forme selon les soins.
+// Les habitudes s'estompent doucement si on arrête (4 % par jour).
+export const TRAITS = ["joueuse", "gourmande", "caline", "rancuniere", "coquette"];
+const TRAIT_FADE_PER_DAY = 0.04;
+
 let decayTimer = null;
+let neglectedDuringDecay = false;
 
 export const useTamagotchiStore = defineStore(
   "tamagotchi",
@@ -37,6 +43,25 @@ export const useTamagotchiStore = defineStore(
     const health = ref(100);
     const isSleeping = ref(false);
     const lastUpdate = ref(0); // horodatage (ms) du dernier calcul
+    const traits = ref(Object.fromEntries(TRAITS.map((t) => [t, 0])));
+    const neglectedAt = ref(0); // dernière fois qu'il a manqué de quelque chose
+
+    // rapproche un trait de 1 (nudge) ou de 0 (soothe), sans jamais dépasser
+    function nudge(trait, amount) {
+      const v = traits.value[trait] || 0;
+      traits.value[trait] = Math.min(1, v + amount * (1 - v));
+    }
+    function soothe(trait, amount) {
+      traits.value[trait] = Math.max(0, (traits.value[trait] || 0) * (1 - amount));
+    }
+
+    // Boude-t-il ? Une créature rancunière boude un moment après avoir été négligée.
+    function isSulking(now = Date.now()) {
+      const r = traits.value.rancuniere || 0;
+      if (r < 0.3 || !neglectedAt.value) return false;
+      const duration = (r * 4 * 3600 * 1000) / speed.value; // jusqu'à 4 h
+      return now - neglectedAt.value < duration;
+    }
 
     // Accélérateur pour tester : ?vitesse=60 fait passer une heure par minute
     const speed = ref(1);
@@ -61,6 +86,29 @@ export const useTamagotchiStore = defineStore(
       const increase = 10;
       const decrease = 2;
       const playCost = health.value > 100 ? 2 : 5;
+
+      // Ce que l'on fait façonne son caractère
+      switch (action) {
+        case "nourrir":
+          nudge("gourmande", hunger.value > 85 ? 0.05 : 0.012); // trop nourrie → gourmande
+          soothe("rancuniere", 0.01);
+          break;
+        case "laver":
+          nudge("coquette", cleanliness.value > 70 ? 0.05 : 0.015); // lavée déjà propre → coquette
+          soothe("rancuniere", 0.01);
+          break;
+        case "jouer":
+          nudge("joueuse", 0.035);
+          soothe("rancuniere", 0.03);
+          break;
+        case "chatouiller":
+          nudge("caline", 0.015);
+          soothe("rancuniere", 0.01);
+          break;
+        case "soigner":
+          soothe("rancuniere", 0.01);
+          break;
+      }
 
       switch (action) {
         case "nourrir":
@@ -124,7 +172,18 @@ export const useTamagotchiStore = defineStore(
 
       if (hunger.value === 0) {
         health.value = Math.max(health.value - RATES.healthStarving * hours, 0);
+        if (health.value === 0) nudge("rancuniere", 0.25); // on l'a laissée mourir
       }
+
+      // Négligence : manquer de quelque chose la rend rancunière
+      if (hunger.value === 0 || fun.value === 0 || cleanliness.value === 0) {
+        nudge("rancuniere", 0.03 * hours);
+      }
+      if (hunger.value < 15 || fun.value < 15 || cleanliness.value < 15) neglectedDuringDecay = true;
+
+      // Les habitudes s'estompent
+      const fade = 1 - (TRAIT_FADE_PER_DAY * hours) / 24;
+      for (const t of TRAITS) traits.value[t] = (traits.value[t] || 0) * fade;
     }
 
     // Rattrape le temps passé depuis la dernière visite, puis continue en direct.
@@ -142,6 +201,10 @@ export const useTamagotchiStore = defineStore(
         elapsed -= step;
       }
       lastUpdate.value = now;
+      if (neglectedDuringDecay) {
+        neglectedAt.value = now;
+        neglectedDuringDecay = false;
+      }
       return total;
     }
 
@@ -179,6 +242,9 @@ export const useTamagotchiStore = defineStore(
       health,
       lastUpdate,
       speed,
+      traits,
+      neglectedAt,
+      isSulking,
       applyAction,
       wakeUp,
       startSleeping,
@@ -188,7 +254,7 @@ export const useTamagotchiStore = defineStore(
   },
   {
     persist: {
-      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate"],
+      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt"],
     },
   }
 );

@@ -13,7 +13,7 @@
 
     <!-- Jauges -->
     <div
-      class="w-full max-w-md bg-white/50 p-4 rounded-xl shadow-md space-y-4 mb-[110px]"
+      class="w-full max-w-md bg-white/50 p-4 rounded-xl shadow-md space-y-4 mb-4"
     >
       <Gauge label="Faim" color="orange" :value="store.hunger" />
       <div class="h-px bg-[#E5B87D]" />
@@ -28,6 +28,11 @@
       <div class="h-px bg-[#E5B87D]" />
 
       <Gauge label="Santé" color="red" :value="store.health" />
+    </div>
+
+    <!-- Caractère -->
+    <div class="w-full max-w-md mb-[110px]">
+      <PersonalityCard />
     </div>
 
     <!-- Actions -->
