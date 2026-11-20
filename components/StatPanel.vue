@@ -29,7 +29,7 @@ const EMOJI = {
   energy: "ph:lightning-fill",
   health: "ph:heart-fill",
 };
-import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+import { uiTheme } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
 const CIRC = 2 * Math.PI * 27;
@@ -38,7 +38,7 @@ const rings = computed(() =>
     const value = store[s.key];
     return {
       ...s,
-      color: (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).stats[s.key],
+      color: uiTheme(store.ui).stats[s.key],
       emoji: EMOJI[s.key],
       value,
       need: value < 25 ? "urgent" : value < 50 ? "soon" : null,

@@ -10,7 +10,7 @@
 <script setup>
 import { computed } from "vue";
 
-import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+import { uiTheme } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
 const { photos } = useGallery();
@@ -23,7 +23,7 @@ function dance() {
   store.applyAction("danser");
 }
 
-const tint = computed(() => (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).tiles);
+const tint = computed(() => uiTheme(store.ui).tiles);
 const tiles = computed(() => [
   { key: "journal", label: "Journal", icon: "ph:backpack-fill", color: tint.value[0], run: () => (gameBus.sheet = "journal") },
   { key: "danser", label: "Danser", icon: "ph:disco-ball-fill", color: tint.value[1], run: dance },

@@ -5,7 +5,7 @@
       :key="a.key"
       class="jelly"
       :class="{ locked: !!a.reason, highlight: a.highlight, wiggle: wiggling === a.key }"
-      :style="{ '--c': a.color, '--d': a.dark }"
+      :style="{ '--c': a.color, '--d': a.dark, '--i': a.ink }"
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : '')"
       @click="press(a)"
     >
@@ -18,7 +18,7 @@
 <script setup>
 import { computed, ref } from "vue";
 
-import { PALETTES, DEFAULT_PALETTE } from "~/lib/palettes";
+import { uiTheme } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
 
@@ -42,8 +42,8 @@ function reasonFor(key) {
 
 const actions = computed(() =>
   BASE.map((base) => {
-    const [color, dark] = (PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]).jelly[base.key];
-    const a = { ...base, color, dark };
+    const [color, dark, ink = "#fff"] = uiTheme(store.ui).jelly[base.key];
+    const a = { ...base, color, dark, ink };
     const wake = a.key === "coucher" && store.isSleeping;
     return {
       ...a,
@@ -130,7 +130,7 @@ function press(a) {
   height: 54%;
   max-width: 56px;
   max-height: 56px;
-  color: #fff;
+  color: var(--i, #fff);
   /* gravé : liseré sombre dessous, reflet clair dessus */
   filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.15)) drop-shadow(0 3px 0 color-mix(in srgb, var(--d) 80%, #000)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.18));
 }

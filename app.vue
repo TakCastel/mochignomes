@@ -1,5 +1,5 @@
 <template>
-  <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
+  <div class="world" :class="[`phase-${shownPhase}`, { dead, 'ui-dark': UI_THEMES[store.ui]?.dark }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
       <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
@@ -31,12 +31,12 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
-import { PALETTES, DEFAULT_PALETTE, paletteVars } from "~/lib/palettes";
+import { PALETTES, DEFAULT_PALETTE, UI_THEMES, paletteVars } from "~/lib/palettes";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
 const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
-const paletteStyle = computed(() => paletteVars(store.palette));
+const paletteStyle = computed(() => paletteVars(store.palette, store.ui));
 const arrowHint = computed(() => !(store.counters.tourner > 0));
 
 // moment de la journée réel, mis à jour chaque minute
@@ -66,6 +66,9 @@ onMounted(() => {
   // ?palette=lagon : essayer une palette
   const wanted = new URLSearchParams(window.location.search).get("palette");
   if (wanted && PALETTES[wanted]) store.palette = wanted;
+  // ?theme=verre : essayer un thème d'interface
+  const theme = new URLSearchParams(window.location.search).get("theme");
+  if (theme && UI_THEMES[theme]) store.ui = theme;
   // ?heure=22 force l'heure affichée (pratique pour voir le décor de nuit)
   const params = new URLSearchParams(window.location.search);
   const forced = Number(params.get("heure"));
