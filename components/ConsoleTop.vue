@@ -154,8 +154,8 @@ onMounted(() => store.initName());
 .round {
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   border: 0;
   border-radius: 50%;
   background: linear-gradient(145deg, #4c5a8a, #2f3a63);

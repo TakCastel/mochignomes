@@ -76,11 +76,9 @@ const stars = Array.from({ length: 46 }, (_, id) => ({ id, x: rnd() * 100, y: rn
   background: repeating-conic-gradient(rgba(255, 255, 255, 0.16) 0deg 8deg, transparent 8deg 22deg);
   mask-image: radial-gradient(circle, #000 18%, transparent 62%);
   -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 62%);
-  animation: spin 90s linear infinite;
   transition: opacity 1.5s;
 }
 .phase-night .rays { opacity: 0; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .astre {
   position: absolute;
@@ -151,16 +149,18 @@ const stars = Array.from({ length: 46 }, (_, id) => ({ id, x: rnd() * 100, y: rn
 }
 .cloud::before { width: 50px; height: 50px; left: 18px; top: -26px; }
 .cloud::after { width: 36px; height: 36px; left: 56px; top: -16px; }
+/* déplacés par transform : pas de recalcul de mise en page à chaque image */
+.cloud { left: 0; will-change: transform; }
 .c1 { width: 116px; top: 31%; animation-duration: 75s; animation-delay: -20s; }
-.c2 { width: 90px; top: 40%; animation-duration: 100s; animation-delay: -65s; transform: scale(0.75); }
+.c2 { width: 90px; top: 40%; animation-duration: 100s; animation-delay: -65s; }
 .c3 { width: 130px; top: 22%; animation-duration: 130s; animation-delay: -95s; opacity: 0.9; }
-.c4 { width: 80px; top: 45%; animation-duration: 85s; animation-delay: -40s; transform: scale(0.6); opacity: 0.85; }
+.c4 { width: 80px; top: 45%; animation-duration: 85s; animation-delay: -40s; opacity: 0.85; }
 @keyframes drift {
-  from { left: -170px; }
-  to { left: 110%; }
+  from { transform: translateX(-180px); }
+  to { transform: translateX(560px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cloud, .stars span, .rays, .shooting { animation: none; }
+  .cloud, .stars span, .shooting { animation: none; }
 }
 </style>

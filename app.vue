@@ -2,7 +2,7 @@
   <div class="world" :class="`phase-${shownPhase}`">
     <!-- décor derrière la console -->
     <div class="outside">
-      <SceneBackdrop :phase="shownPhase" :dead="dead" />
+      <div class="sky" :style="skyStyle" />
       <div class="tree left" />
       <div class="tree right" />
       <div class="meadow" />
@@ -30,10 +30,15 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
-import { dayPhase } from "~/lib/gameUi";
+import { dayPhase, SKY } from "~/lib/gameUi";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
+// fond fixe autour de la console (le ciel animé est dans l'écran)
+const skyStyle = computed(() => {
+  const c = SKY[shownPhase.value] || SKY.day;
+  return { background: `linear-gradient(180deg, ${c.top}, ${c.bottom} 70%)` };
+});
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
@@ -85,14 +90,19 @@ body {
   place-items: center;
   overflow: hidden;
   /* tailles qui s'adaptent à la hauteur de l'écran */
-  --btn: clamp(48px, min(15vw, 8.2vh), 70px);
-  --big: clamp(54px, min(17vw, 9vh), 76px);
-  --ring: clamp(44px, min(14vw, 7.4vh), 60px);
-  --tile: clamp(38px, 6vh, 50px);
+  --btn: clamp(42px, min(13.5vw, 6.8vh), 62px);
+  --big: clamp(48px, min(15vw, 7.6vh), 68px);
+  --ring: clamp(40px, min(12.5vw, 6.2vh), 56px);
+  --tile: clamp(32px, 4.8vh, 42px);
 }
 .outside {
   position: absolute;
   inset: 0;
+}
+.sky {
+  position: absolute;
+  inset: 0;
+  transition: background 1.5s;
 }
 .tree {
   position: absolute;
@@ -119,14 +129,14 @@ body {
 .console {
   position: relative;
   z-index: 1;
-  width: calc(100% - 16px);
+  width: calc(100% - 10px);
   max-width: 470px;
-  height: calc(100% - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  height: calc(100% - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   max-height: 960px;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-  gap: clamp(8px, 1.4vh, 14px);
-  padding: clamp(10px, 1.6vh, 16px) 12px;
+  gap: clamp(6px, 1.1vh, 12px);
+  padding: clamp(8px, 1.3vh, 14px) 8px;
   border-radius: 44px;
   background:
     radial-gradient(120% 60% at 15% 0%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%),
@@ -167,7 +177,6 @@ body {
 }
 .screen-slot {
   min-height: 0;
-  padding: 2px 6px;
 }
 @media (min-width: 600px) and (min-height: 760px) {
   .console { height: min(940px, calc(100% - 48px)); }

@@ -87,16 +87,16 @@ function press(a) {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 6px;
-  padding: 10px 6px 12px;
-  border-radius: 30px;
+  gap: 4px;
+  padding: 8px 4px 9px;
+  border-radius: 28px;
   background: linear-gradient(180deg, #f1e6d7, #f8f0e5);
   box-shadow: inset 0 3px 5px rgba(140, 110, 80, 0.35), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 rgba(140, 110, 80, 0.25);
 }
 .side {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px 6px;
+  gap: 4px 4px;
   justify-items: center;
 }
 .center {
@@ -138,10 +138,13 @@ function press(a) {
   text-shadow: 0 1px 0 #fff;
 }
 .grill {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 4px;
   margin-top: 4px;
+}
+@media (min-height: 820px) {
+  .grill { display: flex; }
 }
 .grill span {
   width: 46px;

@@ -78,7 +78,7 @@ const rings = computed(() =>
 .panel {
   list-style: none;
   margin: 0;
-  padding: 10px 8px 10px;
+  padding: 8px 6px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
@@ -94,7 +94,7 @@ const rings = computed(() =>
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   --c-light: color-mix(in srgb, var(--c) 60%, #fff);
   --c-dark: color-mix(in srgb, var(--c) 86%, #000);
 }
@@ -176,8 +176,8 @@ const rings = computed(() =>
   box-shadow: 0 1px 0 #fff, inset 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 .bars span {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 2.5px;
   background: #3a2a22;
 }

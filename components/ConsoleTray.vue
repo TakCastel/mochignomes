@@ -28,9 +28,9 @@ const tiles = computed(() => [
 .tray {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 10px;
-  border-radius: 26px;
+  gap: 8px;
+  padding: 7px;
+  border-radius: 24px;
   background: #ece1d2;
   box-shadow: inset 3px 3px 8px rgba(140, 110, 80, 0.4), inset -3px -3px 8px #fff;
 }

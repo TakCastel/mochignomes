@@ -28,7 +28,7 @@ defineEmits(["press"]);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
   padding: 0;
   border: 0;
   background: none;
@@ -102,7 +102,7 @@ defineEmits(["press"]);
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   color: #5a3a24;
   text-shadow: 0 1px 0 #fff;
 }
