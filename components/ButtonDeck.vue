@@ -28,14 +28,14 @@ import { computed, ref } from "vue";
 const { store } = useCreatureMood();
 
 const BASE = [
-  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffb02e", dark: "#c46a00" },
-  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#3d9bff", dark: "#1258c4" },
-  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff5c8a", dark: "#c2185b" },
-  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#5b5fd6", dark: "#2e2f94" },
-  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#3ccf5a", dark: "#16862f" },
-  { key: "danser", label: "Danser", icon: "ph:music-notes-fill", color: "#b16cff", dark: "#6a2fc4" },
-  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#2ec5d8", dark: "#0b7f92" },
-  { key: "photo", label: "Photo", icon: "ph:camera-fill", color: "#ff8a3d", dark: "#c24f0a" },
+  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffa51f", dark: "#c45a00" },
+  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#2b8cff", dark: "#0b47b8" },
+  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff4f86", dark: "#c0104f" },
+  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#5560ff", dark: "#2326a8" },
+  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#2fd456", dark: "#0c8a2a" },
+  { key: "danser", label: "Danser", icon: "ph:music-notes-fill", color: "#b25bff", dark: "#6417c9" },
+  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#14c6e0", dark: "#037a96" },
+  { key: "photo", label: "Photo", icon: "ph:camera-fill", color: "#ff7a2e", dark: "#c43f00" },
 ];
 
 // Pourquoi une action n'est pas possible : la créature le dit elle-même
@@ -123,7 +123,7 @@ function press(a) {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #ffd58a, #d9862b 60%, #9a5212);
+  background: radial-gradient(circle at 36% 26%, #ffe3a6, #f29a2e 50%, #c56a12 85%, #9a4a0a 100%);
   box-shadow: inset 0 -5px 8px rgba(90, 40, 0, 0.45), inset 0 4px 6px rgba(255, 255, 255, 0.55);
   transition: transform 0.08s;
 }
@@ -133,7 +133,9 @@ function press(a) {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 600;
   font-size: 12px;
-  color: #6b4a33;
+  color: #5a3a24;
+  font-weight: 700;
+  text-shadow: 0 1px 0 #fff;
 }
 .grill {
   display: flex;

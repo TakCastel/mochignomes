@@ -82,6 +82,9 @@ onMounted(() => store.initName());
   font-weight: 800;
   opacity: 0.95;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .dot {
   width: 8px;

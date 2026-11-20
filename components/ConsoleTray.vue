@@ -51,8 +51,8 @@ const tiles = computed(() => [
   width: var(--tile, 46px);
   height: var(--tile, 46px);
   border-radius: 15px;
-  background: linear-gradient(160deg, #b98a5e, #8a5b34);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(60, 30, 10, 0.35), 0 3px 6px rgba(90, 60, 30, 0.35);
+  background: radial-gradient(circle at 35% 25%, #e0a56a, #a8662e 60%, #7a4318);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -4px 0 rgba(60, 25, 5, 0.4), 0 4px 0 #6b3a14, 0 6px 10px rgba(90, 50, 20, 0.4);
   transition: transform 0.08s;
 }
 .tile:active .well { transform: translateY(2px) scale(0.96); }
@@ -74,7 +74,9 @@ const tiles = computed(() => [
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 600;
   font-size: 14px;
-  color: #6b4a33;
+  color: #5a3a24;
+  font-weight: 700;
+  text-shadow: 0 1px 0 #fff;
 }
 @media (max-width: 380px) {
   .label { display: none; }

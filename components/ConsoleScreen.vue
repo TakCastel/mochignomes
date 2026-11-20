@@ -28,10 +28,15 @@ defineProps({
 .bezel {
   position: relative;
   height: 100%;
-  padding: 7px;
+  padding: 8px;
   border-radius: 40px;
-  background: linear-gradient(180deg, #4a4160, #2c2640);
-  box-shadow: 0 0 0 5px #f4ebdf, 0 0 0 7px #e0d2bf, inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 6px 14px rgba(110, 80, 50, 0.35);
+  background: linear-gradient(180deg, #5a4f7a 0%, #2a2340 60%, #1d1830 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+    0 0 0 5px #fbf3e8,
+    0 0 0 8px #dcc6a8,
+    0 10px 18px rgba(90, 60, 30, 0.45);
 }
 .screen {
   position: relative;
@@ -84,8 +89,8 @@ defineProps({
   width: 7px;
   height: 46px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #fff6b0, #ffc93c);
-  box-shadow: 0 0 12px 3px rgba(255, 200, 60, 0.7);
+  background: linear-gradient(180deg, #fffbd0, #ffd23a 60%, #ffae00);
+  box-shadow: 0 0 14px 4px rgba(255, 196, 30, 0.85), inset 0 1px 0 #fff;
 }
 .light.left { left: -18px; }
 .light.right { right: -18px; }

@@ -42,7 +42,7 @@ defineEmits(["press"]);
   height: var(--btn, 64px);
   padding: 5px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #fffaf3, #e9dece);
+  background: radial-gradient(circle at 35% 25%, #fffefb, #eadbc6 80%);
   /* épaisseur du plastique sous le bouton */
   box-shadow: 0 6px 0 #d6c3a9, 0 8px 12px rgba(120, 90, 60, 0.4), -3px -3px 8px #fff, inset 0 1px 0 #fff;
   transition: box-shadow 0.08s, transform 0.08s;
@@ -55,19 +55,34 @@ defineEmits(["press"]);
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 36% 28%, color-mix(in srgb, var(--c) 45%, #fff), var(--c) 52%, var(--d) 100%);
-  box-shadow: inset 0 -5px 8px color-mix(in srgb, var(--d) 70%, #000), inset 0 3px 5px rgba(255, 255, 255, 0.5);
+  background: radial-gradient(circle at 36% 26%, color-mix(in srgb, var(--c) 50%, #fff), var(--c) 48%, color-mix(in srgb, var(--c) 60%, var(--d)) 82%, var(--d) 100%);
+  box-shadow:
+    inset 0 -5px 7px color-mix(in srgb, var(--d) 75%, transparent),
+    inset 0 3px 4px rgba(255, 255, 255, 0.6),
+    0 0 0 1.5px color-mix(in srgb, var(--d) 70%, #000);
   transition: transform 0.08s, filter 0.2s;
 }
+/* reflet franc en haut, et rebond de lumière en bas */
 .candy::after {
   content: "";
   position: absolute;
-  top: 8%;
-  left: 22%;
-  width: 56%;
-  height: 26%;
+  top: 7%;
+  left: 20%;
+  width: 60%;
+  height: 30%;
   border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.1));
+}
+.candy::before {
+  content: "";
+  position: absolute;
+  bottom: 9%;
+  left: 30%;
+  width: 40%;
+  height: 12%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(1px);
 }
 /* symbole blanc moulé dans le bonbon */
 .icon {
@@ -86,9 +101,10 @@ defineEmits(["press"]);
 .candy-btn:focus-visible .rim { outline: 3px solid #6f4fe0; outline-offset: 2px; }
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
-  color: #6b4a33;
+  color: #5a3a24;
+  text-shadow: 0 1px 0 #fff;
 }
 .locked .candy { filter: grayscale(0.9) brightness(1.1) opacity(0.65); }
 .locked .label { opacity: 0.5; }
