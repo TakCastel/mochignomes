@@ -16,6 +16,7 @@
         <ConsoleScreen :phase="shownPhase" :dead="dead" />
       </div>
       <ButtonDeck />
+      <ConsoleTray />
 
       <GameToasts />
       <GameSheet />
@@ -130,7 +131,7 @@ body {
   height: calc(100% - 10px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   max-height: 960px;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: clamp(6px, 1.1vh, 12px);
   padding: clamp(14px, 2vh, 20px) 18px clamp(26px, 3.6vh, 38px);
   isolation: isolate;
