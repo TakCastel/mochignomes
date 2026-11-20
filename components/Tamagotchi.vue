@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
-import { MOODS, MESSAGES, REACTIONS, pick } from "~/lib/creatureLook";
+import { MOODS, MESSAGES, REACTIONS, MOOD_LABELS, pick } from "~/lib/creatureLook";
 import { STATS, SKY } from "~/lib/gameUi";
 
 const props = defineProps({
@@ -79,7 +79,7 @@ watch(() => gameBus.command, (cmd) => {
 const flash = ref(false);
 
 // Apparence finale = humeur de fond + réaction en cours + morphing des jauges
-const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value }));
+const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value, mark: MOOD_LABELS[mood.value]?.[1] }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
 watch(() => [props.phase, props.dead, props.sky, props.theme], ([phase, dead, sky, theme]) => creature.value?.setScene({ phase, dead, sky, theme }));
 watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
@@ -131,7 +131,6 @@ function listenToActions() {
       if (name === "applyAction") {
         showDeltas(before);
         const action = args[0];
-        if (action === "chatouiller") return;
         if (action === "soigner" && wasDead) react("revivre");
         else if (action === "coucher") react(wasSleeping ? "reveil" : "coucher");
         else react(action);
@@ -142,10 +141,13 @@ function listenToActions() {
   });
 }
 
-// Toucher la créature ouvre le menu d'actions autour d'elle
+// Toucher la créature la chatouille
 function onPoke({ dead, asleep }) {
   navigator.vibrate?.(8);
-  if (asleep && !dead) say("Mmh... laisse-moi dormir");
+  if (dead) return;
+  if (asleep) return say("Mmh... laisse-moi dormir");
+  store.applyAction("chatouiller");
+  store.countGesture("menu");
   emit("tap");
 }
 

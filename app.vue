@@ -2,26 +2,19 @@
   <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" @tap="openWheel" />
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
     <main class="ui">
-      <HudTop class="hit" />
-      <div ref="middle" class="middle">
-        <button class="arrow prev hit" :class="{ hint: arrowHint }" aria-label="Tourner vers la gauche" @click="gameCommand('rotate', -1)">
-          <Icon name="ph:caret-left-bold" class="chevron" />
-        </button>
-        <button class="arrow next hit" :class="{ hint: arrowHint }" aria-label="Tourner vers la droite" @click="gameCommand('rotate', 1)">
-          <Icon name="ph:caret-right-bold" class="chevron" />
-        </button>
+      <ProfileBar class="hit pad" />
+      <div ref="middle" class="middle" />
+      <div class="pad stack">
+        <StatsStrip class="hit" />
+        <ActionGrid class="hit" />
       </div>
-      <NeedsCard class="hit" />
-      <NavBar class="hit" @actions="openWheel" />
+      <BottomNav class="hit" :style="{ '--mood': moodColor }" />
     </main>
-
-    <!-- menu d'actions en cercle autour de la créature -->
-    <ActionWheel :open="wheelOpen" :center="wheelCenter" :radius="wheelRadius" @close="wheelOpen = false" />
 
     <GameToasts />
     <GameSheet />
@@ -33,18 +26,21 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
-import { PALETTES, DEFAULT_PALETTE, paletteVars } from "~/lib/palettes";
+import { PALETTES, DEFAULT_PALETTE, paletteVars, UI_THEMES } from "~/lib/palettes";
+import { MOOD_LABELS } from "~/lib/creatureLook";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
+const { mood } = useCreatureMood();
+const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#52c234");
 const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
-// interface claire : panneaux blancs, un seul accent turquoise
+// interface très blanche, un seul accent vert
 const paletteStyle = computed(() => ({
   ...paletteVars(store.palette),
-  "--ink": "#23324a",
-  "--accent": "#13b0ac",
-  "--accent-hi": "#4fd8cf",
-  "--accent-lo": "#0b8481",
+  "--ink": "#2b3440",
+  "--accent": "#4fbf34",
+  "--accent-hi": "#7fdc5a",
+  "--accent-lo": "#3c9a22",
   "--panel-top": "#ffffff",
   "--panel-bottom": "#f4f7fb",
   "--plate-hi": "#ffffff",
@@ -54,21 +50,6 @@ const paletteStyle = computed(() => ({
   "--knob-lo": "#eef3f8",
   "--knob-side": "#cfd9e4",
 }));
-
-// Menu d'actions : s'ouvre au centre de la zone de la créature
-const wheelOpen = ref(false);
-const wheelCenter = ref({ x: 200, y: 400 });
-const wheelRadius = ref(118);
-function openWheel() {
-  const r = middle.value?.getBoundingClientRect();
-  if (r) {
-    wheelCenter.value = { x: r.left + r.width / 2, y: r.top + r.height * 0.55 };
-    wheelRadius.value = Math.min(124, r.width * 0.36, r.height * 0.42);
-  }
-  wheelOpen.value = true;
-  store.countGesture("menu");
-}
-const arrowHint = computed(() => !(store.counters.tourner > 0));
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
@@ -86,9 +67,9 @@ function measure() {
   const r = el.getBoundingClientRect();
   frame.value = {
     ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
-    size: Math.round(Math.min(r.height * 0.62, window.innerWidth * 0.48)),
+    size: Math.round(Math.min(r.height * 0.5, window.innerWidth * 0.42)),
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
-    minTop: Math.round(r.top + 52),
+    minTop: Math.round(r.top + 56),
   };
 }
 
@@ -154,23 +135,23 @@ body {
   --plate-shade: rgba(140, 100, 60, 0.35);
   --shell-edge: #c9a77f;
   /* tailles qui suivent la hauteur de l'écran */
-  --top: clamp(50px, 7.4vh, 62px);
-  --ring: clamp(44px, min(14vw, 7vh), 62px);
-  --jelly: clamp(64px, 10.6vh, 96px);
-  --tile: clamp(52px, 7.6vh, 70px);
-  --gap: clamp(10px, 1.6vh, 16px);
+  --tile: clamp(56px, 10vh, 84px);
+  --gap: clamp(8px, 1.4vh, 12px);
 }
 .scene {
   position: absolute;
   inset: 0;
+  z-index: 0;
 }
 /* lumière chaude fixe par-dessus la scène : halo doré en haut, bords plus profonds */
 .scene::after {
   content: "";
   position: absolute;
+  z-index: 1;
   inset: 0;
   pointer-events: none;
   background:
+    linear-gradient(180deg, transparent 50%, rgba(248, 250, 252, 0.5) 64%, rgba(248, 250, 252, 0.9) 80%),
     radial-gradient(70% 40% at 75% 28%, var(--glow), transparent 70%),
     radial-gradient(130% 90% at 50% 45%, transparent 55%, var(--edge) 100%);
 }
@@ -183,39 +164,17 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.4vh, 14px);
-  padding: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px)) 14px calc(env(safe-area-inset-bottom, 0px) + clamp(10px, 1.8vh, 18px));
+  gap: var(--gap);
+  padding-top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px));
   pointer-events: none;
 }
+.pad { margin: 0 14px; }
+.stack { display: flex; flex-direction: column; gap: var(--gap); }
 /* seuls les éléments d'interface captent le toucher, le reste va à la créature */
 .hit { pointer-events: auto; }
 .middle {
   position: relative;
   flex: 1;
   min-height: 0;
-}
-.arrow {
-  position: absolute;
-  top: 56%;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-top: -22px;
-  border: 0;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(25, 45, 80, 0.22);
-  cursor: pointer;
-}
-.arrow:active { transform: scale(0.94); }
-.prev { left: 0; }
-.next { right: 0; }
-.chevron { width: 22px; height: 22px; color: var(--accent); }
-/* pulsation en transform : animée par le navigateur sans redessiner la page */
-.arrow.hint { animation: nudge 1.6s ease-in-out infinite; }
-@keyframes nudge { 50% { transform: scale(1.12); } }
-@media (prefers-reduced-motion: reduce) {
-  .arrow.hint { animation: none; }
 }
 </style>
