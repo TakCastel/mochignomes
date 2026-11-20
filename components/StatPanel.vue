@@ -21,13 +21,13 @@
 import { computed } from "vue";
 import { STATS } from "~/lib/gameUi";
 
-// Icônes en relief de la maquette (le reste de l'appli garde les pictos)
+// Symbole de chaque jauge
 const EMOJI = {
-  hunger: "fluent-emoji:bread",
-  cleanliness: "fluent-emoji:bubbles",
-  fun: "fluent-emoji:soccer-ball",
-  energy: "fluent-emoji:high-voltage",
-  health: "fluent-emoji:red-heart",
+  hunger: "ph:bowl-food-fill",
+  cleanliness: "ph:drop-fill",
+  fun: "ph:soccer-ball-fill",
+  energy: "ph:lightning-fill",
+  health: "ph:heart-fill",
 };
 const { store } = useCreatureMood();
 const CIRC = 2 * Math.PI * 27;
@@ -100,7 +100,7 @@ const rings = computed(() =>
   background: radial-gradient(circle at 40% 30%, #fffdf9, #efe4d6);
   box-shadow: inset 0 2px 3px rgba(150, 110, 70, 0.25);
 }
-.emoji { width: 96%; height: 96%; filter: drop-shadow(0 2px 1px rgba(90, 50, 10, 0.25)); }
+.emoji { width: 66%; height: 66%; color: var(--c); filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--c) 55%, #000)); }
 .ring.urgent { animation: alarm 1.1s ease-in-out infinite; }
 @keyframes alarm { 50% { transform: scale(1.07) rotate(-5deg); } }
 .need {

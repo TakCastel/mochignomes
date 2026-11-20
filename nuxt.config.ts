@@ -26,19 +26,11 @@ export default defineNuxtConfig({
 
   // Icônes embarquées dans l'appli : aucun appel réseau pour les afficher
   icon: {
-    // le serveur n'embarque que les pictos ; les icônes en relief utilisées
-    // partent dans le paquet du navigateur (liste ci-dessous + détection)
     serverBundle: { collections: ["ph"] },
     clientBundle: {
       scan: true,
-      // les icônes en relief (dégradés) sont plus lourdes que les pictos
-      sizeLimitKb: 600,
       icons: [
-        "fluent-emoji:house", "fluent-emoji:star", "fluent-emoji:bell", "fluent-emoji:gear",
-        "fluent-emoji:bread", "fluent-emoji:bubbles", "fluent-emoji:soccer-ball", "fluent-emoji:high-voltage",
-        "fluent-emoji:red-heart", "fluent-emoji:bathtub", "fluent-emoji:crescent-moon", "fluent-emoji:sparkling-heart",
-        "fluent-emoji:syringe", "fluent-emoji:sun-with-face", "fluent-emoji:backpack", "fluent-emoji:mirror-ball",
-        "fluent-emoji:camera-with-flash", "fluent-emoji:framed-picture",
+        "ph:house-fill", "ph:bell-fill", "ph:backpack-fill", "ph:disco-ball-fill", "ph:sun-fill",
         "ph:caret-left-bold", "ph:caret-right-bold", "ph:lock-simple-fill",
         "ph:bowl-food-fill", "ph:bathtub-fill", "ph:drop-fill", "ph:soccer-ball-fill",
         "ph:lightning-fill", "ph:heart-fill", "ph:hand-heart-fill", "ph:moon-stars-fill",

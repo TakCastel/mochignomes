@@ -2,14 +2,14 @@
   <div class="topbar">
     <!-- maison : la fiche de la créature -->
     <button class="knob square" :aria-label="`Fiche de ${store.name}`" @click="gameBus.sheet = 'fiche'">
-      <Icon name="fluent-emoji:house" class="emoji" />
+      <Icon name="ph:house-fill" class="emoji house" />
     </button>
 
     <!-- niveau : étoile + barre à crans -->
     <button class="knob level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`" @click="explainLevel">
       <span class="track">
         <span class="star">
-          <Icon name="fluent-emoji:star" class="star-icon" />
+          <Icon name="ph:star-fill" class="star-icon" />
           <span class="num">{{ lvl.level }}</span>
         </span>
         <span v-for="i in 5" :key="i" class="seg" :class="{ on: i <= filled }" />
@@ -19,11 +19,11 @@
     <!-- cloche (succès) et engrenage (réglages) -->
     <div class="knob duo">
       <button class="cell" aria-label="Succès" @click="gameBus.sheet = 'succes'">
-        <Icon name="fluent-emoji:bell" class="emoji" />
+        <Icon name="ph:bell-fill" class="emoji bell" />
         <span v-if="newUnlocked" class="dot" />
       </button>
       <button class="cell gear" aria-label="Réglages" @click="gameBus.sheet = 'reglages'">
-        <Icon name="fluent-emoji:gear" class="emoji" />
+        <Icon name="ph:gear-six-fill" class="emoji" />
       </button>
     </div>
   </div>
@@ -39,7 +39,7 @@ const filled = computed(() => Math.round((lvl.value.into / lvl.value.need) * 5))
 const newUnlocked = computed(() => store.unlocked.length > gameBus.seenUnlocked);
 
 function explainLevel() {
-  gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "fluent-emoji:star");
+  gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "ph:star-fill");
 }
 onMounted(() => store.initName());
 </script>
@@ -71,7 +71,9 @@ onMounted(() => store.initName());
   display: grid;
   place-items: center;
 }
-.emoji { width: 62%; height: 62%; filter: drop-shadow(0 2px 1px rgba(90, 50, 10, 0.3)); }
+.emoji { width: 56%; height: 56%; }
+.house { color: #c07a3a; filter: drop-shadow(0 2px 0 #8a4f1c); }
+.bell { color: #ffb400; filter: drop-shadow(0 2px 0 #c27e00); }
 
 .level {
   justify-self: center;
@@ -98,7 +100,7 @@ onMounted(() => store.initName());
   height: 40px;
   margin: -6px 2px -6px -6px;
 }
-.star-icon { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4)); }
+.star-icon { width: 100%; height: 100%; color: #ffc21a; filter: drop-shadow(0 2px 0 #c27e00) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
 .num {
   position: absolute;
   inset: 0;
@@ -139,12 +141,12 @@ onMounted(() => store.initName());
   background: transparent;
   cursor: pointer;
 }
-.cell .emoji { width: 74%; height: 74%; }
+.cell .emoji { width: 64%; height: 64%; }
 .gear {
   background: radial-gradient(circle at 40% 30%, #6a77a8, #3d4a7a 70%);
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 2px 3px rgba(0, 0, 0, 0.25);
 }
-.gear .emoji { width: 66%; height: 66%; filter: brightness(1.6) grayscale(0.3); }
+.gear .emoji { width: 56%; height: 56%; color: #fff; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3)); }
 .dot {
   position: absolute;
   top: 3px;

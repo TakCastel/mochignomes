@@ -21,12 +21,12 @@ import { computed, ref } from "vue";
 const { store } = useCreatureMood();
 
 const BASE = [
-  { key: "nourrir", label: "Manger", icon: "fluent-emoji:bread", color: "#ffad42", dark: "#d9710f" },
-  { key: "laver", label: "Laver", icon: "fluent-emoji:bathtub", color: "#58a8ff", dark: "#2a66d6" },
-  { key: "jouer", label: "Jouer", icon: "fluent-emoji:soccer-ball", color: "#77d548", dark: "#3c9420" },
-  { key: "coucher", label: "Dodo", icon: "fluent-emoji:crescent-moon", color: "#a36cf0", dark: "#6534c2" },
-  { key: "calin", label: "Câlin", icon: "fluent-emoji:sparkling-heart", color: "#ff6f9f", dark: "#d4386b" },
-  { key: "soigner", label: "Soigner", icon: "fluent-emoji:syringe", color: "#3fd2bf", dark: "#159488" },
+  { key: "nourrir", label: "Manger", icon: "ph:bowl-food-fill", color: "#ffad42", dark: "#d9710f" },
+  { key: "laver", label: "Laver", icon: "ph:bathtub-fill", color: "#58a8ff", dark: "#2a66d6" },
+  { key: "jouer", label: "Jouer", icon: "ph:soccer-ball-fill", color: "#77d548", dark: "#3c9420" },
+  { key: "coucher", label: "Dodo", icon: "ph:moon-stars-fill", color: "#a36cf0", dark: "#6534c2" },
+  { key: "calin", label: "Câlin", icon: "ph:hand-heart-fill", color: "#ff6f9f", dark: "#d4386b" },
+  { key: "soigner", label: "Soigner", icon: "ph:syringe-fill", color: "#3fd2bf", dark: "#159488" },
 ];
 
 // Pourquoi une action n'est pas possible : la créature le dit elle-même
@@ -44,7 +44,7 @@ const actions = computed(() =>
     return {
       ...a,
       label: wake ? "Réveil" : a.label,
-      icon: wake ? "fluent-emoji:sun-with-face" : a.icon,
+      icon: wake ? "ph:sun-fill" : a.icon,
       color: wake ? "#ffc93c" : a.color,
       dark: wake ? "#d18a00" : a.dark,
       reason: reasonFor(a.key),
@@ -122,11 +122,13 @@ function press(a) {
 .jelly:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .emoji {
   position: relative;
-  width: 92%;
-  height: 92%;
-  max-width: 96px;
-  max-height: 96px;
-  filter: drop-shadow(0 5px 3px rgba(40, 20, 0, 0.4));
+  width: 54%;
+  height: 54%;
+  max-width: 56px;
+  max-height: 56px;
+  color: #fff;
+  /* gravé : liseré sombre dessous, reflet clair dessus */
+  filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.15)) drop-shadow(0 3px 0 color-mix(in srgb, var(--d) 80%, #000)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.18));
 }
 .locked { filter: saturate(0.5) brightness(1.04); }
 .lock {

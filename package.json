@@ -27,7 +27,6 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@iconify-json/fluent-emoji": "^1.2.7",
     "@iconify-json/ph": "^1.2.2"
   }
 }

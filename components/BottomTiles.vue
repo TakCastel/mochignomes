@@ -1,6 +1,6 @@
 <template>
   <nav class="tiles" aria-label="Menu">
-    <button v-for="t in tiles" :key="t.key" class="tile" :aria-label="t.label" @click="t.run">
+    <button v-for="t in tiles" :key="t.key" class="tile" :style="{ '--c': t.color }" :aria-label="t.label" @click="t.run">
       <Icon :name="t.icon" class="emoji" />
       <span v-if="t.badge" class="badge">{{ t.badge }}</span>
     </button>
@@ -22,10 +22,10 @@ function dance() {
 }
 
 const tiles = computed(() => [
-  { key: "journal", label: "Journal", icon: "fluent-emoji:backpack", run: () => (gameBus.sheet = "journal") },
-  { key: "danser", label: "Danser", icon: "fluent-emoji:mirror-ball", run: dance },
-  { key: "photo", label: "Prendre une photo", icon: "fluent-emoji:camera-with-flash", run: () => gameCommand("photo") },
-  { key: "galerie", label: "Galerie photos", icon: "fluent-emoji:framed-picture", badge: photos.value.length || null, run: () => (gameBus.sheet = "galerie") },
+  { key: "journal", label: "Journal", icon: "ph:backpack-fill", color: "#f0812a", run: () => (gameBus.sheet = "journal") },
+  { key: "danser", label: "Danser", icon: "ph:disco-ball-fill", color: "#9a4dff", run: dance },
+  { key: "photo", label: "Prendre une photo", icon: "ph:camera-fill", color: "#14b8c8", run: () => gameCommand("photo") },
+  { key: "galerie", label: "Galerie photos", icon: "ph:images-fill", color: "#f0479b", badge: photos.value.length || null, run: () => (gameBus.sheet = "galerie") },
 ]);
 </script>
 
@@ -62,7 +62,7 @@ const tiles = computed(() => [
   transition: transform 0.08s, box-shadow 0.08s;
 }
 .tile:active { transform: translateY(4px); box-shadow: 0 1px 0 #d2b48c, 0 3px 6px rgba(90, 60, 30, 0.25), inset 0 2px 0 #fff; }
-.emoji { width: 86%; height: 86%; max-width: 64px; max-height: 64px; filter: drop-shadow(0 3px 2px rgba(60, 30, 0, 0.3)); }
+.emoji { width: 58%; height: 58%; max-width: 42px; max-height: 42px; color: var(--c); filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--c) 55%, #000)); }
 .badge {
   position: absolute;
   top: -6px;
