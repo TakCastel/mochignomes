@@ -2,7 +2,6 @@
   <div class="world" :class="[`phase-${shownPhase}`, { dead }]">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
-      <SceneBackdrop :phase="shownPhase" :dead="dead" />
       <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" />
     </div>
 
@@ -130,7 +129,6 @@ body {
   position: absolute;
   inset: 0;
 }
-.dead .scene { filter: grayscale(0.6); }
 
 .ui {
   position: relative;
@@ -169,11 +167,9 @@ body {
 .prev { left: 0; }
 .next { right: 0; }
 .chevron { width: 24px; height: 24px; color: #a0703c; }
+/* pulsation en transform : animée par le navigateur sans redessiner la page */
 .arrow.hint { animation: nudge 1.6s ease-in-out infinite; }
-@keyframes nudge {
-  0%, 100% { box-shadow: 0 4px 0 #d2b48c, 0 0 0 0 rgba(255, 170, 60, 0.6); }
-  50% { box-shadow: 0 4px 0 #d2b48c, 0 0 0 12px rgba(255, 170, 60, 0); }
-}
+@keyframes nudge { 50% { transform: scale(1.12); } }
 @media (prefers-reduced-motion: reduce) {
   .arrow.hint { animation: none; }
 }
