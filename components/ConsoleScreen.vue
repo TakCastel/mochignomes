@@ -40,7 +40,7 @@ useSquircle([inner], (w, h) => Math.min(w, h) * 0.28, 0.85);
   height: 100%;
   padding: 3px;
   /* liseré crème bombé : clair en haut, plus sombre en bas */
-  background: linear-gradient(180deg, #ffffff 0%, #efe2cf 55%, #d8c2a4 100%);
+  background: linear-gradient(180deg, #ffffff 0%, var(--shell) 55%, var(--shell-lo) 100%);
 }
 .bezel {
   position: relative;

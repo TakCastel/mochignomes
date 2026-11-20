@@ -5,28 +5,28 @@
     <svg v-if="w" :width="w" :height="h" :viewBox="`0 0 ${w} ${h}`">
       <defs>
         <linearGradient id="shell-body" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#fffbf4" />
-          <stop offset="0.45" stop-color="#f5e9d8" />
-          <stop offset="1" stop-color="#e2cbac" />
+          <stop offset="0" style="stop-color: var(--shell-hi)" />
+          <stop offset="0.45" style="stop-color: var(--shell)" />
+          <stop offset="1" style="stop-color: var(--shell-lo)" />
         </linearGradient>
         <!-- volume : plus clair à gauche, plus sombre sur les bords, comme un objet bombé -->
         <linearGradient id="shell-round" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#a77a4c" stop-opacity="0.28" />
+          <stop offset="0" style="stop-color: var(--shell-edge)" stop-opacity="0.28" />
           <stop offset="0.07" stop-color="#ffffff" stop-opacity="0" />
           <stop offset="0.17" stop-color="#ffffff" stop-opacity="0.65" />
           <stop offset="0.32" stop-color="#ffffff" stop-opacity="0" />
-          <stop offset="0.78" stop-color="#a77a4c" stop-opacity="0" />
-          <stop offset="0.95" stop-color="#a77a4c" stop-opacity="0.22" />
-          <stop offset="1" stop-color="#a77a4c" stop-opacity="0.38" />
+          <stop offset="0.78" style="stop-color: var(--shell-edge)" stop-opacity="0" />
+          <stop offset="0.95" style="stop-color: var(--shell-edge)" stop-opacity="0.22" />
+          <stop offset="1" style="stop-color: var(--shell-edge)" stop-opacity="0.38" />
         </linearGradient>
         <linearGradient id="shell-bottom" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0.75" stop-color="#8a5a30" stop-opacity="0" />
-          <stop offset="1" stop-color="#8a5a30" stop-opacity="0.25" />
+          <stop offset="0.75" style="stop-color: var(--shell-edge)" stop-opacity="0" />
+          <stop offset="1" style="stop-color: var(--shell-edge)" stop-opacity="0.25" />
         </linearGradient>
         <linearGradient id="shell-rim" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#ffffff" />
           <stop offset="0.5" stop-color="#ffffff" stop-opacity="0.4" />
-          <stop offset="1" stop-color="#c9a77f" />
+          <stop offset="1" style="stop-color: var(--shell-edge)" />
         </linearGradient>
         <filter id="shell-shadow" x="-10%" y="-10%" width="120%" height="125%">
           <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#28143c" flood-opacity="0.45" />
@@ -46,7 +46,7 @@
       <path :d="gloss" fill="#ffffff" opacity="0.85" />
       <!-- liseré en biseau : clair en haut, plus sombre en bas -->
       <path :d="outline" fill="none" stroke="url(#shell-rim)" stroke-width="3" />
-      <path :d="outline" fill="none" stroke="#c9a77f" stroke-width="1" stroke-opacity="0.6" />
+      <path :d="outline" fill="none" style="stroke: var(--shell-edge)" stroke-width="1" stroke-opacity="0.6" />
     </svg>
   </div>
 </template>

@@ -83,12 +83,12 @@ const rings = computed(() =>
   grid-template-columns: repeat(5, 1fr);
   gap: 2px;
   border-radius: 44px;
-  background: linear-gradient(180deg, #fffdf9, #efe2d1);
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
   box-shadow:
     inset 0 2px 0 #fff,
-    inset 0 -4px 0 rgba(170, 130, 95, 0.3),
-    0 0 0 2px #e7d6c0,
-    0 6px 12px rgba(120, 85, 55, 0.3);
+    inset 0 -4px 0 var(--plate-shade),
+    0 0 0 2px var(--shell-lo),
+    0 6px 12px var(--plate-shade);
 }
 .panel li {
   display: flex;
@@ -106,8 +106,8 @@ const rings = computed(() =>
   border: 0;
   border-radius: 50%;
   /* bouton crème bombé qui porte l'anneau */
-  background: radial-gradient(circle at 40% 30%, #fffdf8, #ecdfcd 75%);
-  box-shadow: 0 4px 0 #d9c4a8, 0 7px 10px rgba(110, 75, 45, 0.35), inset 0 1px 0 #fff, 0 0 0 2px color-mix(in srgb, var(--c) 35%, #fff);
+  background: radial-gradient(circle at 40% 30%, #ffffff, var(--knob-lo) 75%);
+  box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), inset 0 1px 0 #fff, 0 0 0 2px color-mix(in srgb, var(--c) 35%, #fff);
   cursor: pointer;
 }
 .ring svg {
@@ -151,7 +151,7 @@ const rings = computed(() =>
   place-items: center;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, #ffffff, #f4ebdf 70%);
-  box-shadow: 0 2px 3px rgba(90, 60, 30, 0.35), inset 0 -2px 3px rgba(140, 110, 80, 0.25);
+  box-shadow: 0 2px 3px rgba(90, 60, 30, 0.35), inset 0 -2px 3px var(--plate-shade);
 }
 .icon {
   width: 66%;
@@ -161,10 +161,10 @@ const rings = computed(() =>
 }
 .ring.low { animation: alarm 1.1s ease-in-out infinite; }
 @keyframes alarm {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 0 #d9c4a8, 0 7px 10px rgba(110, 75, 45, 0.35), 0 0 0 0 rgba(255, 59, 59, 0.6); }
-  50% { transform: scale(1.08) rotate(-5deg); box-shadow: 0 4px 0 #d9c4a8, 0 7px 10px rgba(110, 75, 45, 0.35), 0 0 0 9px rgba(255, 59, 59, 0); }
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 0 0 rgba(255, 59, 59, 0.6); }
+  50% { transform: scale(1.08) rotate(-5deg); box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 0 9px rgba(255, 59, 59, 0); }
 }
-.ring.bonus { box-shadow: 0 4px 0 #d9c4a8, 0 7px 10px rgba(110, 75, 45, 0.35), 0 0 16px 2px rgba(255, 210, 40, 0.9); }
+.ring.bonus { box-shadow: 0 4px 0 var(--knob-side), 0 7px 10px var(--plate-shade), 0 0 16px 2px rgba(255, 210, 40, 0.9); }
 
 /* barre à crans, comme une pile */
 .bars {
@@ -172,14 +172,14 @@ const rings = computed(() =>
   gap: 2px;
   padding: 2px;
   border-radius: 6px;
-  background: #5b4436;
+  background: color-mix(in srgb, var(--ink) 80%, #000);
   box-shadow: 0 1px 0 #fff, inset 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 .bars span {
   width: 7px;
   height: 7px;
   border-radius: 2.5px;
-  background: #3a2a22;
+  background: color-mix(in srgb, var(--ink) 55%, #000);
 }
 .bars span.on {
   background: linear-gradient(180deg, var(--c-light), var(--c) 60%, var(--c-dark));

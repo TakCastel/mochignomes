@@ -55,8 +55,8 @@ const cards = computed(() => [
   gap: 2px;
   padding: 12px 14px;
   border-radius: 20px;
-  background: #f1e5d5;
-  box-shadow: inset 2px 2px 6px rgba(140, 110, 80, 0.3), inset -2px -2px 6px #fff;
+  background: var(--plate-lo);
+  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
 }
 .card.big {
   grid-column: 1 / -1;
@@ -66,6 +66,6 @@ const cards = computed(() => [
 .icon { width: 28px; height: 28px; color: #d9822b; }
 .card.big .icon { color: #ffb300; }
 .card strong { font-family: "Fredoka", "Nunito", system-ui, sans-serif; font-size: 24px; line-height: 1.1; }
-.card span { font-size: 13px; font-weight: 700; color: #8a5a3a; }
-.born { margin: 16px 0 0; font-weight: 700; color: #a2775a; font-size: 14px; }
+.card span { font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--ink) 72%, #fff); }
+.born { margin: 16px 0 0; font-weight: 700; color: color-mix(in srgb, var(--ink) 58%, #fff); font-size: 14px; }
 </style>

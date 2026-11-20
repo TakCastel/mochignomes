@@ -84,8 +84,8 @@ const meta = computed(() => {
   margin: 4px 0 10px;
   padding: 5px;
   border-radius: 999px;
-  background: #efe2d0;
-  box-shadow: inset 2px 2px 5px rgba(140, 110, 80, 0.35), inset -2px -2px 5px #fff;
+  background: var(--plate-lo);
+  box-shadow: inset 2px 2px 5px var(--plate-shade), inset -2px -2px 5px #fff;
 }
 .tab {
   position: relative;
@@ -97,7 +97,7 @@ const meta = computed(() => {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #8a5a3a;
+  color: color-mix(in srgb, var(--ink) 72%, #fff);
   font: 800 13px "Nunito", system-ui, sans-serif;
   cursor: pointer;
 }
@@ -115,7 +115,7 @@ const meta = computed(() => {
   height: 8px;
   border-radius: 50%;
   background: #ff4d4d;
-  box-shadow: 0 0 0 2px #efe2d0;
+  box-shadow: 0 0 0 2px var(--plate-lo);
 }
 @media (max-width: 360px) {
   .tab span:not(.dot) { display: none; }

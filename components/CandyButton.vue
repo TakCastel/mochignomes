@@ -42,9 +42,9 @@ defineEmits(["press"]);
   height: var(--btn, 64px);
   padding: 5px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 25%, #fffefb, #eadbc6 80%);
+  background: radial-gradient(circle at 35% 25%, #ffffff, var(--knob-lo) 80%);
   /* épaisseur du plastique sous le bouton */
-  box-shadow: 0 6px 0 #d6c3a9, 0 8px 12px rgba(120, 90, 60, 0.4), -3px -3px 8px #fff, inset 0 1px 0 #fff;
+  box-shadow: 0 6px 0 var(--knob-side), 0 8px 12px var(--plate-shade), -3px -3px 8px #fff, inset 0 1px 0 #fff;
   transition: box-shadow 0.08s, transform 0.08s;
 }
 /* bonbon brillant */
@@ -95,7 +95,7 @@ defineEmits(["press"]);
 }
 .candy-btn:active .rim {
   transform: translateY(5px);
-  box-shadow: 0 1px 0 #d6c3a9, 0 2px 4px rgba(120, 90, 60, 0.4), inset 0 1px 0 #fff;
+  box-shadow: 0 1px 0 var(--knob-side), 0 2px 4px var(--plate-shade), inset 0 1px 0 #fff;
 }
 .candy-btn:active .candy { transform: scale(0.92); }
 .candy-btn:focus-visible .rim { outline: 3px solid #6f4fe0; outline-offset: 2px; }
@@ -103,7 +103,7 @@ defineEmits(["press"]);
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
   font-size: 11px;
-  color: #5a3a24;
+  color: var(--ink);
   text-shadow: 0 1px 0 #fff;
 }
 @media (max-height: 740px) {

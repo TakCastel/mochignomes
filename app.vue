@@ -1,11 +1,10 @@
 <template>
-  <div class="world" :class="`phase-${shownPhase}`">
-    <!-- décor derrière la console -->
+  <div class="world" :class="`phase-${shownPhase}`" :style="theme">
+    <!-- fond de jeu derrière la console : dégradé vif à pois -->
     <div class="outside">
-      <div class="sky" :style="skyStyle" />
-      <div class="tree left" />
-      <div class="tree right" />
-      <div class="meadow" />
+      <div class="wall" />
+      <div class="dots" />
+      <div class="night" />
     </div>
 
     <main class="console">
@@ -20,6 +19,7 @@
 
       <GameToasts />
       <GameSheet />
+      <WelcomeCard />
     </main>
   </div>
 </template>
@@ -27,15 +27,12 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
-import { dayPhase, SKY } from "~/lib/gameUi";
+import { dayPhase, shellVars } from "~/lib/gameUi";
 
 const store = useTamagotchiStore();
 const dead = computed(() => store.health <= 0);
-// fond fixe autour de la console (le ciel animé est dans l'écran)
-const skyStyle = computed(() => {
-  const c = SKY[shownPhase.value] || SKY.day;
-  return { background: `linear-gradient(180deg, ${c.top}, ${c.bottom} 70%)` };
-});
+// couleur de coque choisie dans les réglages
+const theme = computed(() => shellVars(store.shell));
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
@@ -96,31 +93,31 @@ body {
   position: absolute;
   inset: 0;
 }
-.sky {
+.wall {
   position: absolute;
   inset: 0;
-  transition: background 1.5s;
+  background:
+    radial-gradient(90% 60% at 20% 10%, rgba(255, 255, 255, 0.35), transparent 60%),
+    linear-gradient(150deg, var(--wall-1), var(--wall-2));
+  transition: background 0.6s;
 }
-.tree {
+.dots {
   position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #7fdc5a, #2f9e3a 70%);
-  box-shadow: inset -20px -20px 0 rgba(0, 60, 20, 0.15);
+  inset: 0;
+  opacity: 0.22;
+  background-image: radial-gradient(circle, #fff 2.5px, transparent 3px);
+  background-size: 34px 34px;
+  background-position: 0 0;
 }
-.tree.left { width: 260px; height: 220px; left: -120px; top: -40px; }
-.tree.right { width: 200px; height: 170px; right: -110px; top: 30%; }
-.meadow {
+.night {
   position: absolute;
-  left: -10%;
-  right: -10%;
-  bottom: 0;
-  height: 22%;
-  border-radius: 50% 50% 0 0 / 40px 40px 0 0;
-  background: linear-gradient(180deg, #ffd27a, #ffb347);
+  inset: 0;
+  background: rgba(15, 10, 50, 0.45);
+  opacity: 0;
+  transition: opacity 1.2s;
 }
-.phase-night .tree { filter: brightness(0.45) saturate(0.8); }
-.phase-night .meadow { filter: brightness(0.5); }
-.phase-dusk .tree, .phase-dusk .meadow { filter: brightness(0.8); }
+.phase-night .night { opacity: 1; }
+.phase-dusk .night { opacity: 0.35; }
 
 /* la console : coque en plastique crème brillant */
 .console {

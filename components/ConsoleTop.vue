@@ -1,8 +1,11 @@
 <template>
   <div class="top">
     <button class="nameplate" :aria-label="`Fiche de ${store.name}`" @click="gameBus.sheet = 'fiche'">
-      <span class="name">{{ store.name || "..." }}</span>
-      <span class="mood"><span class="dot" :style="{ background: moodColor }" />{{ moodLabel }}</span>
+      <span class="dot" :style="{ background: moodColor }"><Icon :name="moodIcon" class="mood-icon" /></span>
+      <span class="text">
+        <span class="name">{{ store.name || "..." }}</span>
+        <span class="mood">{{ moodLabel }}</span>
+      </span>
     </button>
 
     <div class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`">
@@ -26,11 +29,12 @@
 
 <script setup>
 import { computed, onMounted } from "vue";
-import { MOOD_LABELS } from "~/lib/creatureLook";
+import { MOOD_ICONS, MOOD_LABELS } from "~/lib/creatureLook";
 import { levelInfo } from "~/stores/useTamagotchiStore";
 
 const { store, mood } = useCreatureMood();
 const moodLabel = computed(() => MOOD_LABELS[mood.value]?.[0] || "");
+const moodIcon = computed(() => MOOD_ICONS[mood.value] || "ph:smiley-fill");
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#3ccf6e");
 const lvl = computed(() => levelInfo(store.xp));
 const filled = computed(() => Math.floor((lvl.value.into / lvl.value.need) * 8));
@@ -45,96 +49,103 @@ onMounted(() => store.initName());
   align-items: center;
   gap: 8px;
 }
+/* trois pastilles blanches brillantes, assorties */
+.nameplate,
+.level,
+.round {
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 45%, var(--knob-lo) 100%);
+  box-shadow: 0 4px 0 var(--knob-side), 0 7px 12px var(--plate-shade), inset 0 -2px 0 rgba(255, 255, 255, 0.6);
+}
 .nameplate {
   justify-self: start;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
   max-width: 100%;
-  padding: 6px 16px 7px;
+  padding: 5px 14px 5px 5px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #a68cff, #6f4fe0);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -4px 0 rgba(40, 10, 120, 0.3), 0 4px 0 #4b2fb0, 0 8px 14px rgba(60, 30, 140, 0.35);
-  color: #fff;
+  color: var(--ink);
   cursor: pointer;
   text-align: left;
 }
-.nameplate:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 2px 0 #4b2fb0; }
+.nameplate:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side), inset 0 -2px 0 rgba(255, 255, 255, 0.6); }
+/* pastille d'humeur : un rond de couleur avec un reflet */
+.dot {
+  flex: none;
+  display: grid;
+  place-items: center;
+  transition: background 0.4s;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.22), inset 0 2px 2px rgba(255, 255, 255, 0.6);
+}
+.mood-icon { width: 21px; height: 21px; color: #fff; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.2)); }
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 .name {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
-  font-size: clamp(15px, 4.6vw, 19px);
-  line-height: 1;
-  text-shadow: 0 2px 0 rgba(40, 10, 120, 0.45);
-  max-width: 100%;
+  font-size: clamp(15px, 4.4vw, 18px);
+  line-height: 1.05;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .mood {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
   font-size: 11px;
   font-weight: 800;
-  opacity: 0.95;
+  opacity: 0.7;
   white-space: nowrap;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 .level {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px 5px 5px;
+  padding: 4px 10px 4px 4px;
   border-radius: 999px;
-  background: #e9dccb;
-  box-shadow: inset 2px 2px 5px rgba(140, 110, 80, 0.4), inset -2px -2px 5px #fff;
 }
 .badge {
   position: relative;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 }
-.star { width: 34px; height: 34px; color: #ffc21a; filter: drop-shadow(0 2px 0 #c98a00) drop-shadow(0 0 4px rgba(255, 200, 40, 0.6)); }
+.star { width: 32px; height: 32px; color: #ffc21a; filter: drop-shadow(0 2px 0 #d18a00); }
 .num {
   position: absolute;
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   color: #6b3a00;
   padding-top: 2px;
 }
 .segments {
   display: flex;
   gap: clamp(2px, 0.6vw, 3px);
-  padding: 4px;
+  padding: 3px;
   border-radius: 999px;
-  background: #4a3a48;
-  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.5);
+  background: var(--plate-lo);
+  box-shadow: inset 0 1px 3px var(--plate-shade);
 }
 .seg {
-  width: clamp(5px, 1.7vw, 9px);
-  height: 14px;
+  width: clamp(5px, 1.6vw, 8px);
+  height: 12px;
   border-radius: 4px;
-  background: #2f2430;
+  background: color-mix(in srgb, var(--knob-side) 60%, #fff);
 }
 .seg.on {
-  background: linear-gradient(180deg, #fff1a0, #ffc21a);
-  box-shadow: 0 0 6px rgba(255, 200, 40, 0.7);
+  background: linear-gradient(180deg, #fff1a0, #ffb800);
+  box-shadow: 0 0 5px rgba(255, 190, 20, 0.7);
 }
 
 .corner {
@@ -158,10 +169,8 @@ onMounted(() => store.initName());
   height: 42px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(145deg, #4c5a8a, #2f3a63);
-  box-shadow: 0 0 0 4px #f5ede2, 3px 4px 8px rgba(110, 80, 50, 0.45), -2px -2px 6px #fff;
   cursor: pointer;
 }
-.round:active { transform: scale(0.94); }
-.gear { width: 26px; height: 26px; color: #fff; filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.3)); }
+.round:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--knob-side); }
+.gear { width: 24px; height: 24px; color: var(--shell-edge); }
 </style>

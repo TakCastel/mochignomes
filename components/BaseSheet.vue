@@ -52,8 +52,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   max-width: 480px;
   max-height: 88%;
   overflow-y: auto;
-  background: linear-gradient(180deg, #fffaf2, #f6ecdf);
-  color: #4a2410;
+  background: linear-gradient(180deg, #ffffff, var(--plate-lo));
+  color: var(--ink);
   border-radius: 32px 32px 0 0;
   padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
   box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.35), inset 0 2px 0 #fff;
@@ -62,7 +62,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   width: 44px;
   height: 5px;
   border-radius: 999px;
-  background: #e2cfb6;
+  background: var(--knob-side);
   margin: 0 auto 14px;
 }
 .head {
@@ -95,19 +95,19 @@ h2 {
   font-size: 26px;
   font-weight: 700;
 }
-.subtitle { margin: 2px 0 0; font-weight: 700; color: #8a5a3a; font-size: 14px; }
+.subtitle { margin: 2px 0 0; font-weight: 700; color: color-mix(in srgb, var(--ink) 72%, #fff); font-size: 14px; }
 .close {
   flex: none;
   width: 40px;
   height: 40px;
   border: 0;
   border-radius: 50%;
-  background: #f1e4d3;
-  color: #4a2410;
+  background: var(--plate-lo);
+  color: var(--ink);
   font-size: 16px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 2px 3px 6px rgba(140, 110, 80, 0.35), -2px -2px 5px #fff;
+  box-shadow: 2px 3px 6px var(--plate-shade), -2px -2px 5px #fff;
 }
 .sheet-enter-active, .sheet-leave-active { transition: background 0.25s; }
 .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }

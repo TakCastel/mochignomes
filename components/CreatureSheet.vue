@@ -67,7 +67,7 @@ h3 {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #a2775a;
+  color: color-mix(in srgb, var(--ink) 58%, #fff);
 }
 .bars {
   list-style: none;
@@ -76,8 +76,8 @@ h3 {
   display: grid;
   gap: 10px;
   border-radius: 20px;
-  background: #f1e5d5;
-  box-shadow: inset 2px 2px 6px rgba(140, 110, 80, 0.3), inset -2px -2px 6px #fff;
+  background: var(--plate-lo);
+  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
 }
 .bars li {
   display: grid;
@@ -91,15 +91,15 @@ h3 {
 .bar {
   height: 12px;
   border-radius: 999px;
-  background: #e3d3bf;
+  background: var(--knob-lo);
   overflow: hidden;
-  box-shadow: inset 1px 1px 3px rgba(120, 90, 60, 0.35);
+  box-shadow: inset 1px 1px 3px var(--plate-shade);
 }
 .bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s; }
 .bar-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 14px; }
 .bar-value.bonus { color: #d9a400; }
-.how { margin-top: 16px; font-size: 14px; color: #7a5236; }
+.how { margin-top: 16px; font-size: 14px; color: color-mix(in srgb, var(--ink) 78%, #fff); }
 .how summary { cursor: pointer; font-weight: 800; }
 .how ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
-.tip { margin: 16px 0 0; font-size: 13px; color: #a2775a; font-weight: 700; }
+.tip { margin: 16px 0 0; font-size: 13px; color: color-mix(in srgb, var(--ink) 58%, #fff); font-weight: 700; }
 </style>

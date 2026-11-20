@@ -9,6 +9,24 @@
       <p v-if="saved" class="ok">C'est noté, elle s'appelle maintenant {{ store.name }}.</p>
     </form>
 
+    <div class="block">
+      <strong>Couleur de la console</strong>
+      <div class="swatches" role="radiogroup" aria-label="Couleur de la console">
+        <button
+          v-for="(t, key) in SHELLS"
+          :key="key"
+          class="swatch"
+          role="radio"
+          :aria-checked="store.shell === key"
+          :class="{ on: store.shell === key }"
+          @click="store.shell = key"
+        >
+          <span class="chip" :style="{ background: `linear-gradient(160deg, ${t.hi}, ${t.mid} 55%, ${t.lo})` }" />
+          <span>{{ t.label }}</span>
+        </button>
+      </div>
+    </div>
+
     <div class="block danger">
       <strong>Nouvelle partie</strong>
       <p>Une nouvelle créature remplace {{ store.name }} : jauges, caractère, niveau et succès repartent de zéro. Les photos restent dans la galerie.</p>
@@ -23,6 +41,7 @@
 
 <script setup>
 import { ref } from "vue";
+import { SHELLS } from "~/lib/gameUi";
 
 const { store } = useCreatureMood();
 const draft = ref("");
@@ -51,11 +70,11 @@ function restart() {
   margin-top: 12px;
   padding: 14px;
   border-radius: 20px;
-  background: #f1e5d5;
-  box-shadow: inset 2px 2px 6px rgba(140, 110, 80, 0.3), inset -2px -2px 6px #fff;
+  background: var(--plate-lo);
+  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
 }
 label, .block strong { font-weight: 800; font-size: 15px; }
-.block p { margin: 0; font-size: 14px; color: #7a5236; font-weight: 700; }
+.block p { margin: 0; font-size: 14px; color: color-mix(in srgb, var(--ink) 78%, #fff); font-weight: 700; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; }
 input {
   flex: 1;
@@ -63,10 +82,10 @@ input {
   padding: 10px 12px;
   border: 0;
   border-radius: 14px;
-  background: #fffaf3;
-  color: #4a2410;
+  background: #ffffff;
+  color: var(--ink);
   font: 800 16px "Nunito", system-ui, sans-serif;
-  box-shadow: inset 2px 2px 5px rgba(140, 110, 80, 0.35);
+  box-shadow: inset 2px 2px 5px var(--plate-shade);
   user-select: text;
 }
 input:focus { outline: 3px solid #a68cff; }
@@ -74,14 +93,39 @@ input:focus { outline: 3px solid #a68cff; }
   padding: 10px 16px;
   border: 0;
   border-radius: 14px;
-  background: #fffaf3;
-  color: #4a2410;
+  background: #ffffff;
+  color: var(--ink);
   font: 800 14px "Nunito", system-ui, sans-serif;
-  box-shadow: 0 3px 0 #c9b296;
+  box-shadow: 0 3px 0 var(--knob-side);
   cursor: pointer;
 }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn.primary { background: linear-gradient(180deg, #a68cff, #6f4fe0); color: #fff; box-shadow: 0 3px 0 #4b2fb0; }
 .btn.red { background: linear-gradient(180deg, #ff7a7a, #e04848); color: #fff; box-shadow: 0 3px 0 #a82727; }
 .ok { color: #2f9e44 !important; }
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.swatch {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  font: 800 11px "Nunito", system-ui, sans-serif;
+  cursor: pointer;
+}
+.swatch.on { background: #ffffff; box-shadow: 0 3px 0 var(--knob-side); }
+.chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.swatch.on .chip { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #6f4fe0; }
 </style>

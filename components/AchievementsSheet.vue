@@ -48,8 +48,8 @@ const done = computed(() => rows.value.filter((r) => r.done).length);
   gap: 12px;
   padding: 10px 12px;
   border-radius: 20px;
-  background: #f1e5d5;
-  box-shadow: inset 2px 2px 6px rgba(140, 110, 80, 0.3), inset -2px -2px 6px #fff;
+  background: var(--plate-lo);
+  box-shadow: inset 2px 2px 6px var(--plate-shade), inset -2px -2px 6px #fff;
 }
 .list li.done {
   background: linear-gradient(180deg, #fff6d6, #ffe9a8);
@@ -61,17 +61,17 @@ const done = computed(() => rows.value.filter((r) => r.done).length);
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: #e6d6c2;
-  box-shadow: inset 2px 2px 4px rgba(120, 90, 60, 0.35);
+  background: var(--knob-lo);
+  box-shadow: inset 2px 2px 4px var(--plate-shade);
 }
 .done .medal { background: radial-gradient(circle at 40% 30%, #fff7c9, #ffc93c); box-shadow: 0 3px 0 #d39a00; }
 .icon { width: 28px; height: 28px; color: #b9a58e; }
 .done .icon { color: #fff; filter: drop-shadow(0 2px 0 #b07c00); }
 .text { display: grid; gap: 2px; min-width: 0; }
 .text strong { font-size: 15px; }
-.text span { font-size: 13px; color: #8a5a3a; font-weight: 700; }
-.progress { height: 7px; margin-top: 4px; border-radius: 999px; background: #e0cfb9; overflow: hidden; }
+.text span { font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-weight: 700; }
+.progress { height: 7px; margin-top: 4px; border-radius: 999px; background: var(--knob-lo); overflow: hidden; }
 .progress div { height: 100%; background: #ff9f1c; border-radius: 999px; }
-.count { font-weight: 800; font-size: 13px; color: #8a5a3a; font-variant-numeric: tabular-nums; }
+.count { font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-variant-numeric: tabular-nums; }
 .done .count { color: #2f9e44; font-size: 20px; }
 </style>

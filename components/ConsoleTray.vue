@@ -1,6 +1,6 @@
 <template>
   <nav class="tray" aria-label="Menu">
-    <button v-for="t in tiles" :key="t.key" class="tile" @click="gameBus.sheet = t.key">
+    <button v-for="t in tiles" :key="t.key" class="tile" :style="{ '--c': t.color }" @click="gameBus.sheet = t.key">
       <span class="well">
         <Icon :name="t.icon" class="icon" />
         <span v-if="t.badge" class="badge" :class="{ alert: t.alert }">{{ t.badge }}</span>
@@ -18,15 +18,16 @@ const { store } = useCreatureMood();
 const { photos } = useGallery();
 
 const tiles = computed(() => [
-  { key: "galerie", label: "Photos", icon: "ph:images-fill", badge: photos.value.length || null },
+  { key: "galerie", label: "Photos", icon: "ph:images-fill", color: "#ff5c8a", badge: photos.value.length || null },
   {
     key: "succes",
     label: "Succès",
     icon: "ph:trophy-fill",
+    color: "#ffb300",
     badge: `${store.unlocked.length}/${ACHIEVEMENTS.length}`,
     alert: store.unlocked.length > gameBus.seenUnlocked,
   },
-  { key: "journal", label: "Journal", icon: "ph:calendar-fill", badge: null },
+  { key: "journal", label: "Journal", icon: "ph:calendar-fill", color: "#21b8d6", badge: null },
 ]);
 </script>
 
@@ -38,21 +39,21 @@ const tiles = computed(() => [
   gap: 6px;
   padding: 7px 14px 11px;
   border-radius: 36px 36px 50% 50% / 36px 36px 60px 60px;
-  background: linear-gradient(180deg, #ebdecb, #f3e8d9);
-  box-shadow: inset 0 3px 6px rgba(140, 105, 70, 0.4), inset 0 -2px 2px #fff, 0 1px 0 #fff;
+  background: linear-gradient(180deg, var(--plate-lo), var(--plate-hi));
+  box-shadow: inset 0 3px 6px var(--plate-shade), inset 0 -2px 2px #fff, 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 .tile {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 12px;
   padding: 0;
   border: 0;
   background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-/* bouton rond en relief, caramel brillant */
+/* bouton rond blanc, icône de couleur */
 .well {
   position: relative;
   display: grid;
@@ -60,57 +61,39 @@ const tiles = computed(() => [
   width: var(--tile, 44px);
   height: var(--tile, 44px);
   border-radius: 50%;
-  background: radial-gradient(circle at 36% 26%, #f2bf86, #c2793a 55%, #8a4a1a 100%);
-  box-shadow:
-    inset 0 2px 2px rgba(255, 255, 255, 0.55),
-    inset 0 -4px 5px rgba(70, 30, 5, 0.45),
-    0 4px 0 #74401a,
-    0 6px 9px rgba(90, 50, 20, 0.4);
+  background: radial-gradient(circle at 38% 28%, #ffffff, #ffffff 40%, var(--knob-lo) 100%);
+  box-shadow: 0 4px 0 var(--knob-side), 0 6px 10px var(--plate-shade), inset 0 -2px 3px rgba(0, 0, 0, 0.06);
   transition: transform 0.08s, box-shadow 0.08s;
-}
-.well::after {
-  content: "";
-  position: absolute;
-  top: 8%;
-  left: 22%;
-  width: 56%;
-  height: 28%;
-  border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
 }
 .tile:active .well {
   transform: translateY(3px);
-  box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.55), inset 0 -4px 5px rgba(70, 30, 5, 0.45), 0 1px 0 #74401a;
+  box-shadow: 0 1px 0 var(--knob-side), 0 2px 4px var(--plate-shade);
 }
 .icon {
-  position: relative;
-  z-index: 1;
-  width: 52%;
-  height: 52%;
-  color: #fff4e3;
-  filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.2)) drop-shadow(0 2px 1px rgba(70, 30, 5, 0.6));
+  width: 54%;
+  height: 54%;
+  color: var(--c);
+  filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--c) 60%, #000));
 }
 .badge {
   position: absolute;
-  z-index: 2;
-  top: -6px;
-  right: -12px;
+  top: -7px;
+  right: -9px;
   padding: 1px 6px;
   border-radius: 999px;
-  background: #fff;
-  color: #8a4a1a;
+  background: var(--ink);
+  color: #fff;
   font-size: 10px;
   font-weight: 900;
-  box-shadow: 0 2px 0 #d9c4a8;
   white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
 }
-.badge.alert { background: #ff4d4d; color: #fff; box-shadow: 0 2px 0 #b52020; }
+.badge.alert { background: #ff4d4d; box-shadow: 0 2px 0 #b52020; }
 .label {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 700;
   font-size: 13px;
-  color: #5a3a24;
-  text-shadow: 0 1px 0 #fff;
+  color: var(--ink);
 }
 @media (max-width: 380px) {
   .label { display: none; }

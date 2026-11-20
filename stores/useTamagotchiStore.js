@@ -63,6 +63,31 @@ export const useTamagotchiStore = defineStore(
     const bornAt = ref(0);
     const counters = ref({}); // nombre de fois que chaque chose a été faite
     const unlocked = ref([]); // succès débloqués
+    const shell = ref("lavande"); // couleur de la coque
+    // Visites : série de jours d'affilée et bonus du jour
+    const lastVisitDay = ref("");
+    const streak = ref(0);
+    const pendingBonus = ref(0);
+    const awaySeconds = ref(0); // durée de l'absence avant cette visite (non sauvegardée)
+
+    const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    function checkDailyVisit() {
+      const today = new Date();
+      const key = dayKey(today);
+      if (lastVisitDay.value === key) return;
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      streak.value = lastVisitDay.value === dayKey(yesterday) ? streak.value + 1 : 1;
+      lastVisitDay.value = key;
+      // le bonus grandit avec la série, jusqu'à 7 jours
+      pendingBonus.value = 10 + 5 * (Math.min(streak.value, 7) - 1);
+    }
+    function claimBonus() {
+      const gained = pendingBonus.value;
+      xp.value += gained;
+      pendingBonus.value = 0;
+      return gained;
+    }
     const count = (key, n = 1) => { counters.value[key] = (counters.value[key] || 0) + n; };
 
     function rename(newName) {
@@ -273,6 +298,8 @@ export const useTamagotchiStore = defineStore(
     function startDecay() {
       if (!bornAt.value) bornAt.value = Date.now();
       if (decayTimer) return;
+      awaySeconds.value = lastUpdate.value ? Math.max(0, (Date.now() - lastUpdate.value) / 1000) : 0;
+      checkDailyVisit();
       if (typeof window !== "undefined") {
         const s = Number(new URLSearchParams(window.location.search).get("vitesse"));
         speed.value = s > 0 ? Math.min(s, 3600) : 1;
@@ -315,6 +342,12 @@ export const useTamagotchiStore = defineStore(
       rename,
       resetGame,
       countPhoto,
+      shell,
+      lastVisitDay,
+      streak,
+      pendingBonus,
+      awaySeconds,
+      claimBonus,
       applyAction,
       wakeUp,
       startSleeping,
@@ -324,7 +357,7 @@ export const useTamagotchiStore = defineStore(
   },
   {
     persist: {
-      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked"],
+      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked", "shell", "lastVisitDay", "streak", "pendingBonus"],
     },
   }
 );

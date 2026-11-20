@@ -90,8 +90,8 @@ function press(a) {
   gap: 4px;
   padding: 10px 6px 11px;
   border-radius: 44px;
-  background: linear-gradient(180deg, #f1e6d7, #f8f0e5);
-  box-shadow: inset 0 3px 5px rgba(140, 110, 80, 0.35), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 rgba(140, 110, 80, 0.25);
+  background: linear-gradient(180deg, var(--plate-lo), var(--plate-hi));
+  box-shadow: inset 0 3px 5px var(--plate-shade), inset 0 -2px 2px #fff, 0 1px 0 #fff, 0 -1px 0 var(--plate-shade);
   /* le bas de la console vient vers nous */
   transform: perspective(650px) rotateX(10deg);
   transform-origin: 50% 0;
@@ -115,12 +115,12 @@ function press(a) {
   padding: 7px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(145deg, #fffaf3, #eadfcf);
-  box-shadow: 0 6px 0 #d6c3a9, 0 8px 14px rgba(120, 90, 60, 0.45), -4px -4px 10px #fff, inset 0 1px 0 #fff;
+  background: linear-gradient(145deg, #ffffff, var(--knob-lo));
+  box-shadow: 0 6px 0 var(--knob-side), 0 8px 14px var(--plate-shade), -4px -4px 10px #fff, inset 0 1px 0 #fff;
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.big:active { transform: translateY(5px); box-shadow: 0 1px 0 #d6c3a9, 0 2px 4px rgba(120, 90, 60, 0.4), inset 0 1px 0 #fff; }
+.big:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--knob-side), 0 2px 4px var(--plate-shade), inset 0 1px 0 #fff; }
 .big-face {
   display: grid;
   place-items: center;
@@ -151,7 +151,7 @@ function press(a) {
   font-family: "Fredoka", "Nunito", system-ui, sans-serif;
   font-weight: 600;
   font-size: 12px;
-  color: #5a3a24;
+  color: var(--ink);
   font-weight: 700;
   text-shadow: 0 1px 0 #fff;
 }
@@ -171,7 +171,7 @@ function press(a) {
   width: 46px;
   height: 4px;
   border-radius: 999px;
-  background: #d9cab6;
-  box-shadow: inset 1px 1px 2px rgba(120, 90, 60, 0.5), 0 1px 0 #fff;
+  background: var(--knob-side);
+  box-shadow: inset 1px 1px 2px var(--plate-shade), 0 1px 0 #fff;
 }
 </style>
