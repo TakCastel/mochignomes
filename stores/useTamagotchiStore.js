@@ -64,7 +64,7 @@ export const useTamagotchiStore = defineStore(
     const counters = ref({}); // nombre de fois que chaque chose a été faite
     const unlocked = ref([]); // succès débloqués
     const shell = ref("lavande"); // (ancienne couleur de coque, inutilisée)
-    const palette = ref("bonbon"); // palette de couleurs de l'interface
+    const palette = ref("printemps"); // palette de couleurs de l'interface
     // Visites : série de jours d'affilée et bonus du jour
     const lastVisitDay = ref("");
     const streak = ref(0);

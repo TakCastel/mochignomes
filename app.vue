@@ -2,7 +2,7 @@
   <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
     <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" />
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
