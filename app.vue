@@ -128,13 +128,17 @@ body {
   gap: clamp(8px, 1.4vh, 14px);
   padding: clamp(10px, 1.6vh, 16px) 12px;
   border-radius: 44px;
-  background: linear-gradient(180deg, #fffaf3 0%, #f4ebdf 45%, #ece0cf 100%);
+  background:
+    radial-gradient(120% 60% at 15% 0%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, #fffaf2 0%, #f3e6d4 50%, #e6d3ba 100%);
   box-shadow:
-    inset 0 3px 0 #fff,
-    inset 0 -8px 14px rgba(170, 135, 100, 0.25),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.6),
-    0 0 0 3px #e3d5c2,
-    0 18px 40px rgba(40, 20, 60, 0.45);
+    inset 0 4px 0 #fff,
+    inset 4px 0 6px rgba(255, 255, 255, 0.8),
+    inset -6px 0 10px rgba(170, 125, 85, 0.25),
+    inset 0 -12px 18px rgba(170, 125, 85, 0.35),
+    0 0 0 3px #dcc6a8,
+    0 0 0 6px rgba(255, 255, 255, 0.35),
+    0 22px 45px rgba(40, 20, 60, 0.5);
   overflow: hidden;
   isolation: isolate;
 }
