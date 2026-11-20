@@ -41,6 +41,14 @@ npm run dev
 
 ---
 
+## 🧪 Tester rapidement
+
+- `?vitesse=60` : le temps passe 60 fois plus vite (une heure en une minute).
+- `?heure=22` : force l'heure affichée pour voir le décor (aube, jour, crépuscule, nuit).
+- `/prototype-3d.html` : bac à sable du personnage 3D (expressions, postures, morphing).
+
+---
+
 ## ☁️ Deployment on Vercel
 
 1. Push your project to GitHub.
