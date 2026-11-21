@@ -1,5 +1,5 @@
 // Service worker : cache de l'appli, notifications locales (aucun serveur push).
-const CACHE = "tamagotchi-v4";
+const CACHE = "tamagotchi-v5";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/manifest.webmanifest", "/icons/icon-192.png"]).catch(() => {})));
