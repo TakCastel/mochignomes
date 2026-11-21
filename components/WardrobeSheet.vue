@@ -397,7 +397,7 @@ function shuffle() {
   background: var(--surface); transition: transform 0.12s;
   box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.08), 0 2px 6px rgba(40, 55, 80, 0.14);
 }
-.r-btn.worn .r-badge, .r-btn.on .r-badge { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.r-btn.worn .r-badge, .r-btn.on .r-badge { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 0 0 2px var(--surface), 0 0 0 4px var(--knob-side); }
 .r-soft { background: var(--surface-3); }
 /* Boutique : rouge et blanc, avec un petit store rayé en haut */
 .r-shop {
