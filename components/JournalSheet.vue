@@ -10,37 +10,37 @@
       <button class="ui-btn ui-btn--gold ui-btn--sm" @click="claimBonus">Récupérer</button>
     </section>
 
-    <!-- défis (après leur découverte) -->
-    <!-- tout est fait (bonus compris) : la carte se replie, un tap la rouvre -->
-    <button v-if="store.features?.defis && allClaimed && !showQuests" class="ui-card quests-done" @click="showQuests = true">
-      <Icon name="solar:check-circle-bold" class="done-ic" />
-      <span class="grow">
-        <strong class="ui-row-title">Défis du jour</strong>
-        <span class="ui-caption">Tout est fait, à demain !</span>
-      </span>
-      <Icon name="solar:alt-arrow-down-linear" class="chev" aria-label="Revoir les défis" />
-    </button>
-    <section v-else-if="store.features?.defis" class="ui-card">
-      <button v-if="allClaimed" class="ui-section-title quests-head" @click="showQuests = false">
-        <Icon name="solar:cup-star-bold-duotone" class="ic" />Les 3 défis du jour
-        <Icon name="solar:alt-arrow-up-linear" class="chev" aria-label="Replier" />
-      </button>
-      <h3 v-else class="ui-section-title"><Icon name="solar:cup-star-bold-duotone" class="ic" />Les 3 défis du jour</h3>
-      <ul class="quests">
-        <li v-for="q in quests" :key="q.id" class="ui-row is-well" :class="{ claimed: q.claimed }">
-          <div class="grow">
-            <strong class="q-label">{{ q.label }}</strong>
-            <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.min(100, (q.progress / q.target) * 100) + '%' }" /></div>
-            <span class="ui-caption">{{ Math.min(q.progress, q.target) }} / {{ q.target }}</span>
-          </div>
-          <Icon v-if="q.claimed" name="solar:check-circle-bold" class="done-ic" aria-label="Récupéré" />
-          <button v-else class="ui-btn ui-btn--primary ui-btn--sm" :disabled="q.progress < q.target" @click="claim(q)">{{ rewardLabel(q) }}</button>
-        </li>
-        <li v-if="!quests.length" class="ui-empty">Les défis arrivent avec le prochain jour.</li>
-      </ul>
-      <button v-if="store.questBonusReady" class="ui-btn ui-btn--gold ui-btn--block mt" @click="claimQuestBonus">
-        <Icon name="solar:gift-bold-duotone" class="ic" />Bonus des 3 défis
-      </button>
+    <!-- défis (après leur découverte). Tout récupéré (bonus compris) : la carte se replie
+         en douceur sur son titre, un tap la rouvre -->
+    <section v-if="store.features?.defis" class="ui-card quests-card" :class="{ folded }">
+      <component :is="allClaimed ? 'button' : 'h3'" class="ui-section-title quests-head"
+        :aria-expanded="allClaimed ? String(!folded) : undefined" @click="allClaimed && (showQuests = !showQuests)">
+        <Icon :name="allClaimed ? 'solar:check-circle-bold' : 'solar:cup-star-bold-duotone'" class="ic" :class="{ 'head-done': allClaimed }" />
+        <span class="head-txt">
+          Les 3 défis du jour
+          <span class="ui-caption head-sub">Tout est fait, à demain !</span>
+        </span>
+        <Icon v-if="allClaimed" name="solar:alt-arrow-down-linear" class="chev" aria-hidden="true" />
+      </component>
+      <div class="fold">
+        <div class="fold-in">
+          <ul class="quests">
+            <li v-for="q in quests" :key="q.id" class="ui-row is-well" :class="{ claimed: q.claimed }">
+              <div class="grow">
+                <strong class="q-label">{{ q.label }}</strong>
+                <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.min(100, (q.progress / q.target) * 100) + '%' }" /></div>
+                <span class="ui-caption">{{ Math.min(q.progress, q.target) }} / {{ q.target }}</span>
+              </div>
+              <Icon v-if="q.claimed" name="solar:check-circle-bold" class="done-ic" aria-label="Récupéré" />
+              <button v-else class="ui-btn ui-btn--primary ui-btn--sm" :disabled="q.progress < q.target" @click="claim(q)">{{ rewardLabel(q) }}</button>
+            </li>
+            <li v-if="!quests.length" class="ui-empty">Les défis arrivent avec le prochain jour.</li>
+          </ul>
+          <button v-if="store.questBonusReady" class="ui-btn ui-btn--gold ui-btn--block mt" @click="claimQuestBonus">
+            <Icon name="solar:gift-bold-duotone" class="ic" />Bonus des 3 défis
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- jours passés ensemble (cumulés : rien à perdre si on rate un jour) -->
@@ -83,6 +83,7 @@ const quests = computed(() => store.quests?.list || []);
 // les 3 défis et leur bonus sont récupérés : rien à faire avant demain
 const allClaimed = computed(() => store.questsAllDone && !store.questBonusReady);
 const showQuests = ref(false);
+const folded = computed(() => allClaimed.value && !showQuests.value);
 const pipsOn = computed(() => ((store.totalDays || 0) > 0 ? ((store.totalDays - 1) % 7) + 1 : 0));
 const entries = computed(() => (store.journal || []).slice(0, 40));
 
@@ -115,10 +116,25 @@ function when(t) {
 .quests .claimed { opacity: 0.6; }
 .q-label { font: 800 15px/1.25 var(--font-text); color: var(--ink); }
 .done-ic { flex: none; width: 32px; height: 32px; margin: 0 8px; color: var(--accent-lo); }
-.quests-done { display: flex; align-items: center; gap: var(--s-3); width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
-.quests-done .done-ic { margin: 0; }
-.quests-head { display: flex; align-items: center; width: 100%; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; }
-.chev { flex: none; width: 20px; height: 20px; margin-left: auto; color: var(--ink-2); }
+/* repli des défis : la hauteur glisse (grille 1fr → 0fr), le sous-titre apparaît, le chevron tourne */
+.quests-head { width: 100%; background: none; border: 0; padding: 0; text-align: left; transition: margin-bottom 0.35s ease; }
+button.quests-head { cursor: pointer; }
+.head-txt { flex: 1; min-width: 0; display: grid; }
+.head-sub { max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.35s ease, opacity 0.3s ease; }
+.head-done { color: var(--accent-lo) !important; animation: head-pop 0.4s ease; }
+.chev { flex: none; width: 20px; height: 20px; color: var(--ink-2); transform: rotate(180deg); transition: transform 0.35s ease; }
+.fold { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.4s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.fold-in { min-height: 0; overflow: hidden; transition: opacity 0.3s ease; }
+.folded .quests-head { margin-bottom: 0; }
+.folded .head-sub { max-height: 1.6em; opacity: 1; }
+.folded .chev { transform: rotate(0deg); }
+.folded .fold { grid-template-rows: 0fr; }
+.folded .fold-in { opacity: 0; }
+@keyframes head-pop { 0% { transform: scale(0.4); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .quests-head, .head-sub, .chev, .fold, .fold-in { transition: none; }
+  .head-done { animation: none; }
+}
 
 /* jours ensemble : style propre (plus de « flamme » orange) */
 .top { display: flex; align-items: center; gap: var(--s-3); }
