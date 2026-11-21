@@ -122,11 +122,14 @@ watch(playing, (p) => creature.value?.setPlaying?.(p));
 const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping);
 // anneau de flèches en relief au sol (3D) : mêmes conditions que les zones tactiles ; la flèche pressée s'allume
 const rotPressed = ref(0);
-watch(
-  () => [creature.value, studio.value, arrowsHidden.value, rotPressed.value, !!fallback.value],
-  ([c, s, hidden, pressed, fb]) => c?.setTurnRing?.({ visible: s && !hidden && !fb, pressed }),
-  { immediate: true }
-);
+// branché au montage : arrowsHidden lit stageKey / houseFx, déclarés plus bas dans ce script
+onMounted(() => {
+  watch(
+    () => [creature.value, studio.value, arrowsHidden.value, rotPressed.value, !!fallback.value],
+    ([c, s, hidden, pressed, fb]) => c?.setTurnRing?.({ visible: s && !hidden && !fb, pressed }),
+    { immediate: true }
+  );
+});
 const arrowsTop = computed(() => (props.frame ? props.frame.ground - 28 : 400)); // centre du cercle au sol, un peu en retrait des pieds pour que l'avant des flèches reste visible
 const arrowsOffset = computed(() => {
   const f = props.frame;
