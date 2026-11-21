@@ -7,16 +7,16 @@
       <svg class="arcs" viewBox="0 0 200 200" aria-hidden="true">
         <g v-for="b in BUTTONS" :key="b.dir" :class="['arc', b.cls, { pressed: pressed === b.dir }]" :transform="b.dir === 1 ? 'translate(200 0) scale(-1 1)' : undefined">
           <g class="shadow" transform="translate(0 7)">
-            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
-            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
+            <path d="M70.6 180.8A86 86 0 0 1 19.2 70.6" />
+            <path class="head" d="M87.5 187L72.5 169.8L64.9 190.4Z" />
           </g>
           <g class="side" transform="translate(0 3.5)">
-            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
-            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
+            <path d="M70.6 180.8A86 86 0 0 1 19.2 70.6" />
+            <path class="head" d="M87.5 187L72.5 169.8L64.9 190.4Z" />
           </g>
           <g class="top">
-            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
-            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
+            <path d="M70.6 180.8A86 86 0 0 1 19.2 70.6" />
+            <path class="head" d="M87.5 187L72.5 169.8L64.9 190.4Z" />
           </g>
         </g>
       </svg>
@@ -106,11 +106,11 @@ onBeforeUnmount(cancel);
   top: 0;
   width: calc(var(--r) * 2);
   height: calc(var(--r) * 2);
-  transform: translate(-50%, -50%) perspective(720px) rotateX(68deg);
+  transform: translate(-50%, -50%) perspective(720px) rotateX(78deg);
   transform-origin: 50% 50%;
 }
 .arcs { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.arc path { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.arc path { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
 .arc path.head { stroke-width: 3; }
 .arc .top path { stroke: rgba(255, 255, 255, 0.82); }
 .arc .top path.head { fill: rgba(255, 255, 255, 0.82); }
@@ -126,9 +126,9 @@ onBeforeUnmount(cancel);
 /* zones tactiles : la partie extérieure de chaque côté du plateau, jamais près des pieds */
 .rbtn {
   position: absolute;
-  top: 12%;
-  bottom: 12%;
-  width: 30%;
+  top: 4%;
+  bottom: 0;
+  width: 40%;
   padding: 0;
   border: 0;
   border-radius: 40%;

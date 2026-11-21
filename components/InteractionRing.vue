@@ -430,7 +430,9 @@ onBeforeUnmount(() => {
   height: 320px;
   margin: -160px 0 0 -160px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.28) 45%, rgba(255, 255, 255, 0) 70%);
+  /* anneau de lumière autour de la créature, centre transparent : le halo est par-dessus la scène 3D,
+     un disque plein la délaverait */
+  background: radial-gradient(circle, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.22) 50%, rgba(255, 255, 255, 0) 68%);
   transition: left 0.12s linear, top 0.12s linear;
   animation: halo-pulse 2.4s ease-in-out infinite;
 }
