@@ -33,7 +33,7 @@
     <!-- Manger : goûter ou plat du frigo -->
     <MealPicker :open="gameBus.sheet === 'manger'" @close="closeSheet" @cook="openKitchen()" />
 
-    <!-- Cuisine : demi-hauteur, on la voit en 3D au-dessus -->
+    <!-- Cuisine : page plein écran comme les autres onglets -->
     <KitchenSheet :open="gameBus.sheet === 'cuisine'" :focus="gameBus.kitchenFocus" @close="closeKitchen" />
   </div>
 </template>
