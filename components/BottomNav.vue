@@ -20,9 +20,9 @@
       </span>
     </span>
 
-    <!-- l'humeur, calée dans l'onglet à côté du bouton (à sa gauche quand on est près du bord droit) -->
+    <!-- l'humeur, à l'accueil seulement, calée dans l'onglet à côté du bouton -->
     <Transition name="side">
-      <span v-if="size.w" :key="side" ref="moodEl" class="mood" :style="moodStyle" aria-live="polite">
+      <span v-if="size.w && showMood" :key="side" ref="moodEl" class="mood" :style="moodStyle" aria-live="polite">
         <span class="mood-dot" :style="{ '--d': moodInfo[1] }" />
         <span :key="moodInfo[0]" class="mood-v">{{ moodInfo[0] }}</span>
       </span>
@@ -124,9 +124,12 @@ let ready = false;
 const activeItem = computed(() => items.value.find((t) => t.key === active.value) || items.value[0]);
 const targetX = computed(() => centers.value[activeItem.value?.key] ?? size.value.w / 2);
 const near = ORB / 2 + PAD + SLOPE; // côté sans humeur
-const far = computed(() => ORB / 2 + MOOD_GAP + moodW.value + MOOD_END + SLOPE); // côté de l'humeur
+// l'humeur ne s'affiche qu'à l'accueil ; ailleurs l'onglet se resserre autour du seul bouton
+const showMood = computed(() => active.value === "maison");
+const moodFar = computed(() => ORB / 2 + MOOD_GAP + moodW.value + MOOD_END + SLOPE);
+const far = computed(() => (showMood.value ? moodFar.value : near)); // côté de l'humeur
 // l'humeur va à droite du bouton, sauf si elle déborderait de l'écran
-const side = computed(() => (targetX.value + far.value > size.value.w - 4 ? "left" : "right"));
+const side = computed(() => (targetX.value + moodFar.value > size.value.w - 4 ? "left" : "right"));
 const target = computed(() => ({
   x: targetX.value,
   l: side.value === "left" ? far.value : near,
@@ -219,7 +222,7 @@ const moodStyle = computed(() => {
   return { transform: `translate(${x.toFixed(1)}px, ${(BUMP_H - bump.value.bh).toFixed(1)}px)` };
 });
 watch(() => moodInfo.value[0], () => nextTick(measureMood));
-watch(side, () => nextTick(measureMood));
+watch([side, showMood], () => nextTick(measureMood));
 
 let ro;
 onMounted(() => {
