@@ -1,17 +1,13 @@
 <template>
   <header class="bar">
-    <!-- carte de profil : avatar, nom, niveau -->
+    <!-- carte de profil : avatar (ouvre la page Elle), nom, niveau, stade, jours -->
     <div class="profile">
-      <button class="avatar" :aria-label="`Fiche de ${store.name}`" @click="gameBus.sheet = 'fiche'">
+      <button class="avatar" :aria-label="`Voir ${store.name}`" @click="openPage('elle')">
         <img src="/images/avatar.webp" alt="" width="64" height="64">
       </button>
       <div class="info">
-        <div class="name-row">
-          <span class="name">{{ store.name || "..." }}</span>
-          <button class="edit" aria-label="Renommer" @click="gameBus.sheet = 'reglages'">
-            <Icon name="solar:pen-bold" class="edit-ic" />
-          </button>
-        </div>
+        <span class="name">{{ store.name || "..." }}</span>
+        <span class="meta">{{ stageLabel }} · {{ days }}</span>
         <button class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`" @click="explainLevel">
           <Icon name="solar:leaf-bold-duotone" class="sprout" />
           <span class="lvl">Niv. {{ lvl.level }}</span>
@@ -20,30 +16,26 @@
       </div>
     </div>
 
-    <!-- boutons ronds : succès, photos, réglages -->
-    <div class="rounds">
-      <button class="round" aria-label="Succès" @click="gameBus.sheet = 'succes'">
-        <Icon name="solar:bell-bold" class="ic" />
-        <span v-if="newUnlocked" class="dot" />
-      </button>
-      <button class="round" aria-label="Galerie photos" @click="gameBus.sheet = 'galerie'">
-        <Icon name="solar:users-group-two-rounded-bold" class="ic" />
-      </button>
-      <button class="round" aria-label="Réglages" @click="gameBus.sheet = 'reglages'">
-        <Icon name="solar:settings-bold" class="ic" />
-      </button>
-    </div>
+    <!-- un seul bouton rond : réglages -->
+    <button class="round" aria-label="Réglages" @click="openSettings">
+      <Icon name="solar:settings-bold-duotone" class="ic" />
+    </button>
   </header>
 </template>
 
 <script setup>
 import { computed, onMounted } from "vue";
+import { ageInDays } from "~/lib/achievements";
 import { levelInfo } from "~/stores/useTamagotchiStore";
 
 const { store } = useCreatureMood();
 const lvl = computed(() => levelInfo(store.xp));
 const pct = computed(() => Math.max(6, Math.round((lvl.value.into / lvl.value.need) * 100)));
-const newUnlocked = computed(() => store.unlocked.length > gameBus.seenUnlocked);
+const stageLabel = computed(() => store.stageInfo?.label || "");
+const days = computed(() => {
+  const d = (store.lastUpdate, ageInDays(store));
+  return d < 1 ? "née aujourd'hui" : `${d} jour${d > 1 ? "s" : ""}`;
+});
 function explainLevel() {
   gameToast(`Niveau ${lvl.value.level} · ${lvl.value.into}/${lvl.value.need} points avant le suivant`, "solar:leaf-bold-duotone");
 }
@@ -64,7 +56,7 @@ onMounted(() => store.initName());
   gap: 10px;
   min-width: 0;
   flex: 1;
-  max-width: 236px;
+  max-width: 260px;
   padding: 6px 14px 6px 6px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.84);
@@ -84,8 +76,7 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
-.info { min-width: 0; flex: 1; display: grid; gap: 5px; }
-.name-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
   font: 700 18px/1.1 "Fredoka", "Nunito", system-ui, sans-serif;
   color: var(--ink);
@@ -93,19 +84,7 @@ onMounted(() => store.initName());
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.edit {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: #eef1f5;
-  cursor: pointer;
-}
-.edit-ic { width: 14px; height: 14px; color: #5b6676; }
+.meta { font: 700 12px/1.2 "Nunito", system-ui, sans-serif; color: #7a8494; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .level {
   width: 100%;
   display: flex;
@@ -132,13 +111,12 @@ onMounted(() => store.initName());
   border-radius: 999px;
   background: linear-gradient(180deg, #7fdc5a, #4fbf34);
 }
-.rounds { display: flex; gap: 8px; }
 .round {
   position: relative;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.92);
@@ -147,20 +125,9 @@ onMounted(() => store.initName());
 }
 .round:active, .avatar:active { transform: scale(0.95); }
 .ic { width: 26px; height: 26px; color: #4a5260; }
-.dot {
-  position: absolute;
-  top: 5px;
-  right: 6px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ff3b3b;
-  box-shadow: 0 0 0 2px #fff;
-}
 @media (max-width: 370px) {
   .avatar { width: 52px; height: 52px; }
-  .round { width: 40px; height: 40px; }
-  .rounds { gap: 5px; }
+  .round { width: 48px; height: 48px; }
   .name { font-size: 17px; }
 }
 </style>

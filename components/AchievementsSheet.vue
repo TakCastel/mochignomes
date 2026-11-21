@@ -12,7 +12,7 @@
             <div :style="{ width: a.pct + '%' }" />
           </div>
         </div>
-        <span class="count">{{ a.done ? "✓" : `${a.value}/${a.goal}` }}</span>
+        <span class="count"><Icon v-if="a.done" name="solar:check-circle-bold" class="ok" /><template v-else>{{ a.value }}/{{ a.goal }}</template></span>
       </li>
     </ul>
   </div>
@@ -72,5 +72,6 @@ const rows = computed(() =>
 .progress { height: 8px; margin-top: 5px; border-radius: 999px; background: var(--plate-lo); overflow: hidden; }
 .progress div { height: 100%; background: var(--c); border-radius: 999px; }
 .count { font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-variant-numeric: tabular-nums; }
-.done .count { color: #2f9e44; font-size: 20px; }
+.done .count { color: #2f9e44; }
+.ok { width: 24px; height: 24px; }
 </style>

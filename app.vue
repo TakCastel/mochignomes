@@ -18,7 +18,9 @@
 
     <GameToasts />
     <GameSheet />
+    <AwayCard />
     <WelcomeCard />
+    <NotifPrompt />
   </div>
 </template>
 
@@ -137,6 +139,7 @@ body {
   /* tailles qui suivent la hauteur de l'écran */
   --tile: clamp(52px, 8.4vh, 72px);
   --gap: clamp(8px, 1.4vh, 12px);
+  --nav-h: 78px;
 }
 .scene {
   position: absolute;

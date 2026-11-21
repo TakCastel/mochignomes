@@ -8,7 +8,10 @@ import { moodFromStats, morphFromStats } from "~/lib/creatureLook";
 export const gameBus = reactive({
   speech: null, // { text, id }
   command: null, // { type: "rotate" | "photo" | "react", value, id }
-  sheet: null, // panneau ouvert : "fiche" | "galerie" | "succes" | "journal" | "reglages"
+  page: null, // page plein écran : null (Maison) | "elle" | "jours" | "album"
+  albumTab: "photos", // "photos" | "succes"
+  highlight: null, // { action, id } : fait pulser une tuile d'action
+  sheet: null, // fenêtre ouverte : null | "reglages"
   toasts: [], // notifications { id, text, icon }
   phase: "day",
   seenUnlocked: 0, // succès déjà vus dans le carnet
@@ -23,13 +26,40 @@ export function gameCommand(type, value) {
 }
 
 let toastId = 0;
-export function gameToast(text, icon = "ph:sparkle-fill") {
+export function gameToast(text, icon = "solar:stars-bold-duotone") {
   const id = ++toastId;
   gameBus.toasts.push({ id, text, icon });
   setTimeout(() => {
     const i = gameBus.toasts.findIndex((t) => t.id === id);
     if (i >= 0) gameBus.toasts.splice(i, 1);
   }, 3200);
+}
+
+const PAGE_NAMES = { elle: "Elle", jours: "Jours", album: "Album" };
+
+export function openPage(name) {
+  if (!PAGE_NAMES[name]) return closePage();
+  const store = useTamagotchiStore();
+  if (!(store.unlockedPages || []).includes(name)) {
+    gameToast(`${PAGE_NAMES[name]} arrive bientôt, continue de t'occuper d'elle.`, "solar:lock-keyhole-bold");
+    return;
+  }
+  gameBus.sheet = null;
+  gameBus.page = name;
+}
+export function closePage() {
+  gameBus.page = null;
+}
+export function openSettings() {
+  gameBus.sheet = "reglages";
+}
+export function closeSettings() {
+  gameBus.sheet = null;
+}
+export function highlightAction(action) {
+  gameBus.page = null;
+  gameBus.sheet = null;
+  gameBus.highlight = { action, id: Math.random() };
 }
 
 export function useCreatureMood() {

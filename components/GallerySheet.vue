@@ -1,7 +1,7 @@
 <template>
   <div class="sheet-content">
     <div v-if="!photos.length" class="empty">
-      <Icon name="ph:camera-fill" class="empty-icon" />
+      <Icon name="solar:camera-bold-duotone" class="empty-icon" />
       <p>Appuie sur le bouton <strong>Photo</strong> pour immortaliser {{ store.name }}. Les photos restent dans ce navigateur.</p>
     </div>
 
