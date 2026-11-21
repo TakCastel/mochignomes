@@ -59,8 +59,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   background: var(--scrim);
 }
 /* page : laisse la barre du bas libre */
+/* page : descend jusqu'en bas, la barre du bas (au-dessus, z 28) la recouvre */
 .overlay.full {
-  bottom: calc(var(--nav-h, 78px) + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
   align-items: stretch;
   background: transparent;
   pointer-events: none;
@@ -75,15 +76,17 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   backdrop-filter: var(--glass-blur);
   color: var(--ink);
   border-radius: 32px 32px 0 0;
-  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  /* en bas : la place de la barre du bas, qui passe par-dessus */
+  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 20px);
   box-shadow: 0 -10px 40px rgba(30, 60, 110, 0.3), var(--glass-edge);
+  will-change: transform;
 }
 /* page plein écran : fond bleu ciel très léger, comme un ciel dégagé */
 .sheet.full {
   max-height: none;
   height: 100%;
   border-radius: 0;
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 20px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 24px);
   background: linear-gradient(180deg, #e2f0ff 0%, #eef6ff 30%, var(--surface-2) 70%);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -129,23 +132,26 @@ h2 {
   text-overflow: ellipsis;
 }
 .body { min-width: 0; }
-.sheet-enter-active, .sheet-leave-active { transition: background 0.25s; }
-/* la feuille monte avec un léger dépassement, et redescend sans rebond */
-.sheet-enter-active .sheet { transition: transform 0.5s var(--spring); }
-.sheet-leave-active .sheet { transition: transform 0.26s cubic-bezier(0.5, 0, 0.75, 0); }
+/* animations fluides : courbe « ease-out quint » (part vite, se pose en douceur, sans rebond),
+   sortie plus courte en accélération ; fond qui se fond au même rythme */
+.sheet-enter-active, .sheet-leave-active { transition: background 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.sheet-enter-active .sheet { transition: transform 0.46s cubic-bezier(0.22, 1, 0.36, 1); }
+.sheet-leave-active .sheet { transition: transform 0.24s cubic-bezier(0.55, 0, 0.75, 0.2); }
 .sheet-enter-from, .sheet-leave-to { background: rgba(40, 20, 60, 0); }
 .sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
-/* page : arrive en glissant et en grossissant un peu, comme une fenêtre qui s'ouvre */
-.page-enter-active { transition: opacity 0.22s, transform 0.45s var(--spring); }
-.page-leave-active { transition: opacity 0.18s, transform 0.2s ease-in; }
-.page-enter-from { opacity: 0; transform: translateY(22px) scale(0.97); }
-.page-leave-to { opacity: 0; transform: translateY(10px); }
-/* le contenu de la page entre en cascade */
-.page-enter-active .body :deep(.ui-page > *) { animation: rise-in 0.5s var(--spring) both; }
-.page-enter-active .body :deep(.ui-page > *:nth-child(2)) { animation-delay: 0.05s; }
-.page-enter-active .body :deep(.ui-page > *:nth-child(3)) { animation-delay: 0.1s; }
-.page-enter-active .body :deep(.ui-page > *:nth-child(n + 4)) { animation-delay: 0.15s; }
-@keyframes rise-in { from { opacity: 0; transform: translateY(16px); } }
+/* page : monte de quelques pixels en apparaissant, comme une fenêtre qui s'ouvre */
+.page-enter-active { transition: opacity 0.28s ease-out, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+.page-leave-active { transition: opacity 0.16s ease-in, transform 0.18s ease-in; }
+.page-enter-from { opacity: 0; transform: translateY(28px); }
+.page-leave-to { opacity: 0; transform: translateY(12px); }
+.page-enter-active .sheet, .sheet-enter-active .sheet { will-change: transform; }
+/* le contenu de la page entre en cascade douce */
+.page-enter-active .body :deep(.ui-page > *) { animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(2)) { animation-delay: 0.04s; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(3)) { animation-delay: 0.08s; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(4)) { animation-delay: 0.12s; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(n + 5)) { animation-delay: 0.16s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(18px); } }
 @media (prefers-reduced-motion: reduce) {
   .sheet-enter-active .sheet, .sheet-leave-active .sheet, .page-enter-active, .page-leave-active { transition: none; }
   .page-enter-active .body :deep(.ui-page > *) { animation: none; }

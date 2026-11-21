@@ -15,7 +15,7 @@
         <!-- actions : uniquement pendant le tutoriel ; ensuite, tout passe par le menu sur la créature -->
         <ActionGrid v-if="(store.onboardStep ?? 6) < 6" class="hit" />
       </div>
-      <BottomNav class="hit" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
+      <BottomNav class="hit nav-top" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
     </main>
 
     <!-- « +N » volants des gains (aucun montant total sur l'écran principal) -->
@@ -194,7 +194,6 @@ body {
 
 .ui {
   position: relative;
-  z-index: 2;
   height: 100%;
   max-width: 480px;
   margin: 0 auto;
@@ -205,6 +204,9 @@ body {
   pointer-events: none;
 }
 .pad { margin: 0 14px; }
+/* la barre du bas reste au-dessus des fenêtres et des pages (z 20), qui glissent derrière elle ;
+   les cartes plein écran (nouveauté, accueil, activité : z 30+) passent au-dessus */
+.nav-top { position: relative; z-index: 28; }
 .stack { display: flex; flex-direction: column; gap: var(--gap); }
 /* seuls les éléments d'interface captent le toucher, le reste va à la créature */
 .hit { pointer-events: auto; }
