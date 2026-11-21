@@ -12,7 +12,7 @@
       <path :d="path" fill="url(#navFill)" stroke="#dbe5f2" stroke-width="1" />
     </svg>
 
-    <!-- bouton principal : le pavé 3D de l'onglet actif, logé dans l'onglet -->
+    <!-- bouton principal : la bulle 3D de l'onglet actif, logé dans l'onglet -->
     <span v-if="activeItem && size.w" class="orb-track" :style="orbStyle" aria-hidden="true" @click="activeItem.run()">
       <span :key="activeItem.key" class="orb">
         <Icon :name="activeItem.icon" class="orb-ic" />
@@ -102,9 +102,9 @@ const items = computed(() =>
 // s'élargit selon l'humeur et change de côté en douceur (ressorts sur sa position et ses deux bords) ----
 const BUMP_H = 28; // hauteur de l'onglet au-dessus de la barre
 const SLOPE = 14; // largeur d'un flanc (petit = flanc plus droit)
-const ORB = 54; // côté du pavé
-const PAD = 6; // marge entre le pavé et le flanc
-const MOOD_GAP = 7; // entre le pavé et l'humeur
+const ORB = 54; // diamètre de la bulle
+const PAD = 6; // marge entre la bulle et le flanc
+const MOOD_GAP = 7; // entre la bulle et l'humeur
 const MOOD_END = 10; // après l'humeur, avant le flanc
 const nav = ref(null);
 const btns = ref([]);
@@ -113,7 +113,7 @@ const size = ref({ w: 0, h: 0 });
 const centers = ref({});
 const moodW = ref(0);
 const navBox = ref({ left: 0, top: 0 });
-// valeurs animées : centre du pavé, étendues gauche et droite de l'onglet
+// valeurs animées : centre de la bulle, étendues gauche et droite de l'onglet
 const cur = ref({ x: 0, l: 0, r: 0 });
 const speed = ref(0);
 const vel = { x: 0, l: 0, r: 0 };
@@ -214,7 +214,7 @@ const path = computed(() => {
 });
 
 const orbStyle = computed(() => ({ transform: `translateX(${cur.value.x}px) translateX(-50%)` }));
-// l'humeur suit le pavé, du côté choisi, et descend avec l'onglet quand il s'aplatit
+// l'humeur suit la bulle, du côté choisi, et descend avec l'onglet quand il s'aplatit
 const moodStyle = computed(() => {
   const x = side.value === "left"
     ? cur.value.x - ORB / 2 - MOOD_GAP - moodW.value
@@ -244,7 +244,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* barre droite ; l'onglet actif monte dans un pavé 3D logé dans un onglet qui glisse, avec l'humeur */
+/* barre droite ; l'onglet actif monte dans une bulle 3D logé dans un onglet qui glisse, avec l'humeur */
 .nav {
   --orb: 54px; /* = ORB */
   --tab: 28px; /* = BUMP_H */
@@ -275,17 +275,17 @@ onBeforeUnmount(() => {
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
 }
-/* pavé à coins doux, plus droit qu'une bulle */
+/* bulle 3D ronde */
 .orb {
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: 50%;
   color: #fff;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.45), transparent 45%),
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.55), transparent 42%),
     linear-gradient(160deg, #6cc3ff 0%, #2f95e8 48%, #1d6fd0 100%);
   box-shadow:
     inset 0 -5px 8px rgba(10, 50, 130, 0.32),
@@ -294,15 +294,15 @@ onBeforeUnmount(() => {
     0 2px 4px rgba(29, 111, 208, 0.3);
   animation: orb-in 0.55s var(--spring-strong);
 }
-/* reflet sur le haut du pavé */
+/* reflet en arc sur le haut de la bulle */
 .orb::before {
   content: "";
   position: absolute;
-  top: 4px;
-  left: 7px;
-  right: 7px;
+  top: 5px;
+  left: 12px;
+  right: 12px;
   height: 14px;
-  border-radius: 9px 9px 4px 4px;
+  border-radius: 50%;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
   pointer-events: none;
 }
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
   animation: ic-in 0.5s var(--spring-strong);
 }
 .orb-track:active .orb { transform: scale(0.92); transition: transform 0.08s; }
-.orb .badge { top: 3px; right: 3px; box-shadow: 0 0 0 2px #fff; }
+.orb .badge { top: 2px; right: 2px; box-shadow: 0 0 0 2px #fff; }
 /* l'humeur posée sur l'onglet : pastille de couleur + mot, sans fond à elle */
 .mood {
   position: absolute;
@@ -333,7 +333,7 @@ onBeforeUnmount(() => {
   flex: none;
   width: 10px;
   height: 10px;
-  border-radius: 4px;
+  border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.55), var(--d) 65%);
   background-color: var(--d);
   box-shadow: 0 1px 2px rgba(40, 60, 90, 0.3);
@@ -389,10 +389,10 @@ onBeforeUnmount(() => {
 }
 .label { font: 800 12px/1 var(--font-text); transition: transform 0.45s var(--spring-strong); }
 @media (hover: hover) { .item:not(.on):hover .ic { transform: translateY(-2px); } }
-/* l'onglet actif : son icône est partie dans le pavé, son libellé descend un peu et prend la couleur */
+/* l'onglet actif : son icône est partie dans la bulle, son libellé reste en place et prend la couleur */
 .item.on { color: #1f73c2; }
 .item.on .icwrap { opacity: 0; transform: translateY(-14px) scale(0.6); }
-.item.on .label { transform: translateY(6px); }
+.item.on .label { transform: translateY(1px); }
 .badge {
   position: absolute;
   top: 0;
