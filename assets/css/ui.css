@@ -713,70 +713,45 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 
 /* ==========================================================================
    Écrans secondaires (feuilles, pages) au style de l'écran principal :
-   blanc net, filets fins gris-bleu, texte bleu marine, sélection franche
-   (liseré bleu ciel sur fond blanc, jamais d'aplat pâle délavé).
+   blanc net, ombres douces SANS contour, texte bleu marine ; la sélection est
+   un aplat bleu ciel franc avec texte blanc (ni liseré, ni aplat pâle délavé).
    Vient en dernier : complète les primitives ci-dessus sans changer les classes.
    ========================================================================== */
+:root {
+  --ui-soft: 0 2px 4px rgba(30, 55, 100, 0.06), 0 6px 16px rgba(30, 55, 100, 0.08);
+  --ui-on-bg: linear-gradient(180deg, #5cb3f5, var(--sky) 60%, #2584d6);
+  --ui-on-shadow: 0 4px 12px rgba(47, 149, 232, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
 
-/* cartes et lignes : blanc net + filet fin */
-.ui-card {
-  background: #fff;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow: 0 0 0 1px var(--hud-line), 0 4px 12px rgba(30, 55, 100, 0.08);
-}
-.ui-row {
-  background: linear-gradient(180deg, #ffffff, #f7f9fc);
-  box-shadow: 0 0 0 1px var(--hud-line), 0 3px 8px rgba(30, 55, 100, 0.08), inset 0 1px 0 #fff;
-}
+/* cartes, lignes, tuiles : blanc, ombre douce */
+.ui-card { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--ui-soft); }
+.ui-row, .ui-tile { background: #fff; box-shadow: var(--ui-soft); }
 .ui-row-title { font: 800 15.5px / 1.2 var(--font-text); color: var(--hud-ink); }
 .ui-row-sub { color: var(--hud-ink-2); }
-.ui-row.is-well { background: var(--hud-band); box-shadow: inset 0 0 0 1px var(--hud-line); }
-/* ligne mise en avant (ex. « Cuisiner ») : blanche, liseré bleu ciel franc et léger halo */
-.ui-row.is-on {
-  background: linear-gradient(180deg, #ffffff, #f1f8ff);
-  box-shadow: 0 0 0 2px var(--sky), 0 4px 14px rgba(47, 149, 232, 0.26), inset 0 1px 0 #fff;
-}
-.ui-row.is-on .ui-row-title { color: var(--sky-lo); }
-
-/* tuiles */
-.ui-tile {
-  background: linear-gradient(180deg, #ffffff, #f7f9fc);
-  box-shadow: 0 0 0 1px var(--hud-line), 0 3px 8px rgba(30, 55, 100, 0.08), inset 0 1px 0 #fff;
-}
 .ui-tile-label { color: var(--hud-ink); }
 .ui-tile-sub { color: var(--hud-ink-2); }
-.ui-tile.is-on { background: #fff; box-shadow: 0 0 0 2px var(--sky), 0 4px 12px rgba(47, 149, 232, 0.24); }
-.ui-tile.is-ghost { background: var(--hud-band); box-shadow: inset 0 0 0 1px var(--hud-line); }
+.ui-row.is-well, .ui-tile.is-ghost { background: var(--hud-band); box-shadow: none; }
 
-/* vignette d'objet : pastille blanche ronde cerclée */
-.ui-thumb {
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 30%, #ffffff, #eef3f9 75%);
-  box-shadow: 0 0 0 1px var(--hud-line), 0 2px 6px rgba(30, 55, 100, 0.12), inset 0 1px 0 #fff;
-}
+/* sélection / mise en avant : aplat bleu ciel, texte blanc */
+.ui-row.is-on, .ui-tile.is-on, .ui-tab.is-on, .ui-chip.is-on { background: var(--ui-on-bg); box-shadow: var(--ui-on-shadow); color: #fff; }
+.ui-row.is-on .ui-row-title, .ui-row.is-on .ui-row-sub,
+.ui-tile.is-on .ui-tile-label, .ui-tile.is-on .ui-tile-sub,
+.ui-tab.is-on .ic, .ui-chip.is-on .ic { color: #fff; }
+
+/* vignette d'objet : pastille blanche ronde, ombre légère */
+.ui-thumb { border-radius: 50%; background: radial-gradient(circle at 50% 30%, #ffffff, #eef3f9 78%); box-shadow: 0 2px 6px rgba(30, 55, 100, 0.12), inset 0 1px 0 #fff; }
 .ui-thumb--accent { background: radial-gradient(circle at 50% 30%, #ffffff, #e2f0ff 80%); }
 .ui-thumb--accent .ic { color: var(--sky); }
 
-/* médaillon d'en-tête : rond blanc cerclé de bleu ciel, pictogramme bleu (les variantes or / amour restent colorées) */
-.ui-medal {
-  background: radial-gradient(circle at 40% 30%, #ffffff, #e6f1fc 78%);
-  box-shadow: 0 0 0 2px #a9d4fb, 0 3px 8px rgba(30, 70, 120, 0.18), inset 0 1px 0 #fff;
-}
-.ui-medal .ic { color: var(--sky); }
-.ui-medal--gold .ic, .ui-medal--love .ic, .ui-medal--sky .ic { color: #fff; }
-.ui-medal--sky {
-  background: radial-gradient(circle at 40% 30%, #ffffff, #e6f1fc 78%);
-  box-shadow: 0 0 0 2px #a9d4fb, 0 3px 8px rgba(30, 70, 120, 0.18), inset 0 1px 0 #fff;
-}
-.ui-medal--sky .ic { color: var(--sky); }
+/* médaillon d'en-tête : rond blanc, pictogramme bleu (les variantes or / amour restent colorées) */
+.ui-medal, .ui-medal--sky { background: radial-gradient(circle at 40% 30%, #ffffff, #e9f3fd 80%); box-shadow: 0 3px 10px rgba(30, 70, 120, 0.16), inset 0 1px 0 #fff; }
+.ui-medal .ic, .ui-medal--sky .ic { color: var(--sky); }
+.ui-medal--gold .ic, .ui-medal--love .ic { color: #fff; }
 
-/* onglets, puces : la sélection est une pilule blanche cerclée de bleu ciel, texte bleu */
-.ui-tabs { background: var(--hud-band); box-shadow: inset 0 0 0 1px var(--hud-line); }
+/* onglets, puces : non sélectionnés en blanc doux, sans contour */
+.ui-tabs { background: var(--hud-band); box-shadow: none; }
 .ui-tab { color: var(--hud-ink-2); }
-.ui-tab.is-on { background: #fff; color: var(--sky-lo); box-shadow: 0 0 0 2px var(--sky-hi), 0 2px 6px rgba(47, 149, 232, 0.22); }
-.ui-chip { color: var(--hud-ink); box-shadow: 0 0 0 1px var(--hud-line), 0 2px 5px rgba(30, 55, 100, 0.08); }
-.ui-chip.is-on { background: #fff; color: var(--sky-lo); box-shadow: 0 0 0 2px var(--sky-hi), 0 2px 6px rgba(47, 149, 232, 0.22); }
+.ui-chip { color: var(--hud-ink); box-shadow: var(--ui-soft); }
 
 /* textes */
 .ui-overline { color: var(--hud-ink-2); }
@@ -785,15 +760,11 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .ui-caption, .ui-foot-note { color: var(--hud-ink-2); }
 .ui-sheet-title p { color: var(--hud-ink-2); }
 
-/* zones vides : bande gris-bleu cerclée */
-.ui-empty { background: var(--hud-band); box-shadow: inset 0 0 0 1px var(--hud-line); color: var(--hud-ink-2); }
+/* zones vides : bande gris-bleu, sans contour */
+.ui-empty { background: var(--hud-band); box-shadow: none; color: var(--hud-ink-2); }
 
-/* boutons secondaires et ronds : blancs, filet fin, texte / pictogramme bleu marine */
-.ui-btn--secondary {
-  color: var(--hud-ink);
-  background: linear-gradient(180deg, #ffffff, #f1f5fa);
-  box-shadow: 0 0 0 1px var(--hud-line), 0 3px 0 #c9d4e2, 0 5px 10px rgba(30, 55, 100, 0.1);
-}
-.ui-btn--secondary:active:not(:disabled) { box-shadow: 0 0 0 1px var(--hud-line), 0 1px 0 #c9d4e2; }
-.ui-btn--soft { color: var(--sky-lo); background: #fff; box-shadow: 0 0 0 1.5px #a9d4fb; }
-.ui-icon-btn { color: var(--hud-ink); }
+/* boutons secondaires et ronds : blancs, ombre douce, texte / pictogramme bleu marine */
+.ui-btn--secondary { color: var(--hud-ink); background: #fff; box-shadow: 0 3px 0 #d5dde8, 0 6px 14px rgba(30, 55, 100, 0.1); }
+.ui-btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 #d5dde8; }
+.ui-btn--soft { color: var(--sky-lo); background: #fff; box-shadow: var(--ui-soft); }
+.ui-icon-btn { color: var(--hud-ink); background: #fff; box-shadow: 0 4px 12px rgba(30, 70, 120, 0.14); }
