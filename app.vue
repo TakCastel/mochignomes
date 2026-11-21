@@ -85,9 +85,18 @@ function measure() {
     shown = Math.round(Math.min(size, free * 0.78));
     ground = r.top + (free + shown) / 2 + 10;
   }
+  // volet latéral (Sac) : la créature se recentre dans la place libre à gauche, à sa mesure
+  const sideW = gameBus.sideW;
+  let centerX;
+  if (sideW > 0) {
+    const freeW = Math.max(80, window.innerWidth - sideW);
+    centerX = Math.round(freeW / 2);
+    shown = Math.round(Math.min(shown, freeW * 0.82));
+  }
   frame.value = {
     ground: Math.round(ground),
     size: shown,
+    centerX,
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
@@ -95,6 +104,7 @@ function measure() {
 
 watch(studioHome, measure);
 watch(() => gameBus.tryTop, measure); // essayage en boutique : recadrage au-dessus de la barre
+watch(() => gameBus.sideW, measure); // Sac ouvert en volet : recadrage à gauche
 
 onMounted(() => {
   // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)

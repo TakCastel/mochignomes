@@ -1,10 +1,10 @@
 <template>
-  <Transition :name="fullscreen ? 'page' : 'sheet'">
-    <div v-if="open" class="overlay" :class="{ full: fullscreen }" @click.self="!fullscreen && close()">
-      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+  <Transition :name="side ? 'slide' : fullscreen ? 'page' : 'sheet'">
+    <div v-if="open" class="overlay" :class="{ full: fullscreen, side }" @click.self="!fullscreen && close()">
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, side, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
         <div v-if="!fullscreen" class="grab-zone" v-on="grabOn"><div class="grab" /></div>
         <header class="head">
-          <button v-if="fullscreen" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
+          <button v-if="fullscreen && !side" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
             <Icon name="solar:arrow-left-bold" class="ic" />
           </button>
           <div class="title">
@@ -14,7 +14,7 @@
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
             </div>
           </div>
-          <button v-if="!fullscreen" class="ui-icon-btn" aria-label="Fermer" @click="close">
+          <button v-if="!fullscreen || side" class="ui-icon-btn" aria-label="Fermer" @click="close">
             <Icon name="solar:close-circle-bold" class="ic" />
           </button>
         </header>
@@ -35,6 +35,8 @@ const props = defineProps({
   icon: { type: String, default: "" },
   // page plein écran avec flèche retour (la barre du bas reste visible)
   fullscreen: { type: Boolean, default: false },
+  // avec fullscreen : volet ancré à droite, la scène reste visible et touchable à gauche
+  side: { type: Boolean, default: false },
 });
 
 function close() {
@@ -46,9 +48,24 @@ const sheetEl = ref(null);
 // volet tirable par sa poignée (bas = fermer, haut = agrandir) ; pas pour les pages plein écran
 const { tall, grab: grabOn } = useSheetDrag(sheetEl, () => close());
 watch(() => props.title, () => { if (sheetEl.value) sheetEl.value.scrollTop = 0; });
+// volet latéral : sa largeur part dans gameBus.sideW, la créature se recadre dans la place libre à gauche
+// (le volet qui se ferme rend la place tout de suite : elle revient au centre pendant qu'il sort)
+let sideRo = null;
+watch([sheetEl, () => props.side && props.open], ([el, on]) => {
+  sideRo?.disconnect();
+  sideRo = null;
+  if (!el || !on) { if (gameBus.sideW) gameBus.sideW = 0; return; }
+  const put = () => (gameBus.sideW = Math.round(el.getBoundingClientRect().width));
+  sideRo = new ResizeObserver(put);
+  sideRo.observe(el);
+  put();
+}, { immediate: true });
 const onKey = (e) => e.key === "Escape" && props.open && close();
 onMounted(() => window.addEventListener("keydown", onKey));
-onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", onKey);
+  sideRo?.disconnect();
+});
 </script>
 
 <style scoped>
@@ -99,6 +116,23 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   pointer-events: auto;
   -webkit-overflow-scrolling: touch;
 }
+.overlay.side { justify-content: flex-end; }
+/* volet latéral : ancré à droite, la scène reste visible à gauche */
+.sheet.full.side {
+  width: clamp(240px, 62vw, 440px);
+  max-width: none;
+  border-radius: 28px 0 0 28px;
+  padding-left: 14px;
+  padding-right: 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, #e2f0ff var(--tint), var(--surface-2)) 0%, var(--surface-2) 40%);
+  box-shadow: -10px 0 34px rgba(30, 60, 110, 0.22), var(--glass-edge);
+}
+.sheet.side h2 { font-size: 22px; }
+/* volet étroit (téléphone) : les onglets gardent leur texte, sans icône */
+@media (max-width: 640px) {
+  .sheet.side :deep(.ui-tab .ic) { display: none; }
+  .sheet.side :deep(.ui-tab) { padding: 0 4px; font-size: var(--t-sm, 13px); }
+}
 .grab {
   width: 44px;
   height: 5px;
@@ -144,6 +178,12 @@ h2 {
 .sheet-leave-active .sheet { transition: transform 0.24s cubic-bezier(0.55, 0, 0.75, 0.2); }
 .sheet-enter-from, .sheet-leave-to { background: rgba(40, 20, 60, 0); }
 .sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
+/* volet latéral : glisse depuis la droite */
+.slide-enter-active .sheet { transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+.slide-leave-active .sheet { transition: transform 0.22s cubic-bezier(0.55, 0, 0.75, 0.2); }
+.slide-enter-active, .slide-leave-active { transition: opacity 0.42s; }
+.slide-enter-from .sheet, .slide-leave-to .sheet { transform: translateX(100%); }
+.slide-enter-active .body :deep(.ui-page > *) { animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
 /* page : monte de quelques pixels en apparaissant, comme une fenêtre qui s'ouvre */
 .page-enter-active { transition: opacity 0.28s ease-out, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
 .page-leave-active { transition: opacity 0.16s ease-in, transform 0.18s ease-in; }
@@ -158,7 +198,8 @@ h2 {
 .page-enter-active .body :deep(.ui-page > *:nth-child(n + 5)) { animation-delay: 0.16s; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(18px); } }
 @media (prefers-reduced-motion: reduce) {
-  .sheet-enter-active .sheet, .sheet-leave-active .sheet, .page-enter-active, .page-leave-active { transition: none; }
-  .page-enter-active .body :deep(.ui-page > *) { animation: none; }
+  .sheet-enter-active .sheet, .sheet-leave-active .sheet, .page-enter-active, .page-leave-active,
+  .slide-enter-active .sheet, .slide-leave-active .sheet { transition: none; }
+  .page-enter-active .body :deep(.ui-page > *), .slide-enter-active .body :deep(.ui-page > *) { animation: none; }
 }
 </style>

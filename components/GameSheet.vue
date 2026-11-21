@@ -1,7 +1,8 @@
 <template>
   <div>
-    <!-- pages plein écran (la barre du bas reste visible) : Elle, Jours, Album, Sac, Boutique -->
-    <BaseSheet fullscreen :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
+    <!-- pages plein écran (la barre du bas reste visible) : Elle, Jours, Album, Boutique.
+         Le Sac s'ouvre en volet sur la droite : on la voit à gauche essayer ses tenues -->
+    <BaseSheet fullscreen :side="gameBus.page === 'sac'" :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
       <CreatureSheet v-if="gameBus.page === 'elle'" />
       <JournalSheet v-else-if="gameBus.page === 'jours'" />
       <AlbumSheet v-else-if="gameBus.page === 'album'" />
