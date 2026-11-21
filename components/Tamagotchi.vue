@@ -45,6 +45,7 @@
       :hidden="arrowsHidden"
       @step="onRotateStep"
       @hold="onRotateHold"
+      @pressed="(d) => (rotPressed = d)"
     />
 
     <!-- gains et pertes qui s'envolent après une action -->
@@ -119,6 +120,13 @@ watch(playing, (p) => creature.value?.setPlaying?.(p));
 // flèches « tourner » : à hauteur des pieds, de part et d'autre de la créature (elle fait ~0,8 fois sa hauteur de large),
 // sans sortir de l'écran ; elles s'écartent un peu quand on zoome
 const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping);
+// anneau de flèches en relief au sol (3D) : mêmes conditions que les zones tactiles ; la flèche pressée s'allume
+const rotPressed = ref(0);
+watch(
+  () => [creature.value, studio.value, arrowsHidden.value, rotPressed.value, !!fallback.value],
+  ([c, s, hidden, pressed, fb]) => c?.setTurnRing?.({ visible: s && !hidden && !fb, pressed }),
+  { immediate: true }
+);
 const arrowsTop = computed(() => (props.frame ? props.frame.ground - 28 : 400)); // centre du cercle au sol, un peu en retrait des pieds pour que l'avant des flèches reste visible
 const arrowsOffset = computed(() => {
   const f = props.frame;

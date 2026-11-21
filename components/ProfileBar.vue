@@ -106,33 +106,54 @@ onMounted(() => store.initName());
 }
 .lvl { font: 800 13px var(--font-text); color: var(--hud-ink); white-space: nowrap; }
 /* barre de niveau : même matière que les jauges (bleu ciel dégradé + reflet) */
+/* gouttière creusée, comme les jauges des besoins */
 .track {
   position: relative;
   flex: 1;
   min-width: 56px;
-  height: 14px;
+  height: 18px;
+  padding: 2px;
+  box-sizing: border-box;
   border-radius: 999px;
-  background: #d9e1ea;
+  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
   overflow: hidden;
-  box-shadow: inset 0 2px 3px rgba(40, 60, 90, 0.18);
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
 }
+/* remplissage en relief bleu ciel : dégradé de tube, liseré lumineux en haut, ombre douce en bas */
 .bar-fill {
   position: relative;
   display: block;
+  min-width: 14px;
   height: 100%;
+  overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(180deg, #8fd2ff, var(--sky) 55%, var(--sky-lo));
+  background: linear-gradient(180deg, #d4eeff 0%, #8fd2ff 22%, var(--sky) 58%, var(--sky-lo) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), inset 0 -2px 2px rgba(29, 111, 191, 0.55), 0 1px 2px rgba(29, 111, 191, 0.4);
   transition: width 0.8s var(--spring);
 }
-.bar-fill::after { content: ""; position: absolute; left: 5px; right: 5px; top: 2px; height: 35%; border-radius: inherit; background: rgba(255, 255, 255, 0.55); }
+/* reflet qui balaie la jauge de temps en temps */
+.bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.5) 52%, transparent 70%);
+  transform: translateX(-110%);
+  animation: sheen 6s ease-in-out 3.5s infinite;
+  pointer-events: none;
+}
+@keyframes sheen {
+  0% { transform: translateX(-110%); }
+  14%, 100% { transform: translateX(110%); }
+}
+@media (prefers-reduced-motion: reduce) { .bar-fill::after { animation: none; display: none; } }
 .xp {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   font: 800 11px/1 var(--font-text);
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(20, 50, 100, 0.65);
+  color: var(--hud-ink);
+  text-shadow: 0 0 3px #fff, 0 0 2px #fff;
 }
 /* réglages : bouton rond blanc */
 .round {

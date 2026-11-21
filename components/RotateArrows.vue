@@ -51,7 +51,7 @@ const props = defineProps({
   offset: { type: Number, default: 130 }, // écart (px) entre le centre de l'écran et le centre de chaque bouton
   hidden: { type: Boolean, default: false },
 });
-const emit = defineEmits(["step", "hold"]);
+const emit = defineEmits(["step", "hold", "pressed"]);
 
 const BUTTONS = [
   { dir: -1, cls: "left", label: "Tourner à gauche" },
@@ -83,6 +83,8 @@ function cancel() {
 }
 // masquées pendant l'appui (menu ouvert, activité) : on lâche proprement
 watch(() => props.hidden, (h) => { if (h) cancel(); });
+// la flèche pressée s'allume dans l'anneau 3D (creature.setTurnRing)
+watch(pressed, (d) => emit("pressed", d));
 onBeforeUnmount(cancel);
 </script>
 
@@ -109,7 +111,8 @@ onBeforeUnmount(cancel);
   transform: translate(-50%, -50%) perspective(720px) rotateX(78deg);
   transform-origin: 50% 50%;
 }
-.arcs { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+/* les flèches visibles sont l'anneau 3D (creature.setTurnRing) ; le dessin SVG reste en secours, masqué */
+.arcs { display: none; }
 .arc path { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
 .arc path.head { stroke-width: 3; }
 .arc .top path { stroke: rgba(255, 255, 255, 0.82); }
@@ -126,8 +129,8 @@ onBeforeUnmount(cancel);
 /* zones tactiles : la partie extérieure de chaque côté du plateau, jamais près des pieds */
 .rbtn {
   position: absolute;
-  top: 4%;
-  bottom: 0;
+  top: -40%;
+  bottom: -40%;
   width: 40%;
   padding: 0;
   border: 0;
