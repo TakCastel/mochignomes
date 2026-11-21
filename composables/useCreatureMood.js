@@ -101,6 +101,7 @@ export function closeSettings() {
 // Cuisine (recette mise en avant facultative)
 export function openKitchen(focus = "") {
   if (!featureOpen("cuisine")) return;
+  try { useTamagotchiStore().countEvent?.("page:cuisine"); } catch { /* compteur indisponible */ }
   gameBus.kitchenFocus = focus || "";
   openSheet("cuisine");
 }

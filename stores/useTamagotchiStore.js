@@ -3,7 +3,8 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { gameToast, gameSay, gameCommand } from "~/composables/useCreatureMood";
 import { dayPhase } from "~/lib/gameUi";
-import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_KEYS, CHAIN_IDLE_MIN, stageFor, nextStage, stageDef } from "~/lib/growth";
+import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_KEYS, stageFor, nextStage, stageDef } from "~/lib/growth";
+import { GUIDES } from "~/lib/guides";
 import { pickWish } from "~/lib/wishes";
 import { awayLines } from "~/lib/dialogue";
 import { questsForDay, QUEST_BONUS } from "~/lib/quests";
@@ -195,6 +196,7 @@ export const useTamagotchiStore = defineStore(
     const welcomeGift = ref(0); // pièces offertes aux parties existantes, versées au démarrage
     // schéma 4
     const features = ref({}); // nouveautés débloquées { [clé de FEATURES]: horodatage }
+    const guide = ref(null); // tuto de la nouveauté en cours (lib/guides.js) : { key, step } ou null
     const tasteSeed = ref(""); // graine de ses goûts, figée à l'éclosion (hatchedAt + nom)
     const playsToday = ref({ day: "", counts: {} }); // parties par activité aujourd'hui (rendement dégressif)
     const mealBoostUntil = ref(0);
@@ -414,7 +416,17 @@ export const useTamagotchiStore = defineStore(
         q.progress = Math.min(q.target, q.progress + n);
         if (q.progress >= q.target && features.value.defis) safeToast(`Défi réussi : ${q.label}`, "solar:cup-star-bold-duotone");
       }
+      // tuto de la nouveauté en cours : l'étape est faite quand son compteur bouge
+      const g = guide.value;
+      if (g && GUIDES[g.key]?.[g.step]?.ev === key) advanceGuide();
     };
+    // étape suivante du tuto (aussi le bouton « Passer ») ; la dernière termine le tuto
+    function advanceGuide() {
+      const g = guide.value;
+      if (!g) return;
+      const next = g.step + 1;
+      guide.value = next < (GUIDES[g.key]?.length || 0) ? { key: g.key, step: next } : null;
+    }
     // Compteur d'événements (défis, succès) utilisable depuis les autres stores et composants
     function countEvent(key, n = 1, value) { count(key, n, value); }
 
@@ -491,7 +503,7 @@ export const useTamagotchiStore = defineStore(
       // parties existantes : les nouveautés arrivent une à une (voir checkUnlocks), comme pour
       // une nouvelle partie. Les sauvegardes qui avaient tout reçu d'un coup repartent de zéro
       // (le Sac est conservé ; les cadeaux de découverte ne sont pas doublés).
-      if (patch.relockFeatures) { features.value = {}; unlockEvent.value = null; revealAt.value = { play: playMs.value, session: 0 }; }
+      if (patch.relockFeatures) { features.value = {}; guide.value = null; unlockEvent.value = null; revealAt.value = { play: playMs.value, session: 0 }; }
     }
 
     // ---------- éclosion, tutoriel ----------
@@ -770,6 +782,8 @@ export const useTamagotchiStore = defineStore(
       const now = Date.now();
       features.value = { ...features.value, [key]: now };
       revealAt.value = { play: playMs.value, session: sessions.value };
+      // son petit tuto démarre (bannière GuideCard, après la carte de découverte)
+      if (!silent && GUIDES[key]) guide.value = { key, step: 0 };
       const who = name.value || "Elle";
       let say = "";
       try {
@@ -825,23 +839,18 @@ export const useTamagotchiStore = defineStore(
       const lvl = topLevel.value;
       const reach = lvl >= FEATURES[key].level;
       const did = (k) => (counters.value[k] || 0) > 0;
-      // nouveauté précédente ignorée : la suivante arrive quand même, sans rester bloqué
-      const idle = playMs.value - (revealAt.value.play || 0) >= CHAIN_IDLE_MIN * 60000;
+      // chaîne de la première visite : la suivante arrive une fois le tuto de la précédente fini
+      // (checkUnlocks attend qu'aucun tuto ne soit en cours)
       switch (key) {
         // dès la fin du tutoriel
         case "ballon": return true;
         // la 1re partie de foot rapporte les premières pièces
-        case "coins": return f.ballon && (did("activite:foot") || idle || reach);
-        // les pièces servent tout de suite : le Sac (t-shirt offert)...
+        case "coins": return f.ballon && (did("activite:foot") || reach);
         case "sac": return !!f.coins;
-        // ... Sac ouvert (le t-shirt est déjà sur elle) : la Boutique ouvre
-        case "boutique": return f.sac && (did("page:sac") || did("habillage") || idle || reach);
-        // Boutique visitée : la Cuisine (kit crêpes)
-        case "cuisine": return f.boutique && (did("page:boutique") || idle || reach);
-        // 1res crêpes : la Télé
-        case "tele": return f.cuisine && (did("cuisine") || idle || reach);
-        // 1er épisode : les Défis du jour
-        case "defis": return f.tele && (did("activite:tele") || idle || reach);
+        case "boutique": return !!f.sac;
+        case "cuisine": return !!f.boutique;
+        case "tele": return !!f.cuisine;
+        case "defis": return !!f.tele;
         case "collection": return f.tele && f.defis && (totalDays.value >= 2 || reach);
         case "course": case "etoiles": return f.collection && (totalDays.value >= 3 || reach);
         default: return false;
@@ -871,6 +880,7 @@ export const useTamagotchiStore = defineStore(
     function checkUnlocks(now = Date.now()) {
       if (!hatched.value || onboardStep.value < 6) return null;
       if (cardPending(now)) return null;
+      if (guide.value) return null; // on explore d'abord la nouveauté en cours
       const key = FEATURE_KEYS.find((k) => !features.value[k] && featureDue(k, now));
       if (!key || !paceOk(key)) return null;
       unlockFeature(key);
@@ -1437,7 +1447,7 @@ export const useTamagotchiStore = defineStore(
       hatched, eggHeat, onboardStep, hatchedAt, stage, cooldowns, wish, wishesDone, illness, exhausted,
       quests, journal, bestStreak, totalDays, jokers, nextWishAt, lastWishId, surpriseLog,
       away, tick, level, stageInfo, unlockedPages, welcomeGift, pendingBonusCoins,
-      features, tasteSeed, tastes, appearance, playsToday, mealBoostUntil, mealBoostActive, playDaysRewarded, returnGift, unlockEvent,
+      features, guide, advanceGuide, tasteSeed, tastes, appearance, playsToday, mealBoostUntil, mealBoostActive, playDaysRewarded, returnGift, unlockEvent,
       playMs, sessions, revealAt, ackUnlock,
       questsAllDone, questBonusReady, idleSuggestion,
       rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, claimQuestBonus, claimReturnGift, addJournal, countEvent,
@@ -1455,7 +1465,7 @@ export const useTamagotchiStore = defineStore(
         "neglectedAt", "xp", "bornAt", "counters", "unlocked", "palette", "ui", "lastVisitDay", "streak", "pendingBonus",
         "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
         "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
-        "welcomeGift", "features", "tasteSeed", "playsToday", "mealBoostUntil", "playDaysRewarded", "returnGift",
+        "welcomeGift", "features", "guide", "tasteSeed", "playsToday", "mealBoostUntil", "playDaysRewarded", "returnGift",
         "playMs", "sessions", "revealAt", "unlockEvent", "appearance", "roster", "activeId", "slotsSeen",
       ],
       afterHydrate: (ctx) => { ctx.store.migrate?.(); },

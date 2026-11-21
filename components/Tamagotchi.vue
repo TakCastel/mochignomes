@@ -383,6 +383,7 @@ let tryOnIdx = 0;
 let tryOnTurn = 0;
 function tryOnEmote() {
   touched();
+  store.countEvent?.("pose");
   try { if (!["0", "false", "off"].includes(localStorage.getItem("tamagotchi-haptics"))) navigator.vibrate?.(10); } catch { /* ignoré */ }
   const e = TRY_ON_EMOTES[tryOnIdx++ % TRY_ON_EMOTES.length];
   clearTimeout(reactionTimer);
