@@ -244,6 +244,8 @@ const moodStyle = computed(() => {
 });
 watch(() => moodInfo.value[0], () => nextTick(measureMood));
 watch([side, showMood], () => nextTick(measureMood));
+// un onglet débloqué déplace les autres : on remesure leurs centres
+watch(() => items.value.map((t) => t.key).join("|"), () => nextTick(measure));
 
 let ro;
 onMounted(() => {
@@ -271,7 +273,8 @@ onBeforeUnmount(() => {
   --tab: 28px; /* = BUMP_H */
   position: relative;
   display: flex;
-  justify-content: space-around;
+  /* premier onglet calé à gauche, dernier à droite (avec 2 onglets : Maison au bord gauche, Elle au bord droit) */
+  justify-content: space-between;
   align-items: stretch;
   height: var(--nav-h, 64px);
   box-sizing: content-box;
