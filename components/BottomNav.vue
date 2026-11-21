@@ -410,7 +410,7 @@ onBeforeUnmount(() => {
 .label { font: 800 12px/1 var(--font-text); transition: transform 0.45s var(--spring-strong); }
 @media (hover: hover) { .item:not(.on):hover .ic { transform: translateY(-2px); } }
 /* l'onglet actif : son icône est partie dans la bulle, son libellé reste en place et prend la couleur */
-.item.on { color: #1f73c2; }
+.item.on { color: var(--sel-ink); }
 .item.on .icwrap { opacity: 0; transform: translateY(-14px) scale(0.6); }
 .item.on .label { transform: translateY(1px); }
 .badge {
@@ -421,7 +421,7 @@ onBeforeUnmount(() => {
   height: 10px;
   border-radius: 50%;
   background: var(--dot, #ff3b3b);
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   animation: badge 0.9s ease-in-out 3;
 }
 @keyframes badge { 50% { transform: scale(1.35); } }

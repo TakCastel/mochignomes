@@ -109,19 +109,19 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clear
   max-width: min(260px, 78vw);
   min-height: 48px;
   padding: 8px 14px 8px 10px;
-  border: 1px solid #d6dfea;
+  border: 1px solid var(--hud-line);
   border-radius: 18px;
   background: var(--surface);
   color: var(--hud-ink);
   font: 800 15px/1.25 var(--font-text);
   text-align: left;
-  box-shadow: 0 2px 0 #c9d4e2, 0 6px 16px rgba(30, 55, 100, 0.14);
+  box-shadow: var(--ui-sh-1), var(--ui-sh-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   animation: bob 4s ease-in-out infinite;
 }
 .wish.calm { animation: none; }
-.wish.real { border-color: #ffc2d4; }
+.wish.real { border-color: color-mix(in srgb, var(--love) 40%, var(--surface)); }
 .wish.urgent .wi { color: var(--warn); }
 .wi { flex: none; width: 28px; height: 28px; color: var(--love); }
 .wimg {
@@ -129,11 +129,11 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clear
   width: 28px;
   height: 28px;
   object-fit: contain;
-  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+  filter: drop-shadow(0 0 1px var(--halo)) drop-shadow(0 0 1px var(--halo)) drop-shadow(0 0 1px var(--halo));
   pointer-events: none;
 }
 .wt { min-width: 0; }
-.heart { flex: none; margin-left: -2px; font-size: 14px; line-height: 1; color: #ff4f86; }
+.heart { flex: none; margin-left: -2px; font-size: 14px; line-height: 1; color: var(--love); }
 /* queue : vrai triangle, filet compris */
 .tail {
   position: absolute;
@@ -141,7 +141,7 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clear
   bottom: -9px;
   width: 16px;
   height: 10px;
-  background: #d6dfea;
+  background: var(--hud-line);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 .tail::after {

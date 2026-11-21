@@ -65,7 +65,7 @@ onMounted(() => store.initName());
   padding: 6px 14px 6px 6px;
   border-radius: 16px;
   background: var(--surface);
-  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
+  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px var(--hud-line);
   animation: slide-in 0.55s var(--spring) both;
 }
 @keyframes slide-in { from { opacity: 0; transform: translateX(-24px) scale(0.94); } }
@@ -78,7 +78,7 @@ onMounted(() => store.initName());
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
-  box-shadow: 0 0 0 1px #d6dfea, 0 3px 8px rgba(40, 55, 80, 0.18);
+  box-shadow: 0 0 0 1px var(--hud-line), 0 3px 8px rgba(40, 55, 80, 0.18);
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
@@ -117,7 +117,7 @@ onMounted(() => store.initName());
   border-radius: 999px;
   background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
   overflow: hidden;
-  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 var(--glint), 0 1px 0 var(--glint);
 }
 /* remplissage en relief bleu ciel : dégradé de tube, liseré lumineux en haut, ombre douce en bas */
 .bar-fill {
@@ -153,7 +153,7 @@ onMounted(() => store.initName());
   place-items: center;
   font: 800 11px/1 var(--font-text);
   color: var(--hud-ink);
-  text-shadow: 0 0 3px #fff, 0 0 2px #fff;
+  text-shadow: 0 0 3px var(--halo), 0 0 2px var(--halo);
 }
 /* réglages : bouton rond blanc */
 .round {
@@ -165,7 +165,7 @@ onMounted(() => store.initName());
   border: 0;
   border-radius: 50%;
   background: var(--surface);
-  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
+  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px var(--hud-line);
   cursor: pointer;
   transition: transform 0.4s var(--spring-strong);
   animation: pop-in 0.5s var(--spring-strong) 0.15s both;

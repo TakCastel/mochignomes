@@ -193,7 +193,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
-  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 var(--glint), 0 1px 0 var(--glint);
 }
 /* remplissage en relief : dégradé de tube arrondi, liseré lumineux fin en haut, ombre douce en bas */
 .fill {

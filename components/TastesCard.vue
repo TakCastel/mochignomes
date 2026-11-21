@@ -119,7 +119,7 @@ const dislikes = computed(() => ["colorDislike", "foodDislike", "itemDislike"].m
 .bar { --c: var(--love); }
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .entry { min-height: 60px; padding: var(--s-2) 10px; }
-.entry.dis { background: color-mix(in srgb, #f5f1ff var(--tint), var(--surface)); box-shadow: inset 0 0 0 2px #e6dcff; }
+.entry.dis { background: color-mix(in srgb, #f5f1ff var(--tint), var(--surface)); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--gem) 30%, var(--surface)); }
 .entry.fresh { animation: reveal 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes reveal { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
 .ui-thumb { width: 42px; height: 42px; font-size: 26px; background: var(--surface); }

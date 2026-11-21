@@ -484,12 +484,12 @@ onBeforeUnmount(() => {
   margin-left: 6px;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #7a5c20;
+  background: var(--surface);
+  color: var(--coin-ink);
   font: 800 11px "Nunito", system-ui, sans-serif;
   box-shadow: 0 2px 6px rgba(40, 55, 80, 0.15);
 }
-.status.ill { color: #3b7a30; }
+.status.ill { color: var(--accent-ink); }
 .fallback-bubble {
   position: absolute;
   top: 12%;

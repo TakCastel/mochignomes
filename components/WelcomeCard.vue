@@ -252,9 +252,9 @@ const confetti = Array.from({ length: 14 }, (_, i) => ({
   padding: 54px 22px 22px;
   border-radius: 34px;
   text-align: center;
-  color: #2b3440;
-  background: linear-gradient(180deg, #ffffff, #eef3f8);
-  box-shadow: 0 8px 0 #cfd9e4, 0 24px 50px rgba(30, 40, 70, 0.4), inset 0 2px 0 #fff;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
+  box-shadow: 0 8px 0 var(--knob-side), 0 24px 50px rgba(30, 40, 70, 0.4), inset 0 2px 0 var(--glint);
 }
 .medal {
   position: absolute;
@@ -298,14 +298,14 @@ h2 { margin: 0; font: 700 30px "Fredoka", "Nunito", system-ui, sans-serif; }
   width: 100%;
   margin-top: 14px;
   padding: 12px 14px;
-  border: 2px solid #d5deea;
+  border: 2px solid var(--ui-line);
   border-radius: 16px;
-  background: #fff;
-  color: #2b3440;
+  background: var(--surface);
+  color: var(--ink);
   font: 700 20px "Fredoka", "Nunito", system-ui, sans-serif;
   text-align: center;
 }
-.field:focus { outline: none; border-color: #4fbf34; }
+.field:focus { outline: none; border-color: var(--accent); }
 .cta {
   display: inline-flex;
   align-items: center;
@@ -336,12 +336,12 @@ h2 { margin: 0; font: 700 30px "Fredoka", "Nunito", system-ui, sans-serif; }
   transform: translateX(-50%);
   padding: 10px 14px;
   border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(40, 55, 80, 0.25), 0 0 0 2px #bde8a8;
+  background: var(--surface);
+  box-shadow: var(--ui-sh-3), 0 0 0 2px color-mix(in srgb, var(--accent) 45%, var(--surface));
   pointer-events: none;
 }
-.guide-num { flex: none; padding: 3px 9px; border-radius: 999px; background: #4fbf34; color: #fff; font: 800 12px "Nunito", system-ui, sans-serif; }
-.guide-text { font: 700 14px/1.3 "Nunito", system-ui, sans-serif; color: #2b3440; }
+.guide-num { flex: none; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #fff; font: 800 12px "Nunito", system-ui, sans-serif; }
+.guide-text { font: 700 14px/1.3 "Nunito", system-ui, sans-serif; color: var(--ink); }
 
 .confetti { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
 .confetti span { position: absolute; top: -10px; width: 8px; height: 12px; border-radius: 2px; opacity: 0; animation: fall 1.6s ease-in forwards; }

@@ -56,7 +56,7 @@ const paletteStyle = computed(() => ({ "--glow": pal.value.glow, "--edge": pal.v
 watchEffect(() => {
   const key = themeKey(store.ui);
   document.documentElement.dataset.theme = key;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEMES[key].dark ? "#1a1f2a" : "#8fd3ff");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEMES[key].bar);
 });
 
 // moment de la journée réel, mis à jour chaque minute
@@ -123,9 +123,6 @@ onMounted(() => {
   // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)
   loadSeenUnlocked(store.unlocked.length);
   store.startDecay();
-  // ?palette=lagon : essayer une palette
-  const wanted = new URLSearchParams(window.location.search).get("palette");
-  if (wanted && PALETTES[wanted]) store.palette = wanted;
   // ?theme=sombre : essayer un thème d'interface
   const theme = new URLSearchParams(window.location.search).get("theme");
   if (theme && THEMES[theme]) store.ui = theme;
