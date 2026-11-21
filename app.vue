@@ -23,6 +23,8 @@
     <GameSheet />
     <!-- nouveauté débloquée : « Elle a trouvé un ballon ! » -->
     <UnlockCard v-if="!playing" />
+    <!-- petit tuto de la nouveauté en cours (une étape à la fois) -->
+    <GuideCard />
     <LazyActivityPlayer v-if="gameBus.activity" :key="gameBus.activity" :activity-id="gameBus.activity" @close="closeActivity" />
     <AwayCard />
     <WelcomeCard />

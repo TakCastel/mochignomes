@@ -340,6 +340,8 @@ const tabs = computed(() => [
 ].filter(Boolean));
 const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "vetements");
 const tab = ref(validTab(props.tab));
+// tuto de la Cuisine : « va voir l'Épicerie » (lib/guides.js)
+watch(tab, (t) => store.countEvent?.("boutique:" + t), { immediate: true });
 
 // ---------- vêtements ----------
 const slotFilter = ref(SLOTS.includes(props.slotKey) ? props.slotKey : "all");
@@ -451,7 +453,7 @@ function pickColor(k) {
   buyError.value = "";
   reactionLine.value = "";
   celebrate.value = false;
-  if (trying.value) preview();
+  if (trying.value) { preview(); store.countEvent?.("essayage:couleur"); }
 }
 
 function buzz(pattern) {
@@ -531,6 +533,7 @@ function startTry() {
   }
   trying.value = true;
   gameBus.trying = true;
+  store.countEvent?.("essayage");
   emit("tryon", true);
   // on efface la fenêtre de la boutique pour la voir en 3D
   hiddenOverlay = root.value?.closest(".overlay") || null;
