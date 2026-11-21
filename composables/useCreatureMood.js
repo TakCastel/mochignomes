@@ -19,6 +19,7 @@ export const gameBus = reactive({
   kitchenFocus: "", // recette mise en avant dans la cuisine
   activity: null, // id de l'activité 3D en cours (ActivityPlayer monté)
   sideW: 0, // volet latéral ouvert à droite (Sac) : sa largeur en px, la créature se recadre à gauche ; 0 = aucun
+  trying: false, // essayage en boutique en cours : pas de bulle au-dessus de sa tête
   tryTop: 0, // essayage en boutique : haut (px) de la barre d'essayage, la créature se cadre au-dessus ; 0 = pas d'essayage
   coinFx: null, // dernier gain du Sac, pour les « +N » volants (posé par inventory.earn)
   toasts: [], // notifications { id, text, icon }
