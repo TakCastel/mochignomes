@@ -61,9 +61,9 @@ const rows = computed(() =>
   background: color-mix(in srgb, var(--c) 22%, var(--surface));
   box-shadow: inset 2px 2px 4px var(--plate-shade);
 }
-.done .medal { background: radial-gradient(circle at 40% 30%, #fff7c9, #ffc93c); box-shadow: 0 3px 0 #d39a00; }
+.done .medal { background: radial-gradient(circle at 40% 30%, #ffc828, #f29a00); box-shadow: 0 3px 0 #c27c00; }
 .icon { width: 28px; height: 28px; color: var(--c); opacity: 0.6; }
-.done .icon { color: #fff; opacity: 1; filter: drop-shadow(0 2px 0 #b07c00); }
+.done .icon { color: #fff; opacity: 1; filter: drop-shadow(0 2px 0 #9a5f00); }
 .text { display: grid; gap: 2px; min-width: 0; }
 .text strong { font-size: 15px; }
 .text span { font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, var(--surface)); font-weight: 700; }
