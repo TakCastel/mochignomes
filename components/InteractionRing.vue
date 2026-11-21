@@ -153,7 +153,9 @@ const prim = computed(() => {
   if (store.isSleeping) return { key: "coucher", kind: "best" };
   if (!tutoDone.value) return { key: tutoKey.value, kind: "best" };
   const p = primary.value;
-  const find = (key) => list.find((a) => a.key === key) || list.find((a) => a.cat && a.cat === catOf(key)?.key);
+  // « act:foot » trouve aussi « Jouer » quand il est devenu Foot (activity: "foot")
+  const actId = (key) => (String(key).startsWith("act:") ? String(key).slice(4) : null);
+  const find = (key) => list.find((a) => a.key === key || (actId(key) && a.activity === actId(key))) || list.find((a) => a.cat && a.cat === catOf(key)?.key);
   if (props.focus) {
     const f = find(props.focus);
     if (f && !f.reason) return { key: f.key, kind: p?.key === props.focus ? p.kind : "best" };
