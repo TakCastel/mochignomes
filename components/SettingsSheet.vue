@@ -63,7 +63,7 @@
       <button v-if="!confirming" class="ui-btn ui-btn--secondary ui-btn--sm start" @click="confirming = true">Recommencer…</button>
       <div v-else class="wipe">
         <p class="ui-note ui-note--warn">C'est définitif, impossible de revenir en arrière{{ many ? ", pour tous tes mochignomes" : "" }}. Pour confirmer, écris {{ many ? "le nom de celle qui est dans le pré" : "son nom" }} : <strong>{{ store.name }}</strong></p>
-        <input v-model="typed" class="wipe-input" :placeholder="store.name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Nom de la créature pour confirmer">
+        <input v-model="typed" class="wipe-input" :placeholder="store.name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Nom du mochignome pour confirmer">
         <div class="ui-actions">
           <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="cancelWipe">Annuler</button>
           <button class="ui-btn ui-btn--danger ui-btn--sm" :disabled="!nameOk" @click="restart">Tout effacer</button>

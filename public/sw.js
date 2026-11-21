@@ -1,5 +1,5 @@
 // Service worker : cache de l'appli, notifications locales (aucun serveur push).
-const CACHE = "tamagotchi-v5";
+const CACHE = "tamagotchi-v6";
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/manifest.webmanifest", "/icons/icon-192.png"]).catch(() => {})));
@@ -30,7 +30,7 @@ self.addEventListener("fetch", (e) => {
 });
 
 function show({ title, body, tag }) {
-  return self.registration.showNotification(title || "Tamagotchi", {
+  return self.registration.showNotification(title || "Mochignomes", {
     body: body || "",
     tag: tag || "tamagotchi",
     icon: "/icons/icon-192.png",

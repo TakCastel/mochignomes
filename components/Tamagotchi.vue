@@ -3,7 +3,7 @@
     <img
       v-if="fallback"
       :src="`/images/${MOODS[shownMood].image}.png`"
-      alt="Tamagotchi"
+      alt="Mochignome"
       class="fallback-img"
       :style="{ '--sc': houseFx.swapping ? 0 : stageScale || 0 }"
     >

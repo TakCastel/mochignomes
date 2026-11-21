@@ -1,7 +1,7 @@
 {
-  "name": "Tamagotchi",
-  "short_name": "Tamagotchi",
-  "description": "Une petite créature à chouchouter, un moment à la fois.",
+  "name": "Mochignomes",
+  "short_name": "Mochignomes",
+  "description": "Des mochignomes à chouchouter dans leur pré, un moment à la fois.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",

@@ -48,7 +48,7 @@
 
     <!-- journal narratif -->
     <section class="ui-card">
-      <h3 class="ui-section-title"><Icon name="solar:book-bookmark-bold-duotone" class="ic" />Journal de {{ store.name || "ta bestiole" }}</h3>
+      <h3 class="ui-section-title"><Icon name="solar:book-bookmark-bold-duotone" class="ic" />Journal de {{ store.name || "ton mochignome" }}</h3>
       <ul v-if="entries.length" class="log">
         <li v-for="e in entries" :key="e.id">
           <span class="ui-thumb log-ic"><Icon :name="e.icon || 'solar:book-bookmark-bold-duotone'" class="ic" /></span>
