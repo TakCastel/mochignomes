@@ -1,13 +1,8 @@
 <template>
   <!-- panneau des besoins : deux colonnes, médaillon rond à gauche, libellé bleu marine puis jauge ;
-       son bord bas épouse la bulle de la barre du bas (coin bas-gauche laissé libre pour elle).
-       L'humeur est à part, dans une pastille au-dessus. -->
+       son bord bas épouse l'onglet de la barre du bas (coin bas-gauche laissé libre pour lui).
+       L'humeur est dans cet onglet, à côté du bouton actif (BottomNav). -->
   <div class="stats">
-    <div class="mood" aria-live="polite">
-      <span class="mood-dot" :style="{ '--d': moodInfo[1] }" />
-      <span class="name">Humeur</span>
-      <span class="mood-v">{{ moodInfo[0] }}</span>
-    </div>
     <div ref="wrap" class="shadow">
   <section ref="panel" class="needs" :style="clipStyle" aria-label="Besoins">
     <button v-for="(n, i) in rows" :key="n.key" class="need" :class="['is-' + n.level, { 'is-up': bumped[n.key] }]" :style="{ '--i': i }" :aria-label="`${n.label} : ${Math.round(n.value)} sur 100`" @click="tap(n)">
@@ -25,10 +20,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { navOrb, navBumpAt } from "~/composables/useNavOrb";
-import { MOOD_LABELS } from "~/lib/creatureLook";
 
-const { store, mood } = useCreatureMood();
-const moodInfo = computed(() => MOOD_LABELS[mood.value] || ["Sereine", "#4fc3a1"]);
+const { store } = useCreatureMood();
 const STAT_ACTION = { hunger: "nourrir", cleanliness: "laver", fun: "jouer", energy: "coucher", health: "soigner" };
 // icon : pastille du message (gameToast) ; glyph : pictogramme blanc dans le médaillon
 const NEEDS = [
@@ -80,8 +73,8 @@ function tap(n) {
   highlightAction(STAT_ACTION[n.key]);
 }
 
-// ---- bord bas qui épouse la bosse de la barre du bas ----
-const GAP = 7; // écart entre le panneau et la bosse
+// ---- bord bas qui épouse l'onglet de la barre du bas ----
+const GAP = 7; // écart entre le panneau et l'onglet (dessus et flancs)
 const R = 16; // coins du panneau
 const panel = ref(null);
 const wrap = ref(null);
@@ -101,7 +94,7 @@ const clipStyle = computed(() => {
     let y = b.h;
     if (x < R) y -= R - Math.sqrt(R * R - (R - x) ** 2);
     else if (x > b.w - R) y -= R - Math.sqrt(R * R - (x - (b.w - R)) ** 2);
-    y = Math.min(y, limit - navBumpAt(b.left + x));
+    y = Math.min(y, limit - navBumpAt(b.left + x, GAP));
     bottom.push(`${x},${y.toFixed(1)}`);
   }
   const d = `M0,${R} Q0,0 ${R},0 L${b.w - R},0 Q${b.w},0 ${b.w},${R} L${bottom.join(" L")} Z`;
@@ -133,7 +126,7 @@ onBeforeUnmount(() => {
   filter: drop-shadow(0 0 0.5px rgba(30, 55, 100, 0.45)) drop-shadow(0 6px 12px rgba(30, 55, 100, 0.16));
   animation: rise 0.5s var(--spring) both;
 }
-/* panneau blanc ; Santé en bas à droite, le coin bas-gauche est la place de la bulle « Maison » */
+/* panneau blanc ; Santé en bas à droite, le coin bas-gauche est la place de l'onglet « Maison » */
 .needs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -238,37 +231,8 @@ onBeforeUnmount(() => {
 /* besoin critique : le médaillon palpite */
 .need.is-bad .medal { animation: alert 1.1s ease-in-out infinite; }
 @keyframes alert { 50% { transform: scale(1.15); } }
-/* humeur, à part : pastille blanche au-dessus du panneau */
-.mood {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 5px 14px 5px 5px;
-  border-radius: 999px;
-  background: var(--surface);
-  box-shadow: 0 0 0 1px #d6dfea, 0 4px 10px rgba(30, 55, 100, 0.14);
-  animation: fade 0.4s ease-out 0.1s both;
-}
-.mood .name { font-size: 12px; color: var(--hud-ink-2); }
-.mood-dot {
-  flex: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.55), var(--d) 60%);
-  background-color: var(--d);
-  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
-}
-.mood-v {
-  display: block;
-  font: 700 15px/1 var(--font-title);
-  color: var(--hud-ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 @media (prefers-reduced-motion: reduce) {
-  .shadow, .need, .mood, .need.is-bad .medal, .need.is-up .medal { animation: none; }
+  .shadow, .need, .need.is-bad .medal, .need.is-up .medal { animation: none; }
   .fill, .medal { transition: none; }
   .fill::after { animation: none; display: none; }
 }
