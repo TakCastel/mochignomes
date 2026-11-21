@@ -76,7 +76,7 @@
       <ul class="bars traits">
         <li v-for="t in traitRows" :key="t.key">
           <span class="bar-label">{{ t.label }}</span>
-          <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.round(t.value * 100) + '%', background: t.color }" /></div>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.round(t.value * 100) + '%', '--c': t.color }" /></div>
           <span class="bar-value">{{ Math.round(t.value * 100) }}</span>
         </li>
       </ul>
@@ -96,7 +96,7 @@
         <li v-for="s in statRows" :key="s.key">
           <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
           <span class="bar-label">{{ s.label }}</span>
-          <div class="ui-bar ui-bar--thin"><i :style="{ width: s.width + '%', background: s.color }" /></div>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: s.width + '%', '--c': s.color }" /></div>
           <span class="bar-value">{{ Math.round(s.value) }}</span>
         </li>
       </ul>
@@ -225,8 +225,9 @@ function saveName() {
 .short .ui-dot { right: calc(50% - 26px); }
 
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.bars li { display: grid; grid-template-columns: 24px minmax(0, 84px) 1fr 30px; align-items: center; gap: var(--s-2); }
-.traits li { grid-template-columns: minmax(0, 96px) 1fr 30px; }
+/* mêmes colonnes pour Caractère et Santé : les jauges commencent et finissent au même endroit */
+.bars li { display: grid; grid-template-columns: 24px 100px minmax(0, 1fr) 34px; align-items: center; gap: var(--s-2); }
+.traits li { grid-template-columns: calc(124px + var(--s-2)) minmax(0, 1fr) 34px; }
 .bar-icon { width: 24px; height: 24px; }
 .bar-label { font: 800 var(--t-md) var(--font-text); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bar-value { text-align: right; font: 700 var(--t-md) var(--font-title); font-variant-numeric: tabular-nums; color: var(--ink-2); }

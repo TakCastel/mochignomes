@@ -14,7 +14,7 @@
         </div>
         <span class="shadow" />
       </button>
-      <div class="meter" aria-hidden="true"><span :style="{ width: `${(heat / 12) * 100}%` }" /></div>
+      <div class="ui-bar meter" aria-hidden="true"><i :style="{ width: `${(heat / 12) * 100}%` }" /></div>
       <p class="hint">{{ heat === 0 ? "Touche l'œuf pour le réchauffer !" : heat < 12 ? "Continue, il bouge !" : "Ça y est !" }}</p>
       <!-- 2e mochignome et suivants : l'œuf peut attendre au chaud, on retourne voir une autre -->
       <button v-if="backTo && heat < 12" class="ui-btn ui-btn--secondary ui-btn--sm later" type="button" @click="later">
@@ -243,8 +243,7 @@ const confetti = Array.from({ length: 14 }, (_, i) => ({
   60% { transform: scale(1.18) rotate(3deg); filter: brightness(2); opacity: 1; }
   100% { transform: scale(1.5); filter: brightness(3); opacity: 0; }
 }
-.meter { width: min(220px, 60vw); height: 10px; border-radius: 999px; background: rgba(120, 90, 140, 0.18); overflow: hidden; }
-.meter span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffb25c, #ff6d8a); transition: width 0.25s; }
+.meter { --c: #ff8a6d; width: min(220px, 60vw); }
 
 .card {
   position: relative;

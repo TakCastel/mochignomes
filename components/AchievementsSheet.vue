@@ -8,9 +8,7 @@
         <div class="text">
           <strong>{{ a.label }}</strong>
           <span>{{ a.desc }}</span>
-          <div v-if="!a.done" class="progress">
-            <div :style="{ width: a.pct + '%' }" />
-          </div>
+          <div v-if="!a.done" class="ui-bar progress"><i :style="{ width: a.pct + '%' }" /></div>
         </div>
         <span class="count"><Icon v-if="a.done" name="solar:check-circle-bold" class="ok" /><template v-else>{{ a.value }}/{{ a.goal }}</template></span>
       </li>
@@ -69,8 +67,7 @@ const rows = computed(() =>
 .text { display: grid; gap: 2px; min-width: 0; }
 .text strong { font-size: 15px; }
 .text span { font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-weight: 700; }
-.progress { height: 8px; margin-top: 5px; border-radius: 999px; background: var(--plate-lo); overflow: hidden; }
-.progress div { height: 100%; background: var(--c); border-radius: 999px; }
+.progress { --c: inherit; margin-top: 5px; }
 .count { font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, #fff); font-variant-numeric: tabular-nums; }
 .done .count { color: #2f9e44; }
 .ok { width: 24px; height: 24px; }

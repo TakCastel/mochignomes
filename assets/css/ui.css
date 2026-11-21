@@ -493,9 +493,44 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-stars .ic.on { color: #ffc21a; }
 
 /* ---------- jauges ---------- */
-.ui-bar { height: 10px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.1); }
-.ui-bar--thin { height: 8px; }
-.ui-bar > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, var(--accent-hi), var(--accent)); transition: width 0.4s; }
+/* jauge unique du jeu, identique à celles de l'écran principal (besoins, niveau) :
+   gouttière creusée de 18 px + remplissage en tube. Couleur via --c sur la barre ou sur le <i>. */
+.ui-bar {
+  --c: var(--accent);
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 18px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
+}
+.ui-bar--thin { height: 18px; } /* conservé pour compatibilité : toutes les jauges ont la même taille */
+.ui-bar > i {
+  position: relative;
+  display: block;
+  min-width: 14px;
+  max-width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c) 45%, #fff) 0%,
+    color-mix(in srgb, var(--c) 75%, #fff) 22%,
+    var(--c) 58%,
+    color-mix(in srgb, var(--c) 78%, #000) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -2px 2px color-mix(in srgb, var(--c) 45%, transparent),
+    0 1px 2px color-mix(in srgb, var(--c) 35%, transparent);
+  transition: width 0.7s var(--spring), background 0.4s;
+}
+/* à zéro : gouttière vide, pas de petit bout de remplissage */
+/* jauge de temps (chrono) : suit le temps sans rebond */
+.ui-bar--live > i { transition: width 0.3s linear; }
+.ui-bar > i[style*="width: 0%"], .ui-bar > i[style*="width:0%"] { display: none; }
 
 /* ---------- messages ---------- */
 .ui-empty {
@@ -688,18 +723,6 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .ui-tile.is-on { animation: ui-select 0.4s var(--spring-strong); }
 @keyframes ui-select { 0% { transform: scale(0.9); } }
 
-/* jauges : reflet brillant et remplissage à ressort */
-.ui-bar > i { position: relative; transition: width 0.7s var(--spring); }
-.ui-bar > i::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 1px;
-  height: 40%;
-  border-radius: inherit;
-  background: rgba(255, 255, 255, 0.5);
-}
 
 /* médaillons : apparition en rebond */
 .ui-medal { animation: ui-medal-in 0.55s var(--spring-strong) 0.08s both; }
