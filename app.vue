@@ -13,8 +13,6 @@
       <!-- Sac ouvert : on ne regarde que sa tenue, pas ses jauges -->
       <div class="pad stack" :class="{ away: playing || gameBus.page === 'sac' }">
         <StatsStrip class="hit" />
-        <!-- actions : uniquement pendant le tutoriel ; ensuite, tout passe par le menu sur la créature -->
-        <ActionGrid v-if="(store.onboardStep ?? 6) < 6" class="hit" />
       </div>
       <BottomNav class="hit nav-top" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
     </main>

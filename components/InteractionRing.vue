@@ -74,6 +74,9 @@ const CATS = [
   { key: "cat:dodo", label: "Dodo", keys: ["coucher"], needs: ["energy"] },
   { key: "cat:photo", label: "Photo", keys: ["photo"], needs: [], last: true },
 ];
+// tutoriel (WelcomeCard, étapes 2 à 4) : une seule pilule, celle de l'étape
+const TUTO_KEY = { 2: "nourrir", 3: "jouer", 4: "chatouiller" };
+const tutoKey = computed(() => TUTO_KEY[store.onboardStep] || "chatouiller");
 const level = ref(null); // null = catégories ; sinon clé de la catégorie ouverte
 const BACK = { key: "back", label: "Retour", icon: "solar:arrow-left-bold", color: ["#e3edf8", "#2c4f9e"], reason: null, cool: null, back: true };
 
@@ -128,7 +131,7 @@ const baseList = computed(() => {
   let keys = null;
   if (store.health <= 0) keys = ["soigner"];
   else if (store.isSleeping) keys = ["coucher", "calin"];
-  else if (!tutoDone.value) keys = ["chatouiller"];
+  else if (!tutoDone.value) keys = [tutoKey.value];
   if (keys) {
     return keys
       .map((k) => by[k])
@@ -146,7 +149,7 @@ const prim = computed(() => {
   const list = baseList.value;
   if (store.health <= 0) return list[0] ? { key: list[0].key, kind: "best" } : null;
   if (store.isSleeping) return { key: "coucher", kind: "best" };
-  if (!tutoDone.value) return { key: "chatouiller", kind: "best" };
+  if (!tutoDone.value) return { key: tutoKey.value, kind: "best" };
   const p = primary.value;
   const find = (key) => list.find((a) => a.key === key) || list.find((a) => a.cat && a.cat === catOf(key)?.key);
   if (props.focus) {
@@ -345,6 +348,8 @@ function arm(ms = 6000, force = false) {
 function onIdle() {
   // une pilule en recharge se remplit sous les yeux du joueur : on attend, sauf après un choix
   if (!afterPick && ordered.value.some((a) => a.cool)) return arm(1000);
+  // tutoriel : la pilule de l'étape reste affichée tant qu'on ne l'a pas touchée
+  if (!afterPick && !tutoDone.value) return arm(6000);
   requestClose();
 }
 

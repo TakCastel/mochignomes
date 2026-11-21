@@ -24,7 +24,7 @@
       :anchor="info"
       :zoom="zoom"
       :focus="ring.focus"
-      :min-top="frame?.minTop || 80"
+      :min-top="Math.max(frame?.minTop || 80, ring.minTop || 0)"
       @close="closeRing"
       @picked="onPicked"
     />
@@ -87,13 +87,30 @@ let ringClosedAt = 0;
 function closeRing() {
   if (ring.value) { ring.value = null; ringClosedAt = Date.now(); }
 }
+// tutoriel : la carte du guide est en haut de l'écran, le menu reste dessous
+function guideBottom() {
+  const g = typeof document !== "undefined" && document.querySelector(".guide");
+  return g ? Math.round(g.getBoundingClientRect().bottom + 8) : 0;
+}
 function openRing(focus = null) {
   const si = creature.value?.getScreenInfo?.();
   if (si) info.value = si;
   if (!info.value) return;
   touched();
-  ring.value = { focus };
+  ring.value = { focus, minTop: guideBottom() };
 }
+// tutoriel : à chaque étape (Manger, Jouer, Chatouiller), le menu s'ouvre seul sur la pilule attendue
+let tutoTimer = 0;
+// (la source inclut la créature 3D : après un rechargement en plein tutoriel, il s'ouvre dès qu'elle est prête)
+watch(() => [store.onboardStep, !!creature.value], ([s, ready]) => {
+  clearTimeout(tutoTimer);
+  if (!ready || !(s >= 2 && s <= 4)) return;
+  tutoTimer = setTimeout(() => {
+    if (store.onboardStep !== s || ring.value || inSac.value || gameBus.sheet || gameBus.page) return;
+    openRing(null);
+  }, s === 2 ? 900 : 1800);
+});
+onBeforeUnmount(() => clearTimeout(tutoTimer));
 function onPicked() { touched(); }
 // Sac ouvert (volet latéral) : elle essaie ses tenues. Pas de bulle, pas de menu ;
 // un toucher déclenche une petite pose d'essayage
@@ -344,7 +361,7 @@ function onPoke(p) {
   }
   if (n >= 3) return; // en rafale on ne rouvre pas à chaque toucher
   if (asleep) say("Mmh... laisse-moi dormir");
-  ring.value = { focus: null };
+  ring.value = { focus: null, minTop: guideBottom() };
 }
 
 // Poses d'essayage (Sac) : on les enchaîne dans l'ordre, chaque toucher passe à la suivante
