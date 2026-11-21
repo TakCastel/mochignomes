@@ -17,26 +17,54 @@
 
 <script setup>
 import { computed } from "vue";
+import { useInventoryStore } from "~/stores/useInventoryStore";
 
+// 5 destinations au plus : Maison, Sac, Boutique, Cuisine, Elle (Jours et Album s'ouvrent depuis Elle)
 const { store } = useCreatureMood();
-const active = computed(() => gameBus.page || "maison");
+const inv = useInventoryStore();
 const pages = computed(() => store.unlockedPages || ["maison", "elle"]);
+const has = (k) => !!store.features?.[k];
 
-// pastille : défi prêt à réclamer (Jours) ou succès pas encore vu (Album)
-const questReady = computed(() => (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0);
-const newUnlocked = computed(() => store.unlocked.length > gameBus.seenUnlocked);
+const active = computed(() => {
+  if (gameBus.sheet === "cuisine") return "cuisine";
+  const p = gameBus.page;
+  if (!p) return "maison";
+  if (p === "jours" || p === "album") return "elle";
+  return p;
+});
+
+// pastilles : défi prêt à réclamer ou succès pas encore vu (Elle), coffre gratuit (Boutique),
+// nouveautés ou set à réclamer (Sac), envie de plat (Cuisine)
+const questReady = computed(() =>
+  pages.value.includes("jours") && (
+    (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0 || !!store.questBonusReady
+  ));
+const newUnlocked = computed(() => pages.value.includes("album") && store.unlocked.length > gameBus.seenUnlocked);
+const sacBadge = computed(() => inv.unseenCount > 0 || (has("collection") && inv.setsReady.length > 0));
+const shopBadge = computed(() => !!inv.chestReady);
+const kitchenBadge = computed(() => store.wish?.action === "repas");
+
+function goHome() {
+  closePage();
+  closeSheet();
+}
 
 const ALL = [
-  { key: "maison", label: "Maison", icon: "solar:home-2-bold-duotone", run: closePage },
+  { key: "maison", label: "Maison", icon: "solar:home-2-bold-duotone", run: goHome },
+  { key: "sac", label: "Sac", icon: "solar:bag-4-bold-duotone", feature: "sac", run: () => openPage("sac") },
+  { key: "boutique", label: "Boutique", icon: "solar:shop-bold-duotone", feature: "boutique", run: () => openPage("boutique") },
+  { key: "cuisine", label: "Cuisine", icon: "solar:chef-hat-bold-duotone", feature: "cuisine", run: () => openKitchen() },
   { key: "elle", label: "Elle", icon: "solar:heart-bold-duotone", run: () => openPage("elle") },
-  { key: "jours", label: "Jours", icon: "solar:calendar-bold-duotone", run: () => openPage("jours") },
-  { key: "album", label: "Album", icon: "solar:gallery-bold-duotone", run: () => openPage("album") },
 ];
 // les entrées pas encore débloquées n'apparaissent pas
 const items = computed(() =>
-  ALL.filter((t) => pages.value.includes(t.key)).map((t) => ({
+  ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({
     ...t,
-    badge: (t.key === "jours" && questReady.value) || (t.key === "album" && newUnlocked.value),
+    badge:
+      (t.key === "elle" && (questReady.value || newUnlocked.value)) ||
+      (t.key === "sac" && sacBadge.value) ||
+      (t.key === "boutique" && shopBadge.value) ||
+      (t.key === "cuisine" && kitchenBadge.value),
   }))
 );
 </script>

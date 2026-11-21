@@ -12,7 +12,7 @@
     <div class="flash" :class="{ on: flash }" />
 
     <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
-    <div v-if="bubbleStyle" class="bubble-wrap" :style="bubbleStyle">
+    <div v-if="bubbleStyle && !activeActivity" class="bubble-wrap" :style="bubbleStyle">
       <WishBubble />
       <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
     </div>
@@ -35,6 +35,8 @@
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { MOODS, MESSAGES, REACTIONS, MOOD_LABELS, pick } from "~/lib/creatureLook";
 import { STATS, SKY } from "~/lib/gameUi";
+import { setLiveCreature, activeActivity } from "~/composables/useLiveCreature";
+import { bindOutfit } from "~/composables/useOutfit";
 
 const props = defineProps({
   phase: { type: String, default: "day" },
@@ -51,6 +53,9 @@ const { store, mood, morph, sulking } = useCreatureMood();
 
 const stage = ref(null);
 const creature = shallowRef(null);
+// la tenue du Sac suit la créature (et l'essayage de la boutique passe par là)
+const outfit = bindOutfit(creature);
+let meadow = null;
 const fallback = ref(false);
 const fallbackMessage = ref("");
 const reaction = ref(null);
@@ -203,6 +208,13 @@ onMounted(async () => {
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky, theme: props.theme });
     if (props.frame) creature.value.setFrame(props.frame);
+    // partagée avec les activités 3D, la cuisine et l'essayage
+    setLiveCreature(creature.value);
+    // objets possédés posés dans le pré : les toucher lance l'activité
+    try {
+      const { bindMeadowProps } = await import("~/lib/meadowProps.js");
+      if (creature.value) meadow = bindMeadowProps(creature.value, { onLaunch: (id) => launchActivity(id) });
+    } catch (e) { console.warn("Objets du pré indisponibles :", e); }
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {
       if (stageKey.value === "oeuf") return;
@@ -219,7 +231,12 @@ onBeforeUnmount(() => {
   clearInterval(chatter);
   clearTimeout(reactionTimer);
   stopListening?.();
+  meadow?.dispose();
+  meadow = null;
+  setLiveCreature(null);
+  outfit.unbind(); // retire la tenue avant de détruire la créature
   creature.value?.dispose();
+  creature.value = null;
 });
 </script>
 

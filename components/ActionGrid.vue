@@ -28,10 +28,40 @@
 <script setup>
 import { computed, ref } from "vue";
 import * as growth from "~/lib/growth";
+import { V1_ACTIVITIES, activityById } from "~/lib/catalog";
+import { useInventoryStore } from "~/stores/useInventoryStore";
 
 const ACTION_UNLOCK_LEVEL = growth.ACTION_UNLOCK_LEVEL || { danser: 3 };
 
 const { store } = useCreatureMood();
+const inv = useInventoryStore();
+const tutoDone = computed(() => (store.onboardStep ?? 6) >= 6);
+const has = (k) => !!store.features?.[k];
+// Manger ouvre le choix goûter / plat (le tutoriel garde le goûter direct)
+const mealPath = computed(() => tutoDone.value && (has("cuisine") || inv.mealsCount > 0));
+
+// Activité à proposer à la place de « Jouer » : tout est plein, Jouer est grisé,
+// ou le ballon vient d'arriver et elle n'a jamais joué au foot (1re partie guidée)
+const suggestedActivity = computed(() => {
+  void store.tick;
+  if (!tutoDone.value || store.isSleeping || store.exhausted) return null;
+  const w = store.wish;
+  if (w?.action === "activite" && w.target && store.canActivity(w.target).ok) return w.target;
+  const idle = store.idleSuggestion;
+  if (idle?.kind === "activite") return idle.id;
+  const ok = V1_ACTIVITIES.filter((a) => store.canActivity(a.id).ok);
+  if (!ok.length) return null;
+  if (has("ballon") && !(store.counters?.["activite:foot"] > 0) && ok.some((a) => a.id === "foot")) return "foot";
+  const jouer = store.canAct?.("jouer");
+  if (jouer && !jouer.ok && !(jouer.remaining > 0)) {
+    const fav = ok.find((a) => a.id === store.tastes?.activity && inv.isTasteSeen("activity"));
+    return (fav || ok.find((a) => a.id === "foot") || ok[0]).id;
+  }
+  return null;
+});
+// Plus faim du tout : Manger devient Cuisiner (préparer un plat pour plus tard)
+const suggestCooking = computed(() => mealPath.value && has("cuisine") && store.hunger > 90 && !store.isSleeping);
+const SHORT = { foot: "Foot", course: "Course", tele: "Télé" };
 
 const BASE = [
   { key: "nourrir", label: "Manger", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
@@ -68,11 +98,27 @@ function stateOf(key) {
   if (!c || c.ok) return { reason: null, ring: 0, locked: false };
   let ring = 0;
   if (c.cooldownMs > 0 && c.remaining > 0) ring = Math.min(0.999, Math.max(0.02, 1 - c.remaining / c.cooldownMs));
+  // goûter en recharge : les plats du frigo restent accessibles par Manger
+  if (key === "nourrir" && mealPath.value && c.remaining > 0 && !store.isSleeping) return { reason: null, ring, locked: false };
   return { reason: c.reason || "Encore un instant...", ring, locked: false };
 }
 
 const actions = computed(() =>
   BASE.map((a) => {
+    if (a.key === "jouer" && suggestedActivity.value) {
+      const act = activityById(suggestedActivity.value);
+      return {
+        ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, ring: 0, locked: false,
+        activity: act.id, wanted: true, glow: gameBus.highlight?.action === a.key,
+      };
+    }
+    if (a.key === "nourrir" && suggestCooking.value) {
+      const wish = store.wish?.action === "repas" ? store.wish.target : "";
+      return {
+        ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", reason: null, ring: 0, locked: false,
+        cook: wish || "", wanted: !!wish, glow: gameBus.highlight?.action === a.key,
+      };
+    }
     const wake = a.key === "coucher" && store.isSleeping;
     const st = stateOf(a.key);
     return {
@@ -81,7 +127,7 @@ const actions = computed(() =>
       icon: wake ? "solar:sun-bold-duotone" : a.icon,
       color: wake ? ["#ffe58a", "#f29400"] : a.color,
       ...st,
-      wanted: !st.reason && store.wish?.action === a.key,
+      wanted: !st.reason && (store.wish?.action === a.key || (a.key === "nourrir" && mealPath.value && store.wish?.action === "repas")),
       glow: gameBus.highlight?.action === a.key,
     };
   })
@@ -129,6 +175,9 @@ function press(a) {
     return;
   }
   if (a.key === "photo") { buzz(12); return gameCommand("photo"); }
+  if (a.activity) { buzz(12); return launchActivity(a.activity); }
+  if (a.cook !== undefined) { buzz(12); return openKitchen(a.cook); }
+  if (a.key === "nourrir" && mealPath.value) { buzz(12); return openSheet("manger"); }
   if (a.key === "coucher") {
     buzz(12);
     if (store.isSleeping) return store.wakeUp();
