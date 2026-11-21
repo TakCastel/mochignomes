@@ -110,6 +110,8 @@ const STAGE_SCALE = { oeuf: 0, bebe: 0.62, enfant: 0.8, ado: 0.92, adulte: 1 };
 const stageKey = computed(() => (store.hatched === false ? "oeuf" : store.stage || "adulte"));
 const stageScale = computed(() => STAGE_SCALE[stageKey.value] ?? 1);
 watch(stageKey, (k) => creature.value?.setStage?.(k));
+// son apparence (couleur, motif, forme, houppe, oreilles), tirée à l'éclosion : voir lib/appearance.js
+watch(() => store.appearance, (a) => creature.value?.setAppearance?.(a), { deep: true });
 
 const statusText = computed(() => {
   if (store.isSleeping) return "";
@@ -204,6 +206,7 @@ onMounted(async () => {
       onSpin: () => store.countGesture("tourner"),
       world: true,
     });
+    creature.value.setAppearance(store.appearance);
     creature.value.setStage(stageKey.value);
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky, theme: props.theme });
