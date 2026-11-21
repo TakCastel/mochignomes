@@ -59,7 +59,7 @@
 
   <!-- étapes 2 à 4 : on lui montre quoi faire, sans bloquer l'écran -->
   <Transition name="hint">
-    <div v-if="step >= 2 && step <= 4" :key="step" class="guide" :class="{ hush: gameBus.speaking }" role="status">
+    <div v-if="step >= 2 && step <= 4" :key="step" class="guide onboard-guide" :class="{ hush: gameBus.speaking }" role="status">
       <span class="guide-num">{{ step - 1 }}/3</span>
       <span class="guide-text">{{ guideText }}</span>
     </div>

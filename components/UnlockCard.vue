@@ -45,7 +45,7 @@ function describe(key) {
     case "cuisine":
       return { title: "La cuisine est ouverte !", text: "Farine, œuf, lait : tu as tout ce qu'il faut pour des crêpes.", cta: "Faire des crêpes", run: () => openKitchen("crepes") };
     case "tele":
-      return { title: "Une télé dans le pré", text: "Avec un petit canapé. Regardez un épisode ensemble : quelle chaîne préfère-t-elle ?", cta: "Regarder ensemble", run: () => launchActivity("tele") };
+      return { title: "Une télé pour vous deux", text: "Avec un petit canapé. Regardez un épisode ensemble : quelle chaîne préfère-t-elle ?", cta: "Regarder ensemble", run: () => launchActivity("tele") };
     case "defis":
       return pages().includes("jours")
         ? { title: "Les défis du jour", text: "Trois petits défis chaque jour, et un bonus si tu les fais tous.", cta: "Voir les défis", run: () => openPage("jours") }

@@ -340,8 +340,6 @@ const tabs = computed(() => [
 ].filter(Boolean));
 const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "vetements");
 const tab = ref(validTab(props.tab));
-// tuto de la Cuisine : « va voir l'Épicerie » (lib/guides.js)
-watch(tab, (t) => store.countEvent?.("boutique:" + t), { immediate: true });
 
 // ---------- vêtements ----------
 const slotFilter = ref(SLOTS.includes(props.slotKey) ? props.slotKey : "all");
