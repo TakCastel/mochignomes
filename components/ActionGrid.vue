@@ -15,7 +15,7 @@
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
-      <span v-if="a.ring > 0" class="ring" :style="{ '--p': a.ring }" aria-hidden="true" />
+      <span v-if="a.ring > 0" class="cool-ring" :style="{ '--p': a.ring }" aria-hidden="true" />
       <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
       <span class="lbl">{{ a.label }}</span>
       <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
@@ -263,7 +263,7 @@ function press(a) {
 .off .lbl { opacity: 0.6; }
 .lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); padding-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* anneau de recharge */
-.ring {
+.cool-ring {
   position: absolute;
   inset: -2px;
   border-radius: 20px;

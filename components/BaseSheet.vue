@@ -1,7 +1,7 @@
 <template>
   <Transition :name="fullscreen ? 'page' : 'sheet'">
     <div v-if="open" class="overlay" :class="{ full: fullscreen }" @click.self="!fullscreen && close()">
-      <section class="sheet" :class="{ full: fullscreen }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
         <div v-if="!fullscreen" class="grab" />
         <header class="head">
           <button v-if="fullscreen" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -40,6 +40,9 @@ function close() {
   if (props.fullscreen) closePage();
   else closeSettings();
 }
+// changement de page : on repart du haut (pas de défilement hérité de la page précédente)
+const sheetEl = ref(null);
+watch(() => props.title, () => { if (sheetEl.value) sheetEl.value.scrollTop = 0; });
 const onKey = (e) => e.key === "Escape" && props.open && close();
 onMounted(() => window.addEventListener("keydown", onKey));
 onBeforeUnmount(() => window.removeEventListener("keydown", onKey));

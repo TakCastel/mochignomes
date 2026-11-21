@@ -74,7 +74,7 @@
     <section v-else-if="tab === 'collection'" class="ui-stack">
       <!-- résumé -->
       <div class="ui-card summary">
-        <div class="ring" :style="{ '--p': ratio }">
+        <div class="progress-ring" :style="{ '--p': ratio }">
           <span class="ring-val ui-num">{{ Math.round(ratio * 100) }}<small>%</small></span>
         </div>
         <div class="sum-txt">
@@ -283,7 +283,7 @@ function claim(setId) {
 
 /* collection : résumé */
 .summary { display: flex; align-items: center; gap: var(--s-4); }
-.ring {
+.progress-ring {
   flex: none;
   position: relative;
   display: grid;
@@ -293,7 +293,7 @@ function claim(setId) {
   border-radius: 50%;
   background: conic-gradient(var(--accent) calc(var(--p) * 360deg), var(--surface-3) 0);
 }
-.ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #fff; }
+.progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #fff; }
 .ring-val { position: relative; font-size: 24px; font-weight: 700; color: var(--ink); }
 .ring-val small { font-size: var(--t-md); }
 .sum-txt { display: grid; gap: 2px; min-width: 0; }
