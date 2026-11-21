@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { appearanceText } from "~/lib/appearance";
 
 const { store } = useCreatureMood();
@@ -153,24 +153,14 @@ function later() {
   if (backTo.value) bringCreature(backTo.value.id);
 }
 
-// --- étapes guidées : on fait pulser la tuile attendue ---
-const TARGET = { 2: "nourrir", 3: "jouer" };
+// --- étapes guidées : tout passe par le menu qui s'ouvre en la touchant (InteractionRing) ;
+// pendant le tutoriel il n'y propose que la pilule de l'étape, qui pulse ---
 const GUIDE = {
-  2: () => `${store.name} a faim ! Touche « Manger » pour la nourrir.`,
-  3: () => `${store.name} s'ennuie. Touche « Jouer » pour jouer avec elle.`,
-  4: () => `Appuie sur ${store.name} pour la faire rire !`,
+  2: () => `${store.name} a faim ! Touche-la, puis « Manger ».`,
+  3: () => `${store.name} s'ennuie. Touche-la, puis « Jouer ».`,
+  4: () => `Touche-la, puis « Chatouiller » pour la faire rire !`,
 };
 const guideText = computed(() => GUIDE[step.value]?.() || "");
-let pulse = null;
-function stopPulse() { clearInterval(pulse); pulse = null; }
-watch(step, (s) => {
-  stopPulse();
-  const a = TARGET[s];
-  if (!a) return;
-  setTimeout(() => highlightAction(a), 400);
-  pulse = setInterval(() => highlightAction(a), 3500);
-}, { immediate: true });
-onBeforeUnmount(stopPulse);
 
 // --- promesse ---
 function finish() {

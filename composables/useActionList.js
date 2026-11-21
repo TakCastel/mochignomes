@@ -4,7 +4,7 @@ import * as growth from "~/lib/growth";
 import { V1_ACTIVITIES, activityById } from "~/lib/catalog";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 
-// Logique des actions, partagée entre la barre du bas (ActionGrid) et le menu autour de la créature (InteractionRing).
+// Logique des actions du menu autour de la créature (InteractionRing).
 // Chaque appel a son propre état d'animation (secousse, « +N », recharge).
 const ACTION_UNLOCK_LEVEL = growth.ACTION_UNLOCK_LEVEL || { danser: 3 };
 
