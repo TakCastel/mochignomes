@@ -15,9 +15,10 @@
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
-      <span class="disc">
+      <span class="disc" :style="{ '--c1': a.color[0], '--c2': a.color[1] }">
         <span v-if="a.cool" :key="a.cool.readyAt" class="cool-ring" :style="a.cool.style" aria-hidden="true" />
-        <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
+        <img v-if="a.img" :src="a.img" class="ic emoji" alt="" draggable="false" />
+        <Icon v-else :name="a.icon" mode="svg" class="ic" />
         <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
         <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
       </span>
@@ -65,15 +66,19 @@ const suggestedActivity = computed(() => {
 const suggestCooking = computed(() => mealPath.value && has("cuisine") && store.hunger > 90 && !store.isSleeping);
 const SHORT = { foot: "Foot", course: "Course", tele: "Télé" };
 
+// Icônes Fluent Emoji 3D (Microsoft, licence MIT), avec contour blanc façon autocollant
+const IMG = "/icons/actions/";
+const ACT_IMG = { foot: "jouer", course: "course", tele: "tele" };
+
 const BASE = [
-  { key: "nourrir", label: "Manger", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
-  { key: "laver", label: "Laver", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
-  { key: "jouer", label: "Jouer", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
-  { key: "calin", label: "Tendresse", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
-  { key: "coucher", label: "Dodo", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
-  { key: "soigner", label: "Soigner", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
-  { key: "danser", label: "Danser", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
-  { key: "photo", label: "Photo", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
+  { key: "nourrir", label: "Manger", img: IMG + "manger.png", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
+  { key: "laver", label: "Laver", img: IMG + "laver.png", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
+  { key: "jouer", label: "Jouer", img: IMG + "jouer.png", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
+  { key: "calin", label: "Tendresse", img: IMG + "tendresse.png", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
+  { key: "coucher", label: "Dodo", img: IMG + "dodo.png", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
+  { key: "soigner", label: "Soigner", img: IMG + "soigner.png", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
+  { key: "danser", label: "Danser", img: IMG + "danser.png", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
+  { key: "photo", label: "Photo", img: IMG + "photo.png", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
 ];
 
 // Motifs de vibration par action (respecte le réglage « tamagotchi-haptics »)
@@ -124,7 +129,8 @@ const actions = computed(() =>
       const act = activityById(suggestedActivity.value);
       const w = store.wish;
       return {
-        ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, cool: null, locked: false,
+        ...a, label: SHORT[act.id] || act.label, icon: act.icon,
+        img: ACT_IMG[act.id] ? IMG + ACT_IMG[act.id] + ".png" : null, reason: null, cool: null, locked: false,
         activity: act.id, wanted: w?.action === "activite" && w.target === act.id, suggest: true,
         glow: gameBus.highlight?.action === a.key,
       };
@@ -132,7 +138,7 @@ const actions = computed(() =>
     if (a.key === "nourrir" && suggestCooking.value) {
       const wish = store.wish?.action === "repas" ? store.wish.target : "";
       return {
-        ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", reason: null, cool: null, locked: false,
+        ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", img: IMG + "cuisiner.png", reason: null, cool: null, locked: false,
         cook: wish || "", wanted: !!wish, glow: gameBus.highlight?.action === a.key,
       };
     }
@@ -142,6 +148,7 @@ const actions = computed(() =>
       ...a,
       label: wake ? "Réveil" : a.label,
       icon: wake ? "solar:sun-bold-duotone" : a.icon,
+      img: wake ? IMG + "reveil.png" : a.img,
       color: wake ? ["#ffe58a", "#f29400"] : a.color,
       ...st,
       wanted: !st.reason && (store.wish?.action === a.key || (a.key === "nourrir" && mealPath.value && store.wish?.action === "repas")),
@@ -262,10 +269,11 @@ function press(a) {
   width: var(--tile, 68px);
   max-width: 100%;
   aspect-ratio: 1;
-  border: 2px solid transparent;
+  border: 3px solid #fff;
   border-radius: 50%;
-  background: linear-gradient(180deg, #ffffff, #f3f5f8);
-  box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 1px 0 #fff;
+  /* pastille pastel de la couleur de l'action : le contour blanc de l'objet ressort dessus */
+  background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--c1) 28%, #fff), color-mix(in srgb, var(--c1) 72%, #fff) 78%);
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--c2) 22%, transparent), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 -3px 6px color-mix(in srgb, var(--c2) 14%, transparent);
   transition: transform 0.08s, box-shadow 0.08s;
 }
 .tile:active .disc { transform: scale(0.93); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
@@ -277,13 +285,26 @@ function press(a) {
   filter: drop-shadow(0 3px 3px rgba(40, 55, 80, 0.16));
 }
 .ic :deep([opacity]) { opacity: 1; color: var(--c1); }
+/* objet 3D détouré d'un contour blanc façon autocollant, puis petite ombre portée */
+.emoji {
+  width: 64%;
+  height: 64%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter:
+    drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
+    drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
+    drop-shadow(0 3px 3px rgba(40, 55, 80, 0.25));
+}
 /* action conseillée : fond vert tendre et liseré vert */
 .best .disc {
   border-color: #8fdc6a;
   background: var(--sel-bg);
   box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), var(--hl);
 }
-.off .ic { opacity: 0.45; filter: grayscale(0.5); }
+.off .ic { opacity: 0.45; }
+.off .disc { filter: grayscale(0.7); }
 .off .lbl { opacity: 0.6; }
 .lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* anneau de recharge : rempli en continu par une animation linéaire
