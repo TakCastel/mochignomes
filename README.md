@@ -39,19 +39,15 @@ npm run dev
 
 ---
 
-## ☁️ Deployment on Vercel
+## ☁️ Déploiement sur Netlify
 
-1. Push your project to GitHub.
-2. Create an account on [Vercel](https://vercel.com/) if you don't have one.
-3. Import your GitHub repository into Vercel.
-4. (Optional) If you plan to add Firebase, configure these environment variables:
+Le jeu tourne entièrement dans le navigateur (`ssr: false`) et se publie comme un site statique.
+Tout est réglé dans `netlify.toml` (commande `npm run generate`, dossier `.output/public`, Node 22,
+redirection monopage, cache du service worker désactivé).
 
-```env
-NUXT_PUBLIC_FIREBASE_API_KEY=xxxx
-NUXT_PUBLIC_FIREBASE_PROJECT_ID=xxxx
-```
-
-5. Deploy and enjoy 🚀
+1. Sur [Netlify](https://app.netlify.com/) : **Add new site → Import an existing project → GitHub**, choisir le dépôt.
+2. Garder les réglages lus dans `netlify.toml` et lancer le déploiement.
+3. Chaque push sur `main` redéploie automatiquement.
 
 ---
 
