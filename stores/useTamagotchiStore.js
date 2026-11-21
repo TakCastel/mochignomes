@@ -5,6 +5,7 @@ import { gameToast, gameSay, gameCommand } from "~/composables/useCreatureMood";
 import { dayPhase } from "~/lib/gameUi";
 import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_KEYS, stageFor, nextStage, stageDef } from "~/lib/growth";
 import { pickWish } from "~/lib/wishes";
+import { awayLines } from "~/lib/dialogue";
 import { questsForDay, QUEST_BONUS } from "~/lib/quests";
 import { migrateSnapshot, SCHEMA } from "~/lib/migrate";
 import { appearanceFor, ORIGINAL_APPEARANCE } from "~/lib/appearance";
@@ -65,7 +66,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 // Pièces gagnées : activités (au score), envies exaucées, défis, records, niveaux.
-// Rien pour coucou, fou rire (chatouiller), soigner : la récompense, c'est sa réaction.
+// Rien pour tendresse, fou rire (chatouiller), soigner : la récompense, c'est sa réaction.
 const LEVEL_COINS = 25; // à chaque niveau
 const WISH_COINS = 5; // envie de soin exaucée
 const OWNED_WISH_COINS = 10; // envie de plat, d'activité ou de tenue exaucée
@@ -585,7 +586,7 @@ export const useTamagotchiStore = defineStore(
       else if (onboardStep.value === 3 && key === "jouer") onboardStep.value = 4;
       else if (onboardStep.value === 4 && key === "chatouiller") onboardStep.value = 5;
 
-      // quelques pièces pour les soins utiles (rien pour coucou, fou rire, soigner),
+      // quelques pièces pour les soins utiles (rien pour tendresse, fou rire, soigner),
       // seulement une fois les pièces découvertes
       let coins = 0;
       if (features.value.coins) {
@@ -815,7 +816,7 @@ export const useTamagotchiStore = defineStore(
       if (isSleeping.value) return { ok: false, reason: "Elle dort, chut..." };
       if (exhausted.value) return { ok: false, reason: "Elle est trop épuisée, laisse-la se reposer." };
       // rancunière : refuse de jouer juste après avoir été négligée (la télé, elle, se partage)
-      if (id !== "tele" && tr("rancuniere") > 0.5 && isSulking(tick.value)) return { ok: false, reason: "Elle boude encore un peu... un petit coucou d'abord ?", sulking: true };
+      if (id !== "tele" && tr("rancuniere") > 0.5 && isSulking(tick.value)) return { ok: false, reason: "Elle boude encore un peu... un peu de tendresse d'abord ?", sulking: true };
       if (a.energyCost > 0 && energy.value < a.energyCost + 3) return { ok: false, reason: "Elle est trop fatiguée. Un petit dodo ?" };
       return { ok: true, reason: "" };
     }
@@ -1029,13 +1030,16 @@ export const useTamagotchiStore = defineStore(
     }
 
     function buildAway(before, secs, illBefore) {
-      const lines = [];
-      if (!illBefore && illness.value) lines.push("Elle a attrapé un petit rhume. Un soin, et ça ira mieux !");
-      if (energy.value - before.energy > 20) lines.push("Elle a fait un gros dodo.");
-      if (before.hunger - hunger.value > 25) lines.push(hunger.value < 20 ? "Son ventre gargouille : c'est l'heure du goûter !" : "Elle a eu un petit creux.");
-      if (before.cleanliness - cleanliness.value > 25) lines.push("Elle s'est un peu salie en jouant dans le pré.");
-      if (before.fun - fun.value > 25) lines.push("Elle a hâte de jouer avec toi !");
-      if (!lines.length) lines.push("Elle a passé un moment tout tranquille dans le pré.");
+      // phrases variées : lib/dialogue.js awayLines
+      const hungry = before.hunger - hunger.value > 25;
+      const lines = awayLines({
+        ill: !illBefore && !!illness.value,
+        slept: energy.value - before.energy > 20,
+        veryHungry: hungry && hunger.value < 20,
+        hungry: hungry && hunger.value >= 20,
+        dirty: before.cleanliness - cleanliness.value > 25,
+        bored: before.fun - fun.value > 25,
+      });
       let surprise = null;
       const today = dayKey(new Date());
       if (surpriseLog.value.day !== today) surpriseLog.value = { day: today, n: 0 };
@@ -1177,7 +1181,7 @@ export const useTamagotchiStore = defineStore(
       }
       const at = (h, min, plusDays = 0) => { const d = new Date(now); d.setDate(d.getDate() + plusDays); d.setHours(h, min, 0, 0); return d.getTime(); };
       push("bonjour", at(9, 0) > now ? at(9, 0) : at(9, 0, 1), `Bonjour de la part de ${who}`, `Un nouveau jour se lève sur le pré de ${who} !`);
-      push("soir", at(19, 0) > now ? at(19, 0) : at(19, 0, 1), `Le coucou du soir`, `${who} aimerait un petit coucou avant de dormir.`);
+      push("soir", at(19, 0) > now ? at(19, 0) : at(19, 0, 1), `Un peu de tendresse ce soir`, `${who} aimerait un peu de tendresse avant de dormir.`);
       return out.sort((a, b) => a.at - b.at);
     }
 
