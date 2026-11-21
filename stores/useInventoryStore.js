@@ -1,23 +1,28 @@
 // stores/useInventoryStore.js
 // Le « Sac » : monnaies, vêtements (avec leurs couleurs), tenue portée,
-// frigo (ingrédients et repas prêts), objets d'activité, records, collection.
+// frigo (ingrédients et repas prêts), objets d'activité, records, collection, goûts révélés.
+// `gems` s'affiche « Étoiles » : elles se gagnent en jouant, jamais achetées.
+// L'inventaire est conservé quand on recommence un œuf (seuls les goûts révélés repartent à zéro).
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { gameBus, gameToast } from "~/composables/useCreatureMood";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import {
-  SLOTS, ITEMS, SETS, INGREDIENTS, PREMIUM_LEVEL, TOTAL_VARIANTS,
-  itemById, colorByKey, ingredientById, recipeById, propById, setById,
+  SLOTS, V1_ITEMS, SETS, V1_INGREDIENTS, TOTAL_VARIANTS,
+  itemById, colorByKey, ingredientById, recipeById, propById, setById, itemColors,
   priceFor, discounted, offerDiscount, shopOffersForDay, setProgress, collectionCount, missingIngredients,
 } from "~/lib/catalog";
+import { TASTE_KEYS, tasteLabel } from "~/lib/tastes";
 
 const safeToast = (text, icon) => { try { gameToast(text, icon); } catch { /* hors navigateur */ } };
 const coinFx = (coins = 0, gems = 0) => { try { gameBus.coinFx = { coins, gems, id: Math.random() }; } catch { /* hors navigateur */ } };
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 const emptyOutfit = () => Object.fromEntries(SLOTS.map((s) => [s, null]));
-const freshStats = () => ({ mealsCooked: 0, activitiesPlayed: 0, best: {}, coinsEarned: 0, gemsEarned: 0, itemsBought: 0, chests: 0 });
+// tastesSeen : clés de TASTE_KEYS révélées (carnet « Ce qu'elle aime ») ; mastery : maîtrises obtenues
+const freshStats = () => ({ mealsCooked: 0, activitiesPlayed: 0, best: {}, coinsEarned: 0, gemsEarned: 0, itemsBought: 0, chests: 0, tastesSeen: [], mastery: [] });
+const START = () => ({ coins: 0, gems: 0, owned: {}, pantry: {}, props: [], seen: [] });
 
-// Le main store compte les événements des défis (achat, habillage, cuisine...)
+// Le main store compte les événements des défis (cuisine, collection...)
 function countEvent(key, n = 1) {
   try { useTamagotchiStore().countEvent(key, n); } catch { /* store indisponible */ }
 }
@@ -28,15 +33,17 @@ function playerLevel() {
 export const useInventoryStore = defineStore(
   "inventory",
   () => {
-    const coins = ref(60);
-    const gems = ref(5);
-    const owned = ref({ tshirt: ["vert"] });
+    // départ : rien. Le ballon, le t-shirt et le kit crêpes sont offerts au fil des déblocages
+    // (store principal : unlockFeature → grantStarterKit)
+    const coins = ref(START().coins);
+    const gems = ref(START().gems);
+    const owned = ref(START().owned);
     const outfit = ref(emptyOutfit());
-    const pantry = ref({ pomme: 1, fraise: 2, banane: 2, lait: 1 });
+    const pantry = ref(START().pantry);
     const meals = ref({});
-    const props = ref(["ballon"]);
-    const seenItems = ref(["tshirt:vert"]);
-    const shop = ref({ day: "", offers: [], ingredients: [] });
+    const props = ref(START().props);
+    const seenItems = ref(START().seen);
+    const shop = ref({ day: "", daily: null, offers: [], ingredients: [] });
     const stats = ref(freshStats());
     const setsClaimed = ref([]);
     const recipesKnown = ref([]); // recettes découvertes (cuisinées au moins une fois)
@@ -46,7 +53,8 @@ export const useInventoryStore = defineStore(
     // ---------- dérivés ----------
     const collected = computed(() => collectionCount(owned.value));
     const totalVariants = TOTAL_VARIANTS;
-    const itemsOwnedCount = computed(() => ITEMS.filter((i) => (owned.value[i.id] || []).length).length);
+    const itemsOwnedCount = computed(() => V1_ITEMS.filter((i) => (owned.value[i.id] || []).length).length);
+    const tastesSeen = computed(() => stats.value.tastesSeen || []);
     const unseen = computed(() => {
       const seen = new Set(seenItems.value);
       const out = [];
@@ -86,7 +94,7 @@ export const useInventoryStore = defineStore(
       gems.value += n;
       stats.value.gemsEarned = (stats.value.gemsEarned || 0) + n;
       coinFx(0, n);
-      if (reason) safeToast(`+${n} gemmes · ${reason}`, "solar:diamond-bold-duotone");
+      if (reason) safeToast(`+${n} Étoile${n > 1 ? "s" : ""} · ${reason}`, "solar:star-bold-duotone");
       return n;
     }
     function spendGems(n) {
@@ -122,15 +130,20 @@ export const useInventoryStore = defineStore(
       return (owned.value[id] || []).some((c) => !seenItems.value.includes(`${id}:${c}`));
     }
 
-    function equip(slot, id, color) {
+    // Équipe un vêtement possédé. Renvoie false si impossible, sinon { ok: true, reaction }
+    // (reaction = sa réaction selon ses goûts, voir lib/tastes.js ; null si déjà porté).
+    // { quiet: true } : pas de réaction (essayage, tenue au hasard).
+    function equip(slot, id, color, { quiet = false } = {}) {
       const item = itemById(id);
       if (!item || item.slot !== slot || !ownsColor(id, color)) return false;
       const cur = outfit.value[slot];
-      if (cur && cur.id === id && cur.color === color) return true;
+      if (cur && cur.id === id && cur.color === color) return { ok: true, reaction: null };
       outfit.value = { ...outfit.value, [slot]: { id, color } };
       markSeen(`${id}:${color}`);
       countEvent("habillage");
-      return true;
+      let reaction = null;
+      if (!quiet) { try { reaction = useTamagotchiStore().onEquip(id, color); } catch { /* store indisponible */ } }
+      return { ok: true, reaction };
     }
     function unequip(slot) {
       if (!outfit.value[slot]) return false;
@@ -141,7 +154,7 @@ export const useInventoryStore = defineStore(
     function randomOutfit() {
       const next = emptyOutfit();
       for (const slot of SLOTS) {
-        const mine = ITEMS.filter((i) => i.slot === slot && ownsItem(i.id));
+        const mine = V1_ITEMS.filter((i) => i.slot === slot && ownsItem(i.id));
         if (!mine.length || Math.random() < 0.25) continue;
         const item = mine[Math.floor(Math.random() * mine.length)];
         const colors = owned.value[item.id];
@@ -153,46 +166,51 @@ export const useInventoryStore = defineStore(
     }
 
     // ---------- boutique ----------
+    // Catalogue V1 complet toujours achetable (cadenas de niveau) + « coloris du jour » à -30 %
     function ensureShop() {
       const day = todayKey();
-      if (shop.value.day !== day) shop.value = shopOffersForDay(day, playerLevel());
+      if (shop.value.day !== day || !("daily" in shop.value)) shop.value = shopOffersForDay(day, playerLevel());
       return shop.value;
     }
-    // Prix réel (remise du jour comprise) d'une couleur d'item
+    // Coloris du jour : { itemId, color, discount } | null
+    const dailyColor = computed(() => {
+      try { void useTamagotchiStore().tick; } catch { /* rien */ }
+      const day = todayKey();
+      return (shop.value.day === day && "daily" in shop.value ? shop.value.daily : shopOffersForDay(day, playerLevel()).daily) || null;
+    });
+    // Prix réel (remise du jour comprise) d'une couleur d'item. currency : "coins" | "gems" (Étoiles)
     function itemPrice(id, color) {
       ensureShop();
-      return discounted(priceFor(id, color, owned.value[id] || []), offerDiscount(shop.value, id));
+      return discounted(priceFor(id, color, owned.value[id] || []), offerDiscount(shop.value, id, color));
     }
     function itemLock(id) {
       const item = itemById(id);
       if (!item) return "Introuvable.";
+      if (item.soon) return "Bientôt !";
       const lvl = playerLevel();
-      if (item.premium && lvl < PREMIUM_LEVEL) return `Disponible au niveau ${PREMIUM_LEVEL}.`;
       if (lvl < item.minLevel) return `Disponible au niveau ${item.minLevel}.`;
       return null;
     }
     function buyItem(id, color) {
       const item = itemById(id);
-      if (!item || !colorByKey(color) || !item.colors.includes(color)) return { ok: false, reason: "Cette couleur n'existe pas." };
+      if (!item || !colorByKey(color) || !itemColors(item).includes(color)) return { ok: false, reason: "Cette couleur n'existe pas." };
       if (ownsColor(id, color)) return { ok: false, reason: "Tu l'as déjà !" };
       const lock = itemLock(id);
       if (lock) return { ok: false, reason: lock };
       const price = itemPrice(id, color);
       const paid = price.currency === "gems" ? spendGems(price.amount) : spend(price.amount);
-      if (!paid) return { ok: false, reason: price.currency === "gems" ? "Pas assez de gemmes." : "Pas assez de pièces.", price };
+      if (!paid) return { ok: false, reason: price.currency === "gems" ? "Pas assez d'Étoiles." : "Pas assez de pièces.", price };
       grantItem(id, color);
       stats.value.itemsBought = (stats.value.itemsBought || 0) + 1;
-      countEvent("achat");
       return { ok: true, price, reason: "" };
     }
     function buyIngredient(id, n = 1) {
       const ing = ingredientById(id);
       n = Math.max(1, Math.round(Number(n) || 1));
-      if (!ing) return { ok: false, reason: "Ingrédient introuvable." };
+      if (!ing || ing.soon) return { ok: false, reason: "Ingrédient introuvable." };
       const cost = ing.price * n;
       if (!spend(cost)) return { ok: false, reason: "Pas assez de pièces.", cost };
       addIngredient(id, n);
-      countEvent("achat");
       return { ok: true, cost, reason: "" };
     }
     // Achète tous les ingrédients manquants d'une recette
@@ -202,17 +220,15 @@ export const useInventoryStore = defineStore(
       if (!cost) return { ok: true, cost: 0, reason: "" };
       if (!spend(cost)) return { ok: false, reason: "Pas assez de pièces.", cost };
       for (const [id, n] of Object.entries(miss)) addIngredient(id, n);
-      countEvent("achat");
       return { ok: true, cost, reason: "" };
     }
     function buyProp(id) {
       const p = propById(id);
-      if (!p) return { ok: false, reason: "Objet introuvable." };
+      if (!p || p.soon) return { ok: false, reason: "Objet introuvable." };
       if (hasProp(id)) return { ok: false, reason: "Tu l'as déjà !" };
       if (playerLevel() < p.minLevel) return { ok: false, reason: `Disponible au niveau ${p.minLevel}.` };
       if (!spend(p.price)) return { ok: false, reason: "Pas assez de pièces.", cost: p.price };
       grantProp(id);
-      countEvent("achat");
       return { ok: true, cost: p.price, reason: "" };
     }
 
@@ -247,7 +263,7 @@ export const useInventoryStore = defineStore(
     }
     function canCook(recipeId) {
       const r = recipeById(recipeId);
-      if (!r) return { ok: false, reason: "Recette introuvable.", missing: {} };
+      if (!r || r.soon) return { ok: false, reason: "Recette introuvable.", missing: {} };
       if (playerLevel() < r.minLevel) return { ok: false, reason: `Recette débloquée au niveau ${r.minLevel}.`, missing: {} };
       const missing = missingIngredients(recipeId, pantry.value);
       if (Object.keys(missing).length) return { ok: false, reason: "Il manque des ingrédients.", missing };
@@ -264,7 +280,9 @@ export const useInventoryStore = defineStore(
       stars = Math.max(1, Math.min(3, Math.round(Number(stars) || 1)));
       const firstTime = !recipesKnown.value.includes(recipeId);
       if (firstTime) recipesKnown.value = [...recipesKnown.value, recipeId];
+      const firstThree = stars === 3 && (recipeStars.value[recipeId] || 0) < 3;
       recipeStars.value = { ...recipeStars.value, [recipeId]: Math.max(recipeStars.value[recipeId] || 0, stars) };
+      if (firstThree) { try { useTamagotchiStore().claimMastery("recette-3"); } catch { /* store indisponible */ } }
       stats.value.mealsCooked = (stats.value.mealsCooked || 0) + 1;
       countEvent("cuisine");
       if (firstTime) earn(10, `Nouvelle recette : ${r.label}`);
@@ -277,6 +295,8 @@ export const useInventoryStore = defineStore(
       return { ok: true, reason: "", firstTime, stars, served, meal };
     }
     // Sert un plat du frigo (avec la meilleure note obtenue pour cette recette)
+    // Une recette déjà réussie à 3★ se refait d'un geste (« comme d'habitude »)
+    const canQuickCook = (recipeId) => (recipeStars.value[recipeId] || 0) >= 3;
     function serveMeal(recipeId) {
       if (!(meals.value[recipeId] > 0)) return { ok: false, reason: "Plus de plat de ce genre au frigo." };
       const main = useTamagotchiStore();
@@ -309,8 +329,9 @@ export const useInventoryStore = defineStore(
       if (setsClaimed.value.includes(setId)) return { ok: false, reason: "Déjà récupérée." };
       if (!setProgress(setId, owned.value).done) return { ok: false, reason: "Collection incomplète." };
       setsClaimed.value = [...setsClaimed.value, setId];
-      earn(set.reward.coins, `Collection ${set.label}`);
-      earnGems(set.reward.gems, `Collection ${set.label}`);
+      earn(set.reward.coins);
+      earnGems(set.reward.gems);
+      safeToast(`Collection ${set.label} : +${set.reward.coins} pièces, +${set.reward.gems} Étoiles`, set.icon);
       try { useTamagotchiStore().addJournal("collection", `Collection ${set.label} complétée !`, set.icon); } catch { /* rien */ }
       return { ok: true, coins: set.reward.coins, gems: set.reward.gems };
     }
@@ -321,14 +342,13 @@ export const useInventoryStore = defineStore(
       if (!chestReady.value) return { ok: false, reason: "Reviens demain pour un nouveau coffre !" };
       lastChest.value = todayKey();
       stats.value.chests = (stats.value.chests || 0) + 1;
-      countEvent("coffre");
       const roll = Math.random();
       const lvl = playerLevel();
       if (roll < 0.2) {
         const pool = [];
-        for (const it of ITEMS) {
+        for (const it of V1_ITEMS) {
           if (it.premium || it.rarity !== "commun" || it.minLevel > lvl) continue;
-          for (const c of it.colors) if (!colorByKey(c).premium && !ownsColor(it.id, c)) pool.push([it.id, c]);
+          for (const c of itemColors(it)) if (!colorByKey(c).premium && !ownsColor(it.id, c)) pool.push([it.id, c]);
         }
         if (pool.length) {
           const [id, color] = pool[Math.floor(Math.random() * pool.length)];
@@ -342,7 +362,7 @@ export const useInventoryStore = defineStore(
         const got = {};
         const n = 2 + Math.floor(Math.random() * 2);
         for (let i = 0; i < n; i++) {
-          const ing = INGREDIENTS[Math.floor(Math.random() * INGREDIENTS.length)];
+          const ing = V1_INGREDIENTS[Math.floor(Math.random() * V1_INGREDIENTS.length)];
           got[ing.id] = (got[ing.id] || 0) + 1 + Math.floor(Math.random() * 2);
         }
         for (const [id, q] of Object.entries(got)) addIngredient(id, q);
@@ -355,23 +375,76 @@ export const useInventoryStore = defineStore(
       return { ok: true, kind: "coins", coins: amount, label: `${amount} pièces` };
     }
 
+    // ---------- goûts révélés (carnet « Ce qu'elle aime ») ----------
+    // key : une clé de TASTE_KEYS. Renvoie true si c'est une découverte (toast discret).
+    function revealTaste(key, tastes = null) {
+      if (!TASTE_KEYS.includes(key)) return false;
+      const seen = stats.value.tastesSeen || [];
+      if (seen.includes(key)) return false;
+      stats.value = { ...stats.value, tastesSeen: [...seen, key] };
+      const text = tastes ? tasteLabel(key, tastes) : "";
+      safeToast(text ? `Découverte · ${text}` : "Tu as découvert un de ses goûts !", "solar:heart-bold-duotone");
+      return true;
+    }
+    const isTasteSeen = (key) => (stats.value.tastesSeen || []).includes(key);
+    // Nouvel œuf : nouveaux goûts à redécouvrir
+    function resetTastes() { stats.value = { ...stats.value, tastesSeen: [] }; }
+
+    // ---------- maîtrises (sources d'Étoiles) ----------
+    const hasMastery = (id) => (stats.value.mastery || []).includes(id);
+    function markMastery(id) {
+      if (hasMastery(id)) return false;
+      stats.value = { ...stats.value, mastery: [...(stats.value.mastery || []), id] };
+      return true;
+    }
+
+    // ---------- cadeaux de découverte (appelés par le store principal au déblocage) ----------
+    // kind : "ballon" | "tele" | "baskets" (objet offert), "tshirt" (opts.color, équipé),
+    //        "crepes" (farine + œuf + lait), "etoiles" (opts.gems, défaut 3).
+    // Renvoie ce qui a été donné, ou null si rien (déjà possédé).
+    function grantStarterKit(kind, opts = {}) {
+      switch (kind) {
+        case "ballon": case "tele": case "baskets":
+          return grantProp(kind) ? { prop: kind } : null;
+        case "tshirt": {
+          const color = itemColors("tshirt").includes(opts.color) ? opts.color : "vert";
+          const fresh = grantItem("tshirt", color);
+          if (!outfit.value.haut) outfit.value = { ...outfit.value, haut: { id: "tshirt", color } };
+          return fresh ? { item: "tshirt", color } : null;
+        }
+        case "crepes":
+          addIngredient("farine", 1); addIngredient("oeuf", 1); addIngredient("lait", 1);
+          return { ingredients: { farine: 1, oeuf: 1, lait: 1 } };
+        case "etoiles": {
+          const n = opts.gems ?? 3;
+          earnGems(n);
+          return { gems: n };
+        }
+        default: return null;
+      }
+    }
+
+    // Remet le Sac à zéro (outil de développement ; une nouvelle partie GARDE l'inventaire)
     function resetInventory() {
-      coins.value = 60; gems.value = 5;
-      owned.value = { tshirt: ["vert"] }; outfit.value = emptyOutfit();
-      pantry.value = { pomme: 1, fraise: 2, banane: 2, lait: 1 }; meals.value = {};
-      props.value = ["ballon"]; seenItems.value = ["tshirt:vert"];
-      shop.value = { day: "", offers: [], ingredients: [] }; stats.value = freshStats();
+      const st = START();
+      coins.value = st.coins; gems.value = st.gems;
+      owned.value = st.owned; outfit.value = emptyOutfit();
+      pantry.value = st.pantry; meals.value = {};
+      props.value = st.props; seenItems.value = st.seen;
+      shop.value = { day: "", daily: null, offers: [], ingredients: [] }; stats.value = freshStats();
       setsClaimed.value = []; recipesKnown.value = []; recipeStars.value = {}; lastChest.value = "";
     }
 
     return {
       coins, gems, owned, outfit, pantry, meals, props, seenItems, shop, stats, setsClaimed, recipesKnown, recipeStars, lastChest,
       collected, totalVariants, itemsOwnedCount, unseen, unseenCount, chestReady, setsReady, pantryCount, mealsCount,
+      tastesSeen, dailyColor,
       earn, spend, earnGems, spendGems, canAfford,
       ownsColor, ownsItem, grantItem, markSeen, markAllSeen, isNew, equip, unequip, randomOutfit,
       ensureShop, itemPrice, itemLock, buyItem, buyIngredient, buyMissingFor, buyProp,
-      addIngredient, hasIngredients, useIngredients, addMeal, useMeal, canCook, cook, serveMeal,
-      grantProp, hasProp, recordScore, claimSet, claimChest, resetInventory,
+      addIngredient, hasIngredients, useIngredients, addMeal, useMeal, canCook, canQuickCook, cook, serveMeal,
+      grantProp, hasProp, recordScore, claimSet, claimChest,
+      revealTaste, isTasteSeen, resetTastes, hasMastery, markMastery, grantStarterKit, resetInventory,
     };
   },
   {
@@ -384,9 +457,14 @@ export const useInventoryStore = defineStore(
         // sauvegardes incomplètes : on complète sans rien perdre
         const s = ctx.store;
         s.outfit = { ...Object.fromEntries(SLOTS.map((k) => [k, null])), ...(s.outfit || {}) };
-        s.stats = { ...freshStats(), ...(s.stats || {}), best: { ...(s.stats?.best || {}) } };
-        if (!Array.isArray(s.props)) s.props = ["ballon"];
-        if (!s.props.includes("ballon")) s.props = [...s.props, "ballon"];
+        s.stats = {
+          ...freshStats(), ...(s.stats || {}), best: { ...(s.stats?.best || {}) },
+          tastesSeen: Array.isArray(s.stats?.tastesSeen) ? s.stats.tastesSeen : [],
+          mastery: Array.isArray(s.stats?.mastery) ? s.stats.mastery : [],
+        };
+        if (!Array.isArray(s.props)) s.props = [];
+        if (!s.owned || typeof s.owned !== "object") s.owned = {};
+        if (!s.pantry || typeof s.pantry !== "object") s.pantry = {};
       },
     },
   }
