@@ -66,6 +66,7 @@ html[data-theme="sombre"] {
   --scrim: rgba(5, 8, 15, 0.6);
   --nav-shadow: drop-shadow(0 -4px 14px rgba(0, 0, 0, 0.45));
   --item-rim: drop-shadow(0 0 1px rgba(226, 233, 246, 0.85)) drop-shadow(0 0 1px rgba(226, 233, 246, 0.5));
+  --sticker-edge: #0b0e14;
   --halo: #262d3b; /* contour des icônes : la couleur des pilules, pas un blanc qui clignote */
   --sky: #4ea6ee;
   --sky-hi: #7cc0f5;
