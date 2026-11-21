@@ -768,3 +768,21 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .ui-btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 #d5dde8; }
 .ui-btn--soft { color: var(--sky-lo); background: #fff; box-shadow: var(--ui-soft); }
 .ui-icon-btn { color: var(--hud-ink); background: #fff; box-shadow: 0 4px 12px rgba(30, 70, 120, 0.14); }
+
+/* ---------- volets tirables (composables/useSheetDrag.js) ---------- */
+/* zone de prise de la poignée : toute la largeur, assez haute pour le pouce */
+.grab-zone {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  margin: -8px -16px 4px;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.grab-zone:active { cursor: grabbing; }
+.grab-zone > * { margin: 0 !important; }
+/* demi-feuilles : la barre du bas passe par-dessus, on lui garde la place */
+.ui-half-sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 14px); transition: height 0.38s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1); }

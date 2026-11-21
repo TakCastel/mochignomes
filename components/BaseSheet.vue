@@ -1,8 +1,8 @@
 <template>
   <Transition :name="fullscreen ? 'page' : 'sheet'">
     <div v-if="open" class="overlay" :class="{ full: fullscreen }" @click.self="!fullscreen && close()">
-      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
-        <div v-if="!fullscreen" class="grab" />
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+        <div v-if="!fullscreen" class="grab-zone" v-on="grabOn"><div class="grab" /></div>
         <header class="head">
           <button v-if="fullscreen" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
             <Icon name="solar:arrow-left-bold" class="ic" />
@@ -26,6 +26,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useSheetDrag } from "~/composables/useSheetDrag";
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -42,6 +43,8 @@ function close() {
 }
 // changement de page : on repart du haut (pas de défilement hérité de la page précédente)
 const sheetEl = ref(null);
+// volet tirable par sa poignée (bas = fermer, haut = agrandir) ; pas pour les pages plein écran
+const { tall, grab: grabOn } = useSheetDrag(sheetEl, () => close());
 watch(() => props.title, () => { if (sheetEl.value) sheetEl.value.scrollTop = 0; });
 const onKey = (e) => e.key === "Escape" && props.open && close();
 onMounted(() => window.addEventListener("keydown", onKey));
@@ -82,6 +85,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   will-change: transform;
 }
 /* page plein écran : fond bleu ciel très léger, comme un ciel dégagé */
+.sheet.is-tall { max-height: 96%; }
+.sheet { transition: max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
 .sheet.full {
   max-height: none;
   height: 100%;

@@ -1,8 +1,8 @@
 <template>
   <Transition name="ksheet">
     <div v-if="open" class="k-overlay" @click.self="onBackdrop">
-      <section class="ui-half-sheet k-sheet" role="dialog" aria-modal="true" aria-label="Cuisine">
-        <div class="ui-grab" />
+      <section ref="kSheet" class="ui-half-sheet k-sheet" :class="{ 'is-tall': tall }" role="dialog" aria-modal="true" aria-label="Cuisine">
+        <div class="grab-zone" v-on="grab"><div class="ui-grab" /></div>
         <header class="ui-sheet-head">
           <button v-if="phase !== 'list'" class="ui-icon-btn" aria-label="Retour aux recettes" @click="backToList">
             <Icon name="solar:arrow-left-bold" class="ic" />
@@ -205,6 +205,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { V1_RECIPES, ingredientById, missingIngredients, groceryIngredients, starMult } from "~/lib/catalog";
 import { useCreatureMood, gameCommand, gameSay, gameToast } from "~/composables/useCreatureMood";
+import { useSheetDrag } from "~/composables/useSheetDrag";
 import { beep, haptic } from "~/composables/useBeep";
 import * as live from "~/composables/useLiveCreature";
 
@@ -214,6 +215,9 @@ const props = defineProps({
   focus: { type: String, default: "" },
 });
 const emit = defineEmits(["close"]);
+// volet tirable par sa poignée (bas = fermer, haut = agrandir)
+const kSheet = ref(null);
+const { tall, grab } = useSheetDrag(kSheet, () => close());
 
 const { store } = useCreatureMood();
 const inv = useInventoryStore();
@@ -571,7 +575,8 @@ onBeforeUnmount(() => {
   /* très léger : elle doit rester visible au-dessus */
   background: linear-gradient(180deg, rgba(30, 40, 70, 0) 30%, rgba(30, 40, 70, 0.18));
 }
-.k-sheet { height: 54vh; height: 54dvh; min-height: 360px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+.k-sheet { height: calc(54vh + var(--nav-h, 78px)); height: calc(54dvh + var(--nav-h, 78px)); min-height: 420px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 12px); }
+.k-sheet.is-tall { height: 92vh; height: 92dvh; }
 .coins {
   flex: none; min-height: 36px; padding: 0 12px 0 8px; border-radius: var(--r-pill);
   background: #fff; color: var(--hud-ink); font-size: 15px; box-shadow: var(--ui-soft);
