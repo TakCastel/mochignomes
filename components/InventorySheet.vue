@@ -233,7 +233,7 @@ function claim(setId) {
 .set-items { display: flex; flex-wrap: wrap; gap: 4px; }
 .mini { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--r-xs); background: var(--surface); cursor: pointer; }
 .mini-ic { width: 20px; height: 20px; color: var(--ink); opacity: 0.14; }
-.mini.have .mini-ic { opacity: 1; }
+.mini.have .mini-ic { opacity: 1; filter: var(--item-rim); }
 .set > .ui-btn, .set > .done-ic, .set > .reward { align-self: center; }
 .done-ic { flex: none; width: 28px; height: 28px; color: var(--accent-lo); }
 .reward { flex: none; display: grid; justify-items: end; gap: 2px; }
@@ -246,7 +246,7 @@ function claim(setId) {
 .coll-art { display: grid; place-items: center; width: 48px; height: 48px; }
 /* silhouette des vêtements pas encore trouvés */
 .coll-ic { width: 38px; height: 38px; color: var(--ink); opacity: 0.12; }
-.coll:not(.is-ghost) .coll-ic { opacity: 1; filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.2)); }
+.coll:not(.is-ghost) .coll-ic { opacity: 1; filter: var(--item-rim) drop-shadow(0 2px 2px rgba(40, 55, 80, 0.2)); }
 .coll-name { min-height: 2.3em; display: grid; place-items: center; }
 .coll.is-ghost .coll-name { color: var(--ink-4); }
 .star-badge { position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; color: var(--gem); }

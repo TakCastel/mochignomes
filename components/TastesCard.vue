@@ -123,7 +123,7 @@ const dislikes = computed(() => ["colorDislike", "foodDislike", "itemDislike"].m
 .entry.fresh { animation: reveal 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes reveal { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
 .ui-thumb { width: 42px; height: 42px; font-size: 26px; background: var(--surface); }
-.ui-thumb .ic { width: 28px; height: 28px; }
+.ui-thumb .ic { width: 28px; height: 28px; filter: var(--item-rim); }
 .q { color: var(--ink-4); }
 .swatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 1px 4px rgba(40, 55, 80, 0.25); }
 .hint { font: 700 13px/1.3 var(--font-text); color: var(--ink-2); }
