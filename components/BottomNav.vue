@@ -34,7 +34,7 @@
       ref="btns"
       :data-key="t.key"
       class="item"
-      :class="{ on: active === t.key }"
+      :class="{ on: active === t.key, 'is-guide': guideNav === t.key && active !== t.key }"
       :aria-current="active === t.key ? 'page' : undefined"
       @click="t.run"
     >
@@ -52,6 +52,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect
 import { navOrb, tabHeight } from "~/composables/useNavOrb";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { MOOD_LABELS } from "~/lib/creatureLook";
+import { currentGuideStep } from "~/lib/guides";
 
 // 5 destinations au plus : Maison, Sac, Boutique, Cuisine, Elle (Jours et Album s'ouvrent depuis Elle)
 const { store, mood } = useCreatureMood();
@@ -94,6 +95,12 @@ const ALL = [
   { key: "elle", label: "Elle", icon: "solar:heart-bold-duotone", run: () => openPage("elle") },
   { key: "sac", label: "Sac", icon: "solar:bag-4-bold-duotone", feature: "sac", run: () => openPage("sac") },
 ];
+// tuto de la nouveauté en cours (lib/guides.js) : le bouton à ouvrir pulse, une fois sa carte « Nouveau ! » vue
+const guideNav = computed(() => {
+  const ev = store.unlockEvent;
+  if (ev && !ev.seen) return "";
+  return currentGuideStep(store)?.nav || "";
+});
 // les entrées pas encore débloquées n'apparaissent pas
 const items = computed(() =>
   ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({ ...t, badge: badgeKey.value === t.key })));
@@ -436,4 +443,11 @@ onBeforeUnmount(() => {
   .item, .ic, .icwrap, .label, .mood-dot { transition: none; }
   .side-enter-active, .side-leave-active { transition: none; }
 }
+/* tuto : le bouton à ouvrir pulse (anneau doux autour de l'icône) */
+.item.is-guide .icwrap { animation: guide-pulse 1.1s ease-in-out infinite; border-radius: 50%; }
+@keyframes guide-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { transform: scale(1.18); box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .item.is-guide .icwrap { animation: none; outline: 2px solid var(--accent); } }
 </style>
