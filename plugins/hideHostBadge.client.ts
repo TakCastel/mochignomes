@@ -1,16 +1,21 @@
 // Le badge « Powered by Netlify » est désactivé dans les réglages du site, mais l'hébergeur
-// peut encore l'injecter dans la page : on retire tout élément ajouté hors de l'appli qui
-// pointe vers netlify.com (il recouvrait la barre de navigation).
+// l'injecte quand même (dans un cadre isolé, par-dessus la barre de navigation).
+// On ne garde dans <body> que ce qui appartient au jeu ; le reste est retiré.
 export default defineNuxtPlugin(() => {
-  const isBadge = (el: Element) => {
-    if (el.id === "__nuxt" || el.tagName === "SCRIPT" || el.tagName === "STYLE") return false;
-    const text = (el.textContent || "").toLowerCase();
-    const link = el.matches?.('a[href*="netlify"]') || !!el.querySelector?.('a[href*="netlify"]');
-    return link || text.includes("powered by netlify");
-  };
+  const KEEP_TAGS = new Set(["SCRIPT", "STYLE", "LINK", "NOSCRIPT", "TEMPLATE"]);
+  const ours = (el: Element) =>
+    el.id === "__nuxt" ||
+    el.id === "teleports" ||
+    KEEP_TAGS.has(el.tagName) ||
+    el.hasAttribute("download") || // lien temporaire de téléchargement (rappel d'agenda)
+    Array.from(el.attributes).some((a) => a.name.startsWith("data-v-")); // fenêtres du jeu (Teleport)
   const sweep = () => {
-    for (const el of Array.from(document.body.children)) if (isBadge(el)) el.remove();
+    for (const el of Array.from(document.body.children)) if (!ours(el)) el.remove();
+    for (const el of Array.from(document.documentElement.children)) {
+      if (el !== document.head && el !== document.body) el.remove();
+    }
   };
   sweep();
   new MutationObserver(sweep).observe(document.body, { childList: true });
+  new MutationObserver(sweep).observe(document.documentElement, { childList: true });
 });
