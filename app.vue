@@ -12,7 +12,8 @@
       <div ref="middle" class="middle" />
       <div class="pad stack" :class="{ away: playing }">
         <StatsStrip class="hit" />
-        <ActionGrid class="hit" />
+        <!-- actions : uniquement pendant le tutoriel ; ensuite, tout passe par le menu sur la créature -->
+        <ActionGrid v-if="(store.onboardStep ?? 6) < 6" class="hit" />
       </div>
       <BottomNav class="hit" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
     </main>

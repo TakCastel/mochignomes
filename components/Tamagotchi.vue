@@ -119,7 +119,7 @@ watch(playing, (p) => creature.value?.setPlaying?.(p));
 // flèches « tourner » : à hauteur des pieds, de part et d'autre de la créature (elle fait ~0,8 fois sa hauteur de large),
 // sans sortir de l'écran ; elles s'écartent un peu quand on zoome
 const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping);
-const arrowsTop = computed(() => (props.frame ? props.frame.ground : 400)); // centre de l'ellipse au sol, sous les pieds
+const arrowsTop = computed(() => (props.frame ? props.frame.ground - 28 : 400)); // centre du cercle au sol, un peu en retrait des pieds pour que l'avant des flèches reste visible
 const arrowsOffset = computed(() => {
   const f = props.frame;
   if (!f) return 130;

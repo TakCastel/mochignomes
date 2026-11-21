@@ -7,16 +7,16 @@
       <svg class="arcs" viewBox="0 0 200 200" aria-hidden="true">
         <g v-for="b in BUTTONS" :key="b.dir" :class="['arc', b.cls, { pressed: pressed === b.dir }]" :transform="b.dir === 1 ? 'translate(200 0) scale(-1 1)' : undefined">
           <g class="shadow" transform="translate(0 7)">
-            <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
+            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
+            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
           </g>
           <g class="side" transform="translate(0 3.5)">
-            <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
+            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
+            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
           </g>
           <g class="top">
-            <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
+            <path d="M29.6 149.4A86 86 0 0 1 22.1 63.7" />
+            <path class="head" d="M37.6 160.9L35.9 142.6L21.1 153Z" />
           </g>
         </g>
       </svg>

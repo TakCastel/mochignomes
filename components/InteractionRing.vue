@@ -48,6 +48,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue"
 import { gameBus } from "~/composables/useCreatureMood";
 import { activeActivity } from "~/composables/useLiveCreature";
 import { useActionList } from "~/composables/useActionList";
+import { V1_ACTIVITIES } from "~/lib/catalog";
 
 const props = defineProps({
   anchor: { type: Object, default: () => ({}) }, // { x, y, r, top, bottom } en px, repère du parent plein écran
@@ -60,35 +61,101 @@ const emit = defineEmits(["close", "picked"]);
 const { store, shownActions, primary, press, wiggling, floats, tutoDone } = useActionList();
 
 // ---------------------------------------------------------------- contenu
+// Deux niveaux, façon menu de jeu de simulation de vie : d'abord des catégories, rangées par urgence
+// (son envie d'abord, puis le besoin le plus bas ; l'ordre change donc souvent), puis leurs choix.
+// Une catégorie qui n'a qu'un choix possible agit directement.
+const ACT_IMG = { foot: "jouer", course: "course", tele: "tele" };
+const ACT_SHORT = { foot: "Foot", course: "Course", tele: "Télé" };
+const CATS = [
+  { key: "cat:manger", label: "Manger", keys: ["nourrir"], needs: ["hunger"] },
+  { key: "cat:soins", label: "Soins", keys: ["laver", "soigner"], needs: ["cleanliness", "health"] },
+  { key: "cat:jouer", label: "Jouer", keys: ["jouer", "danser"], acts: true, needs: ["fun"] },
+  { key: "cat:calins", label: "Câlins", keys: ["calin", "chatouiller"], needs: [] },
+  { key: "cat:dodo", label: "Dodo", keys: ["coucher"], needs: ["energy"] },
+  { key: "cat:photo", label: "Photo", keys: ["photo"], needs: [], last: true },
+];
+const level = ref(null); // null = catégories ; sinon clé de la catégorie ouverte
+const BACK = { key: "back", label: "Retour", icon: "solar:arrow-left-bold", color: ["#e3edf8", "#2c4f9e"], reason: null, cool: null, back: true };
+
+const byKey = computed(() => Object.fromEntries(shownActions.value.map((a) => [a.key, a])));
+
+// choix d'une catégorie (actions du composable, plus les activités découvertes pour Jouer)
+function subItems(cat) {
+  void store.tick;
+  const by = byKey.value;
+  const out = cat.keys.map((k) => by[k]).filter(Boolean);
+  if (cat.acts && store.canActivity) {
+    const jouerColor = by.jouer?.color || ["#b4ec9c", "#2a9a3a"];
+    for (const act of V1_ACTIVITIES) {
+      if (out.some((a) => a.activity === act.id)) continue; // déjà proposée à la place de « Jouer »
+      const c = store.canActivity(act.id);
+      if (c.locked) continue; // pas encore découverte : n'apparaît pas
+      out.push({
+        key: "act:" + act.id, label: ACT_SHORT[act.id] || act.label, icon: act.icon,
+        img: ACT_IMG[act.id] ? `/icons/actions/${ACT_IMG[act.id]}.png` : null,
+        color: jouerColor, activity: act.id, reason: c.ok ? null : c.reason || "Pas maintenant...", cool: null,
+      });
+    }
+  }
+  return out;
+}
+// catégorie qui contient une clé d'action (pour l'envie ou le conseil)
+const catOf = (key) => CATS.find((c) => c.keys.includes(key) || (c.acts && String(key).startsWith("act:")));
+
+const categoryList = computed(() => {
+  const p = primary.value;
+  const pc = p ? catOf(p.key)?.key : null;
+  const fc = props.focus ? catOf(props.focus)?.key : null;
+  const urgency = (c) => {
+    if (c.last) return 1000;
+    if (c.key === fc) return -2;
+    if (c.key === pc && p.kind === "wanted") return -1;
+    return c.needs.length ? Math.min(...c.needs.map((n) => store[n] ?? 100)) : 90;
+  };
+  return CATS
+    .map((c) => ({ c, subs: subItems(c) }))
+    .filter((x) => x.subs.length)
+    .sort((a, b) => urgency(a.c) - urgency(b.c))
+    .map(({ c, subs }) => {
+      if (subs.length === 1) return subs[0];
+      const ok = subs.find((s) => !s.reason) || subs[0];
+      return { key: c.key, label: c.label + "…", img: ok.img, icon: ok.icon, color: ok.color, reason: null, cool: null, cat: c.key };
+    });
+});
+
 const baseList = computed(() => {
-  const by = Object.fromEntries(shownActions.value.map((a) => [a.key, a]));
-  let keys;
+  const by = byKey.value;
+  let keys = null;
   if (store.health <= 0) keys = ["soigner"];
   else if (store.isSleeping) keys = ["coucher", "calin"];
   else if (!tutoDone.value) keys = ["chatouiller"];
-  else {
-    keys = ["nourrir", "laver", "jouer", "calin", "chatouiller", "coucher"];
-    if (store.illness || store.health < 60 || store.exhausted) keys.push("soigner");
-    else if (by.danser) keys.push("danser");
+  if (keys) {
+    return keys
+      .map((k) => by[k])
+      .filter(Boolean)
+      .map((a) => (store.isSleeping && a.key === "calin" && a.reason ? { ...a, reason: "Chut, elle dort..." } : a));
   }
-  return keys
-    .map((k) => by[k])
-    .filter(Boolean)
-    .map((a) => (store.isSleeping && a.key === "calin" && a.reason ? { ...a, reason: "Chut, elle dort..." } : a));
+  const open = level.value && CATS.find((c) => c.key === level.value);
+  if (open) return [...subItems(open), BACK];
+  return categoryList.value;
 });
 
-// l'appel mis en avant : focus (bulle d'envie) > mode > envie / conseil du composable
+// l'appel mis en avant : focus (bulle d'envie) > mode > envie / conseil du composable ;
+// au niveau des catégories, c'est la catégorie qui contient l'action qui est mise en avant
 const prim = computed(() => {
   const list = baseList.value;
   if (store.health <= 0) return list[0] ? { key: list[0].key, kind: "best" } : null;
   if (store.isSleeping) return { key: "coucher", kind: "best" };
   if (!tutoDone.value) return { key: "chatouiller", kind: "best" };
   const p = primary.value;
+  const find = (key) => list.find((a) => a.key === key) || list.find((a) => a.cat && a.cat === catOf(key)?.key);
   if (props.focus) {
-    const f = list.find((a) => a.key === props.focus && !a.reason);
-    if (f) return { key: f.key, kind: p?.key === f.key ? p.kind : "best" };
+    const f = find(props.focus);
+    if (f && !f.reason) return { key: f.key, kind: p?.key === props.focus ? p.kind : "best" };
   }
-  return p && list.some((a) => a.key === p.key) ? p : null;
+  if (!p) return null;
+  const hit = find(p.key);
+  return hit ? { key: hit.key, kind: p.kind } : null;
 });
 
 // angles (degrés depuis le haut, sens horaire) : 6 pilules à -125..125, moins de pilules = arc plus serré
@@ -130,7 +197,7 @@ function setBtn(key, el) {
 }
 const num = (v, d) => (Number.isFinite(v) ? v : d);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const estW = (a) => Math.max(104, Math.round(a.label.length * 8.6 + 52));
+const estW = (a) => Math.max(86, Math.round(a.label.length * 7.4 + 42));
 const widthOf = (a) => btnEls.get(a.key)?.offsetWidth || estW(a);
 
 function sideOf(a) {
@@ -175,7 +242,7 @@ function layout() {
   last = { ax, ay, ar, top, bottom, zoom };
 
   const ws = list.map(widthOf);
-  const hs = list.map(() => (n === 1 ? 56 : 46));
+  const hs = list.map(() => (n === 1 ? 48 : 38));
   const yMin = (i) => minTop + hs[i] / 2;
   const yMax = (i) => Math.max(yMin(i), bottom - 20 - hs[i] / 2);
   const xClamp = (x, i, side) => (side === "l" ? clamp(x, ws[i] / 2 + 28, W - 8 - ws[i] / 2) : clamp(x, 8 + ws[i] / 2, W - 28 - ws[i] / 2));
@@ -188,7 +255,7 @@ function layout() {
     pts = [{ x: xClamp(ax, 0, "l"), y: clamp(top - 18 - hs[0] / 2, yMin(0), yMax(0)) }];
   } else {
     const ang = slotAngles(n);
-    const R0 = clamp(ar * 1.15 + 40, 96, 150) * Math.min(zoom, 1.3);
+    const R0 = clamp(ar * 1.35 + 52, 120, 190) * Math.min(zoom, 1.3);
     for (let it = 0; it <= 3; it++) {
       const R = R0 + it * 10;
       pts = ang.map((g) => ({ x: ax + R * Math.sin((g * Math.PI) / 180), y: ay - R * Math.cos((g * Math.PI) / 180) }));
@@ -209,8 +276,8 @@ function layout() {
       { idx: Array.from({ length: nl }, (_, k) => nl - 1 - k), side: "l" }, // de haut en bas : la pile se lit du bas vers le haut
       { idx: Array.from({ length: n - nl }, (_, k) => nl + k), side: "r" },
     ];
-    const off = clamp(ar * 0.75, 40, 100);
-    const rowH = 54;
+    const off = clamp(ar * 1.05 + 18, 70, 170); // bord intérieur des pilules au-delà du corps
+    const rowH = 48;
     pts = new Array(n);
     sides = new Array(n);
     for (const col of cols) {
@@ -218,7 +285,7 @@ function layout() {
       if (!k) continue;
       let ys = col.idx.map((_, j) => ay + (j - (k - 1) / 2) * rowH);
       const first = ys[0], lastY = ys[k - 1];
-      const lo = minTop + 23, hi = Math.max(lo, bottom - 20 - 23);
+      const lo = minTop + 19, hi = Math.max(lo, bottom - 20 - 19);
       let dy = 0;
       if (first < lo) dy = lo - first;
       else if (lastY > hi) dy = -Math.min(lastY - hi, first - lo);
@@ -284,6 +351,9 @@ function onIdle() {
 const STAY = new Set(["calin", "chatouiller", "laver"]);
 function pick(a) {
   if (closing.value) return;
+  // catégorie : on ouvre ses choix ; « Retour » : on revient aux catégories
+  if (a.cat) { level.value = a.cat; arm(6000); return; }
+  if (a.back) { level.value = null; arm(6000); return; }
   if (a.reason) {
     press(a); // gameSay(raison) + secousse, le menu reste ouvert
     arm(6000);
@@ -405,9 +475,9 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-width: 104px;
-  height: 46px;
-  padding: 0 18px 0 32px;
+  min-width: 86px;
+  height: 38px;
+  padding: 0 14px 0 26px;
   border: 0;
   background: none;
   font: inherit;
@@ -418,9 +488,9 @@ onBeforeUnmount(() => {
   scale: 1;
   transition: scale 0.3s var(--spring-strong);
 }
-.pill-btn.is-right { padding: 0 32px 0 18px; }
+.pill-btn.is-right { padding: 0 26px 0 14px; }
 .pill-btn.is-primary { scale: 1.08; }
-.pill-btn.is-big { min-width: 168px; height: 56px; padding: 0 22px 0 40px; }
+.pill-btn.is-big { min-width: 140px; height: 48px; padding: 0 18px 0 34px; }
 .body {
   position: absolute;
   inset: 0;
@@ -433,26 +503,26 @@ onBeforeUnmount(() => {
 .lbl {
   position: relative;
   z-index: 1;
-  font: 800 14px/1 var(--font-text);
+  font: 800 12.5px/1 var(--font-text);
   color: var(--hud-ink);
   white-space: nowrap;
 }
-.is-big .lbl { font-size: 16px; }
+.is-big .lbl { font-size: 14px; }
 .obj {
   position: absolute;
   top: 50%;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-top: -22px;
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
   pointer-events: none;
   transition: transform 0.45s var(--spring-strong);
 }
-.is-left .obj, .pill-btn:not(.is-right) .obj { left: -20px; }
-.is-right .obj { right: -20px; }
-.is-big .obj { width: 54px; height: 54px; margin-top: -27px; left: -24px; }
+.is-left .obj, .pill-btn:not(.is-right) .obj { left: -16px; }
+.is-right .obj { right: -16px; }
+.is-big .obj { width: 44px; height: 44px; margin-top: -22px; left: -20px; }
 .emoji {
   width: 100%;
   height: 100%;
