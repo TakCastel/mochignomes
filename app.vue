@@ -173,12 +173,7 @@ body {
   position: relative;
   height: 100%;
   overflow: hidden;
-  /* couleurs partagées par les panneaux */
-  --accent: #ff8a3d;
-  --accent-hi: #ffb070;
-  --accent-lo: #c25a12;
-  --plate-shade: rgba(140, 100, 60, 0.35);
-  --shell-edge: #c9a77f;
+  /* pas de couleurs ici : accent, ombres et plaques viennent du thème (ui.css / themes.css) */
   /* tailles qui suivent la hauteur de l'écran */
   --tile: clamp(52px, 8.4vh, 72px);
   --gap: clamp(8px, 1.4vh, 12px);
