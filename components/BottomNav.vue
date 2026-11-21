@@ -99,12 +99,14 @@ const items = computed(() =>
   ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({ ...t, badge: badgeKey.value === t.key })));
 
 // ---- barre droite à onglet arrondi : l'onglet (bouton actif + humeur) glisse d'une entrée à l'autre,
-// s'élargit selon l'humeur et change de côté en douceur (ressorts sur sa position et ses deux bords) ----
-const BUMP_H = 28; // hauteur de l'onglet au-dessus de la barre
-const SLOPE = 28; // largeur d'un flanc : raccord creux (6) + coin bombé (22 = coin du bouton 16 + marge 6)
-const ORB = 54; // diamètre de la bulle
+// s'élargit selon l'humeur et change de côté en douceur (ressorts sur sa position et ses deux bords).
+// Il épouse le bouton à INSET près, y compris pendant son rebond d'arrivée (ressort d'échelle). ----
+const BUMP_H = 28; // hauteur de l'onglet au-dessus de la barre (bouton à sa taille normale)
+const ORB = 54; // côté du bouton
+const ORB_R = 16; // coin du bouton
 const INSET = 6; // marge autour du bouton : la même en haut, à gauche et à droite
-const FILLET = SLOPE * 6 / 28; // largeur du raccord creux au pied du flanc
+const FILLET = 6; // largeur du raccord creux au pied du flanc
+const SCALE_FROM = 0.7; // taille du bouton quand il arrive sur un nouvel onglet
 const MOOD_GAP = 7; // entre la bulle et l'humeur
 const MOOD_END = 10; // après l'humeur, avant le bord droit du flanc
 const nav = ref(null);
@@ -114,10 +116,9 @@ const size = ref({ w: 0, h: 0 });
 const centers = ref({});
 const moodW = ref(0);
 const navBox = ref({ left: 0, top: 0 });
-// valeurs animées : centre de la bulle, étendues gauche et droite de l'onglet
-const cur = ref({ x: 0, l: 0, r: 0 });
-const speed = ref(0);
-const vel = { x: 0, l: 0, r: 0 };
+// valeurs animées : centre du bouton, étendues gauche et droite de l'onglet (bouton à taille 1), échelle du bouton
+const cur = ref({ x: 0, l: 0, r: 0, s: 1 });
+const vel = { x: 0, l: 0, r: 0, s: 0 };
 let raf = 0;
 let last = 0;
 let ready = false;
@@ -135,6 +136,7 @@ const target = computed(() => ({
   x: targetX.value,
   l: side.value === "left" ? far.value : near,
   r: side.value === "left" ? near : far.value,
+  s: 1,
 }));
 
 function measureMood() {
@@ -170,27 +172,43 @@ function step(t) {
     next[k] += vel[k] * dt;
     if (Math.abs(d) >= 0.3 || Math.abs(vel[k]) >= 4) settled = false;
   }
+  // échelle du bouton : ressort plus nerveux, qui dépasse un peu (~1,08) avant de se poser
+  const ds = T.s - next.s;
+  vel.s += (ds * 500 - vel.s * 18) * dt;
+  next.s += vel.s * dt;
+  if (Math.abs(ds) >= 0.003 || Math.abs(vel.s) >= 0.05) settled = false;
   if (settled) {
     cur.value = { ...T };
-    speed.value = vel.x = vel.l = vel.r = 0;
+    vel.x = vel.l = vel.r = vel.s = 0;
     raf = 0;
     last = 0;
     return;
   }
   cur.value = next;
-  speed.value = vel.x;
   raf = requestAnimationFrame(step);
+}
+function kick() {
+  if (!raf) raf = requestAnimationFrame(step);
 }
 watch(target, () => {
   if (!ready) return;
   if (reduced) { cur.value = { ...target.value }; return; }
-  if (!raf) raf = requestAnimationFrame(step);
+  kick();
+});
+// nouvel onglet actif : le bouton arrive petit et rebondit, l'onglet suit
+watch(() => activeItem.value?.key, (k, old) => {
+  if (!ready || reduced || !old) return;
+  cur.value = { ...cur.value, s: SCALE_FROM };
+  vel.s = 0;
+  kick();
 });
 
-// l'onglet s'aplatit un peu quand il file
+// forme courante : l'onglet entoure le bouton à sa taille du moment, à INSET près partout
+// (côtés et haut grandissent avec lui, coin concentrique au sien)
 const bump = computed(() => {
-  const s = Math.min(Math.abs(speed.value) / 1800, 0.4);
-  return { cx: cur.value.x, bh: BUMP_H * (1 - s * 0.35), l: cur.value.l, r: cur.value.r };
+  const { x, l, r, s } = cur.value;
+  const grow = (ORB / 2) * (s - 1);
+  return { cx: x, bh: BUMP_H + grow, l: l + grow, r: r + grow, R: ORB_R * s + INSET, grow };
 });
 // on publie la forme de l'onglet (coordonnées écran) pour que le panneau des jauges l'épouse
 watchEffect(() => {
@@ -201,25 +219,27 @@ watchEffect(() => {
   navOrb.bh = b.bh;
   navOrb.l = b.l;
   navOrb.r = b.r;
-  navOrb.s = SLOPE;
+  navOrb.f = FILLET;
+  navOrb.R = b.R;
 });
 const path = computed(() => {
   const { w, h } = size.value;
   if (!w) return "";
   const top = BUMP_H;
   const total = top + h;
-  const { cx, bh, l, r } = bump.value;
+  const { cx, bh, l, r, R } = bump.value;
   const pts = [];
-  for (let px = 0; px <= w; px += 1) pts.push(`${px},${(top - tabHeight(px, cx, l, r, bh, SLOPE)).toFixed(1)}`);
+  for (let px = 0; px <= w; px += 1) pts.push(`${px},${(top - tabHeight(px, cx, l, r, bh, FILLET, R)).toFixed(1)}`);
   return `M0,${total} L${pts.join(" L")} L${w},${total} Z`;
 });
 
-const orbStyle = computed(() => ({ transform: `translateX(${cur.value.x}px) translateX(-50%)` }));
-// l'humeur suit la bulle, du côté choisi, et descend avec l'onglet quand il s'aplatit
+const orbStyle = computed(() => ({ transform: `translateX(${cur.value.x}px) translateX(-50%) scale(${cur.value.s.toFixed(3)})` }));
+// l'humeur suit le bouton, du côté choisi, et bouge avec l'onglet quand il grandit ou rapetisse
 const moodStyle = computed(() => {
+  const g = bump.value.grow;
   const x = side.value === "left"
-    ? cur.value.x - ORB / 2 - MOOD_GAP - moodW.value
-    : cur.value.x + ORB / 2 + MOOD_GAP;
+    ? cur.value.x - ORB / 2 - g - MOOD_GAP - moodW.value
+    : cur.value.x + ORB / 2 + g + MOOD_GAP;
   return { transform: `translate(${x.toFixed(1)}px, ${(BUMP_H - bump.value.bh).toFixed(1)}px)` };
 });
 watch(() => moodInfo.value[0], () => nextTick(measureMood));
@@ -293,7 +313,6 @@ onBeforeUnmount(() => {
     inset 0 2px 3px rgba(255, 255, 255, 0.45),
     0 6px 14px rgba(11, 86, 194, 0.4),
     0 2px 4px rgba(11, 86, 194, 0.32);
-  animation: orb-in 0.55s var(--spring-strong);
 }
 /* reflet discret sur le haut du bouton */
 .orb::before {
@@ -407,11 +426,10 @@ onBeforeUnmount(() => {
 }
 @keyframes badge { 50% { transform: scale(1.35); } }
 @keyframes pop { from { transform: scale(0.4); opacity: 0; } }
-@keyframes orb-in { 0% { transform: scale(0.7); } 60% { transform: scale(1.08, 0.94); } }
 @keyframes ic-in { from { transform: translateY(10px) scale(0.5); opacity: 0; } }
 @keyframes mood-in { from { transform: translateY(6px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .item, .badge, .orb, .orb-ic, .mood-v { animation: none; }
+  .item, .badge, .orb-ic, .mood-v { animation: none; }
   .item, .ic, .icwrap, .label, .mood-dot { transition: none; }
   .side-enter-active, .side-leave-active { transition: none; }
 }
