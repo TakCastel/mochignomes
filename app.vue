@@ -64,8 +64,9 @@ const paletteStyle = computed(() => ({
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
 let phaseTimer = null;
-// quand elle dort, la nuit tombe sur la scène
-const shownPhase = computed(() => (store.isSleeping ? "night" : phase.value));
+// pas de nuit à l'écran : la scène reste en plein jour, même quand elle dort
+// (la nuit délavait le personnage ; la simulation, elle, garde ses heures de nuit)
+const shownPhase = computed(() => (phase.value === "night" ? "day" : phase.value));
 
 // Cadrage : la créature se pose en bas de la zone libre entre les jauges et les boutons
 const middle = ref(null);
