@@ -1,8 +1,8 @@
 <template>
   <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
-    <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
+    <div class="scene" :class="{ studio: studioHome && !playing }">
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" @studio="(v) => (studioHome = v)" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
 import { PALETTES, DEFAULT_PALETTE, paletteVars, UI_THEMES } from "~/lib/palettes";
@@ -40,6 +40,8 @@ import { activeActivity } from "~/composables/useLiveCreature";
 
 const store = useTamagotchiStore();
 const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
+// vue studio à la maison (HOME_VIEW dans lib/world3d.js) : annoncée par la scène 3D une fois créée
+const studioHome = ref(false);
 const dead = computed(() => store.health <= 0);
 const { mood } = useCreatureMood();
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#52c234");
@@ -77,11 +79,14 @@ function measure() {
   const r = el.getBoundingClientRect();
   frame.value = {
     ground: Math.round(r.bottom - Math.min(26, r.height * 0.10)),
-    size: Math.round(Math.min(r.height * 0.60, window.innerWidth * 0.50)),
+    // vue studio : la créature seule, un peu plus grande que dans la prairie
+    size: Math.round(studioHome.value ? Math.min(r.height * 0.64, window.innerWidth * 0.54) : Math.min(r.height * 0.60, window.innerWidth * 0.50)),
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
 }
+
+watch(studioHome, measure);
 
 onMounted(() => {
   // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)
@@ -167,7 +172,10 @@ body {
     linear-gradient(180deg, transparent 62%, rgba(248, 250, 252, 0.55) 100%),
     radial-gradient(70% 40% at 75% 28%, var(--glow), transparent 70%),
     radial-gradient(130% 90% at 50% 45%, transparent 55%, var(--edge) 100%);
+  transition: opacity 0.25s ease;
 }
+/* vue studio : fond bleu uni et propre, plus de halo doré ni de bords sombres (le fond a déjà son halo et sa vignette) */
+.scene.studio::after { opacity: 0; }
 
 .ui {
   position: relative;

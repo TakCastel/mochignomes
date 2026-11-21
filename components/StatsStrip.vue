@@ -139,43 +139,48 @@ function tap(n) {
 .need:active .medal { transform: scale(0.84); transition-duration: 0.08s; }
 .need.is-up .medal { animation: bump 0.6s var(--spring-strong); }
 @keyframes bump { 40% { transform: scale(1.15); } }
+/* gouttière creusée dans le panneau : ombre intérieure en haut, liseré clair en bas */
 .track {
   display: block;
-  height: 20px;
+  height: 18px;
+  padding: 2px;
   overflow: hidden;
   border-radius: 999px;
-  background: #d9e1ea;
-  box-shadow: inset 0 2px 3px rgba(40, 60, 90, 0.18);
+  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
 }
+/* remplissage en relief : dégradé de tube arrondi, liseré lumineux fin en haut, ombre douce en bas */
 .fill {
   position: relative;
   display: block;
+  min-width: 14px;
   height: 100%;
+  overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--c-hi), var(--c) 55%, var(--c-lo));
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c-hi) 70%, #fff) 0%,
+    var(--c-hi) 22%,
+    var(--c) 58%,
+    var(--c-lo) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -2px 2px color-mix(in srgb, var(--c-lo) 60%, transparent),
+    0 1px 2px color-mix(in srgb, var(--c-lo) 45%, transparent);
   transition: width 0.7s var(--spring), background 0.4s;
 }
-/* reflet blanc sur le haut + petit éclat */
-.fill::before {
-  content: "";
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 2px;
-  height: 35%;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.55);
-}
+/* reflet qui balaie la jauge de temps en temps, chaque jauge à son tour */
 .fill::after {
   content: "";
   position: absolute;
-  right: 6px;
-  top: 5px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.5) 52%, transparent 70%);
+  transform: translateX(-110%);
+  animation: sheen 6s ease-in-out calc(1.5s + var(--i, 0) * 0.35s) infinite;
+  pointer-events: none;
+}
+@keyframes sheen {
+  0% { transform: translateX(-110%); }
+  14%, 100% { transform: translateX(110%); }
 }
 /* besoin critique : le médaillon palpite */
 .need.is-bad .medal { animation: alert 1.1s ease-in-out infinite; }
@@ -202,5 +207,6 @@ function tap(n) {
 @media (prefers-reduced-motion: reduce) {
   .needs, .need, .mood, .need.is-bad .medal, .need.is-up .medal { animation: none; }
   .fill, .medal { transition: none; }
+  .fill::after { animation: none; display: none; }
 }
 </style>

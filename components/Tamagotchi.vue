@@ -37,6 +37,16 @@
       @reset="creature?.resetZoom?.()"
     />
 
+    <!-- flèches « tourner » de la vue studio : cachées pendant une activité et quand le menu d'interactions est ouvert -->
+    <RotateArrows
+      v-if="studio && !fallback && frame"
+      :top="arrowsTop"
+      :offset="arrowsOffset"
+      :hidden="arrowsHidden"
+      @step="onRotateStep"
+      @hold="onRotateHold"
+    />
+
     <!-- gains et pertes qui s'envolent après une action -->
     <div class="deltas">
       <div
@@ -70,7 +80,7 @@ const props = defineProps({
   // couleurs du décor (herbe, arbres, collines) imposées par la palette
   theme: { type: Object, default: null },
 });
-const emit = defineEmits(["ground", "tap"]);
+const emit = defineEmits(["ground", "tap", "studio"]);
 const { store, mood, morph, sulking } = useCreatureMood();
 
 const stage = ref(null);
@@ -102,6 +112,29 @@ function openRing(focus = null) {
 function onPicked() { touched(); }
 watch(ring, (r) => creature.value?.holdZoom?.(!!r));
 watch(() => [gameBus.activity, activeActivity.value], ([a, b]) => { if (a || b) closeRing(); });
+// vue studio (HOME_VIEW dans lib/world3d.js) : fond bleu à la maison, prairie pendant les activités
+const studio = ref(false);
+const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
+watch(playing, (p) => creature.value?.setPlaying?.(p));
+// flèches « tourner » : à hauteur des pieds, de part et d'autre de la créature (elle fait ~0,8 fois sa hauteur de large),
+// sans sortir de l'écran ; elles s'écartent un peu quand on zoome
+const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping);
+const arrowsTop = computed(() => (props.frame ? props.frame.ground : 400)); // centre de l'ellipse au sol, sous les pieds
+const arrowsOffset = computed(() => {
+  const f = props.frame;
+  if (!f) return 130;
+  const w = typeof window !== "undefined" ? window.innerWidth : 390;
+  return Math.max(70, Math.min(w / 2 - 70, f.size * 0.4 * Math.min(zoom.value, 1.6) * Math.max(stageScale.value, 0.7) + 46));
+});
+function onRotateStep(dir) {
+  creature.value?.rotateBy?.(-dir * Math.PI / 2);
+  store.countGesture("tourner");
+  touched(); closeRing();
+}
+function onRotateHold(dir) {
+  creature.value?.spinHold?.(-dir); // angle positif = sens inverse des flèches à l'écran
+  if (dir) { touched(); closeRing(); } else store.countGesture("tourner");
+}
 function onScreen(i) { info.value = i; }
 function onZoom(z) { zoom.value = z; }
 function onGesture() { touched(); closeRing(); }
@@ -337,6 +370,9 @@ onMounted(async () => {
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky, theme: props.theme });
     if (props.frame) creature.value.setFrame(props.frame);
+    studio.value = !!creature.value.isStudio?.();
+    emit("studio", studio.value);
+    creature.value.setPlaying?.(playing.value);
     // partagée avec les activités 3D, la cuisine et l'essayage
     setLiveCreature(creature.value);
     // objets possédés posés dans le pré : les toucher lance l'activité
