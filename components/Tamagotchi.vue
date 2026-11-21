@@ -29,24 +29,8 @@
       @picked="onPicked"
     />
 
-    <ZoomControls
-      v-if="!fallback"
-      :zoom="zoom"
-      @in="creature?.zoomBy?.(1.25)"
-      @out="creature?.zoomBy?.(0.8)"
-      @reset="creature?.resetZoom?.()"
-    />
-
-    <!-- flèches « tourner » de la vue studio : cachées pendant une activité et quand le menu d'interactions est ouvert -->
-    <RotateArrows
-      v-if="studio && !fallback && frame"
-      :top="arrowsTop"
-      :offset="arrowsOffset"
-      :hidden="arrowsHidden"
-      @step="onRotateStep"
-      @hold="onRotateHold"
-      @pressed="(d) => (rotPressed = d)"
-    />
+    <!-- zoom : au pincement, à la molette et au double-tap (plus de boutons à l'écran).
+         Flèches « tourner » : dessinées et touchées directement dans la scène 3D (creature.setTurnRing). -->
 
     <!-- gains et pertes qui s'envolent après une action -->
     <div class="deltas">
