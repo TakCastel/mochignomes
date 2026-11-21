@@ -11,6 +11,7 @@ const ACTION_UNLOCK_LEVEL = growth.ACTION_UNLOCK_LEVEL || { danser: 3 };
 const SHORT = { foot: "Foot", course: "Course", tele: "Télé" };
 
 // Icônes Fluent Emoji 3D (Microsoft, licence MIT), avec contour blanc façon autocollant
+// (chatouiller.svg : plume Noto Emoji, Google, licence Apache 2.0)
 const IMG = "/icons/actions/";
 const ACT_IMG = { foot: "jouer", course: "course", tele: "tele" };
 
@@ -19,7 +20,7 @@ const BASE = [
   { key: "laver", label: "Laver", img: IMG + "laver.svg", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
   { key: "jouer", label: "Jouer", img: IMG + "jouer.svg", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
   { key: "calin", label: "Tendresse", img: IMG + "tendresse.svg", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
-  { key: "chatouiller", label: "Chatouiller", img: IMG + "jouer.svg", icon: "solar:hand-heart-bold-duotone", color: ["#ffd0e0", "#ff4f86"] },
+  { key: "chatouiller", label: "Chatouiller", img: IMG + "chatouiller.svg", icon: "solar:hand-heart-bold-duotone", color: ["#ffd0e0", "#ff4f86"] },
   { key: "coucher", label: "Dodo", img: IMG + "dodo.svg", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
   { key: "soigner", label: "Soigner", img: IMG + "soigner.svg", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
   { key: "danser", label: "Danser", img: IMG + "danser.svg", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
