@@ -272,6 +272,7 @@ function toNdc(e) {
 }
 const tapEv = { type: "tap" };
 const swipeEv = { type: "swipe", dx: 0, dy: 0, speed: 0 };
+const tapEndEv = { type: "tapend", dt: 0 };
 function onDown(e) {
   if (phase.value !== "play" || paused.value || !ctrl) return;
   try { e.target.setPointerCapture?.(e.pointerId); } catch { /* ignoré */ }
@@ -284,7 +285,12 @@ function onUp(e) {
   const d = down; down = null;
   if (phase.value !== "play" || paused.value || !ctrl) return;
   const dx = e.clientX - d.x, dy = e.clientY - d.y, dist = Math.hypot(dx, dy);
-  if (dist < 28) return;
+  if (dist < 28) {
+    tapEndEv.dt = performance.now() - d.t;
+    const [x, y] = toNdc(e);
+    ctrl.tap(x, y, tapEndEv);
+    return;
+  }
   swipeEv.dx = dx; swipeEv.dy = dy; swipeEv.speed = dist / Math.max(16, performance.now() - d.t);
   ctrl.tap(d.nx, d.ny, swipeEv);
 }
