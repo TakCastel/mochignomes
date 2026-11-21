@@ -144,7 +144,8 @@ const primary = computed(() => {
   const wish = list.find((a) => a.wanted && !a.reason);
   if (wish) return { key: wish.key, kind: "wanted" };
   const sug = list.find((a) => a.suggest);
-  if (sug) return { key: sug.key, kind: "wanted" };
+  // simple suggestion (tout est plein, Jouer grisé…) : mise en avant douce, sans pastille
+  if (sug) return { key: sug.key, kind: "best" };
   return best.value ? { key: best.value, kind: "best" } : null;
 });
 
