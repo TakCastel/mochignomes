@@ -530,6 +530,7 @@ function startTry() {
     return;
   }
   trying.value = true;
+  gameBus.trying = true;
   emit("tryon", true);
   // on efface la fenêtre de la boutique pour la voir en 3D
   hiddenOverlay = root.value?.closest(".overlay") || null;
@@ -543,6 +544,7 @@ function startTry() {
 function stopTry() {
   if (!trying.value) return;
   trying.value = false;
+  gameBus.trying = false;
   gameBus.tryTop = 0;
   emit("tryon", false);
   if (hiddenOverlay) hiddenOverlay.classList.remove("shop-trying");

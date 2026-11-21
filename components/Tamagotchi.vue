@@ -13,7 +13,7 @@
 
     <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
     <!-- une seule bulle : celle-ci s'efface tant qu'elle parle (bulle 3D) -->
-    <div v-if="bubbleStyle && !activeActivity && !inSac" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
+    <div v-if="bubbleStyle && !activeActivity && !quiet" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
       <WishBubble @pick="(k) => openRing(k)" />
       <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
     </div>
@@ -99,6 +99,14 @@ function onPicked() { touched(); }
 // un toucher déclenche une petite pose d'essayage
 const inSac = computed(() => gameBus.page === "sac");
 watch(inSac, (v) => { if (v) closeRing(); });
+// essayage en boutique : elle pose, sans bulle ni réplique (comme dans le Sac)
+const quiet = computed(() => inSac.value || gameBus.trying);
+watch(quiet, (q) => {
+  if (!q) return;
+  creature.value?.hush?.();
+  speaking.value = false;
+  fallbackMessage.value = "";
+});
 watch(ring, (r) => creature.value?.holdZoom?.(!!r));
 watch(() => [gameBus.activity, activeActivity.value], ([a, b]) => { if (a || b) closeRing(); });
 // vue studio (HOME_VIEW dans lib/world3d.js) : fond bleu à la maison, prairie pendant les activités
@@ -148,7 +156,7 @@ function onSpeech(ms) {
   speakTimer = setTimeout(() => (speaking.value = false), ms);
 }
 function say(text, ms, prio = 1) {
-  if (!text || inSac.value) return;
+  if (!text || quiet.value) return;
   if (creature.value) creature.value.say(text, ms, prio);
   else {
     if (fallbackMessage.value && prio === 0) return;
@@ -376,7 +384,7 @@ function tryOnEmote() {
 let callTimer = null;
 function maybeCall() {
   if (stageKey.value === "oeuf" || store.isSleeping || props.dead || store.health <= 0) return;
-  if (activeActivity.value || gameBus.activity || ring.value || inSac.value) return;
+  if (activeActivity.value || gameBus.activity || ring.value || quiet.value) return;
   if (Date.now() - lastTouch < 30000) return;
   if (!["hunger", "cleanliness", "fun", "energy"].some((k) => store[k] < 25)) return;
   lastTouch = Date.now() - 15000; // pas de nouvel appel avant 15 s
