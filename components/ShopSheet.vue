@@ -691,7 +691,7 @@ onBeforeUnmount(() => {
 .item { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 12px; border: 0; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
 .item:active { transform: scale(0.95); }
 .art { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 12%, var(--surface-2)) 100%); }
-.art-ic { width: 56px; height: 56px; color: var(--ink); filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.22)); }
+.art-ic { width: 56px; height: 56px; color: var(--ink); filter: var(--item-rim) drop-shadow(0 2px 2px rgba(40, 55, 80, 0.22)); }
 .item.locked .art-ic { opacity: 0.35; filter: grayscale(0.7); }
 .art-lock { position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; padding: 4px; border-radius: 50%; background: var(--surface); color: var(--hud-ink-2); box-shadow: var(--ui-soft); }
 .name { max-width: 100%; min-height: 2.3em; display: grid; place-items: center; font: 800 var(--t-md) / 1.15 var(--font-text); color: var(--hud-ink); overflow-wrap: anywhere; }
@@ -708,7 +708,7 @@ onBeforeUnmount(() => {
 .offer { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 14px 8px 10px; border: 0; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
 .offer:active { transform: scale(0.97); }
 .offer-art { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 14%, var(--surface-2))); }
-.offer-ic { width: 32px; height: 32px; color: var(--ink); }
+.offer-ic { width: 32px; height: 32px; color: var(--ink); filter: var(--item-rim); }
 .offer-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
 .offer-kicker { font: 800 var(--t-xs) / 1 var(--font-text); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warn-ink); }
 .offer-title { font: 800 var(--t-md) / 1.15 var(--font-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -748,7 +748,7 @@ onBeforeUnmount(() => {
 .x { position: absolute; top: 14px; right: 14px; z-index: 2; }
 .hero { position: relative; display: grid; place-items: center; height: 140px; }
 .hero-glow { position: absolute; width: 136px; height: 136px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ink) 22%, var(--surface)) 0%, var(--surface) 70%); }
-.hero-ic { position: relative; width: 100px; height: 100px; color: var(--ink); filter: drop-shadow(0 6px 6px rgba(40, 55, 80, 0.22)); transition: color 0.25s; }
+.hero-ic { position: relative; width: 100px; height: 100px; color: var(--ink); filter: var(--item-rim) drop-shadow(0 6px 6px rgba(40, 55, 80, 0.22)); transition: color 0.25s; }
 .hero.party .hero-ic { animation: boing 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes boing { 0% { transform: scale(0.6) rotate(-10deg); } 60% { transform: scale(1.18) rotate(4deg); } 100% { transform: scale(1) rotate(0); } }
 .confetti { position: absolute; left: 50%; top: 55%; width: 10px; height: 14px; border-radius: 3px; background: var(--c); opacity: 0; animation: confetti 1.1s ease-out var(--d) forwards; }

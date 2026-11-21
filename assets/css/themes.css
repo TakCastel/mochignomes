@@ -65,6 +65,7 @@ html[data-theme="sombre"] {
   --sh-pop: 0 18px 48px rgba(0, 0, 0, 0.6);
   --scrim: rgba(5, 8, 15, 0.6);
   --nav-shadow: drop-shadow(0 -4px 14px rgba(0, 0, 0, 0.45));
+  --item-rim: drop-shadow(0 0 1px rgba(226, 233, 246, 0.85)) drop-shadow(0 0 1px rgba(226, 233, 246, 0.5));
   --halo: #262d3b; /* contour des icônes : la couleur des pilules, pas un blanc qui clignote */
   --sky: #4ea6ee;
   --sky-hi: #7cc0f5;
@@ -75,6 +76,8 @@ html[data-theme="sombre"] {
   --ui-on-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 html[data-theme="sombre"] .ui-stars .ic:not(.on) { color: #3d4657; }
+/* pastilles de couleur : un liseré clair, sinon le noir se fond dans les cartes */
+html[data-theme="sombre"] :is(.ui-swatch, .swatch) { outline: 1.5px solid rgba(226, 233, 246, 0.28); outline-offset: 0; }
 /* boutons « pauvres » (pas assez de pièces) : gris ardoise au lieu du gris clair */
 html[data-theme="sombre"] .ui-btn.is-poor { background: linear-gradient(180deg, #4a5468, #3a4355); box-shadow: 0 4px 0 #232a37; color: #c3cad6; }
 
