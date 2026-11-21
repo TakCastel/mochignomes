@@ -71,7 +71,9 @@ const OWNED_WISH_COINS = 10; // envie de plat, d'activité ou de tenue exaucée
 const CARE_COINS = { nourrir: [1, 3], laver: [1, 3], jouer: [1, 3], danser: [1, 2] };
 const RETURN_GIFT_COINS = 20; // retour après une pause : un cadeau, sans culpabiliser
 const MEAL_BOOST_MS = 30 * 60000; // après un bon repas : +20 % d'amusement aux activités
-const UNLOCK_GAP_MS = 45000; // un concept à la fois : au moins 45 s entre deux nouveautés
+const SESSION_GAP_MS = 20 * 60000; // revenir après 20 min d'absence = nouvelle session
+const SESSION_WARMUP_MS = 30000; // en début de session, on la laisse dire bonjour avant toute nouveauté
+const CARD_STALE_MS = 6 * 3600000; // une carte de nouveauté jamais vue ne bloque pas la suite au-delà
 // Une activité exauce aussi l'envie de soin correspondante
 const ACTIVITY_WISH = { foot: "jouer", course: "jouer", danse: "danser" };
 // Humeur d'une réaction de goût → réaction visuelle (lib/creatureLook.js REACTIONS)
@@ -136,10 +138,15 @@ export const useTamagotchiStore = defineStore(
     const mealBoostUntil = ref(0);
     const playDaysRewarded = ref([]); // paliers de jours de jeu cumulés déjà récompensés
     const returnGift = ref(0); // cadeau de retour après une pause (pièces), à récupérer
+    // schéma 5 : rythme des nouveautés
+    const playMs = ref(0); // temps de jeu actif cumulé (appli ouverte et visible)
+    const sessions = ref(0); // nombre de visites (retour après SESSION_GAP_MS)
+    const revealAt = ref({ play: 0, session: 0 }); // moment de la dernière nouveauté
+    const unlockEvent = ref(null); // dernière nouveauté { key, label, icon, at, seen } (carte UnlockCard)
     // non persistant
-    const unlockEvent = ref(null); // dernière nouveauté débloquée { key, label, icon, at }
-    let lastUnlockAt = 0;
-    let unlockSilently = false;
+    let sessionStartPlay = 0;
+    let lastPlayTick = 0;
+    let hiddenAt = 0;
     const away = ref(null);
     const awaySeconds = ref(0);
     const tick = ref(Date.now());
@@ -152,7 +159,8 @@ export const useTamagotchiStore = defineStore(
     const tastes = computed(() => tastesFor(tasteSeed.value || `${hatchedAt.value || 0}${name.value || ""}`));
     const unlockedPages = computed(() => {
       const pages = ["maison", "elle"];
-      if (level.value >= PAGE_UNLOCK_LEVEL.jours) pages.push("jours");
+      // la page Jours (bonus, défis, journal) arrive avec les défis
+      if (features.value.defis) pages.push("jours");
       if (level.value >= PAGE_UNLOCK_LEVEL.album) pages.push("album");
       return pages;
     });
@@ -210,7 +218,6 @@ export const useTamagotchiStore = defineStore(
       let coins = 0, gems = 0;
       if (levelUp) {
         addJournal("niveau", `Niveau ${level.value} atteint.`, "solar:star-bold-duotone");
-        safeToast(`Niveau ${level.value} !`, "solar:star-bold-duotone");
         for (let l = before + 1; l <= level.value; l++) {
           coins += LEVEL_COINS;
         }
@@ -330,7 +337,7 @@ export const useTamagotchiStore = defineStore(
       const q = (quests.value.list || []).find((x) => x.action === key && x.progress < x.target && (x.min == null || (value ?? 0) >= x.min));
       if (q) {
         q.progress = Math.min(q.target, q.progress + n);
-        if (q.progress >= q.target) safeToast(`Défi réussi : ${q.label}`, "solar:cup-star-bold-duotone");
+        if (q.progress >= q.target && features.value.defis) safeToast(`Défi réussi : ${q.label}`, "solar:cup-star-bold-duotone");
       }
     };
     // Compteur d'événements (défis, succès) utilisable depuis les autres stores et composants
@@ -395,6 +402,7 @@ export const useTamagotchiStore = defineStore(
         schema: schema.value, hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
         energy: energy.value, health: health.value, lastUpdate: lastUpdate.value, bornAt: bornAt.value,
         streak: streak.value, totalDays: totalDays.value, bestStreak: bestStreak.value, hatched: hatched.value,
+        features: features.value,
       });
       if (!patch) return;
       const refs = { schema, hunger, cleanliness, fun, energy, health, hatched, onboardStep, hatchedAt, stage, exhausted, totalDays, bestStreak };
@@ -404,8 +412,10 @@ export const useTamagotchiStore = defineStore(
       // les défis passent au nouveau format au démarrage (le Sac doit être prêt)
       if (patch.upgradeQuests) needQuestUpgrade = true;
       if (patch.seedTastes && hatched.value && !tasteSeed.value) tasteSeed.value = `${hatchedAt.value || 0}${name.value || ""}`;
-      // nouveautés déjà atteintes : débloquées en silence au démarrage
-      if (patch.unlockSilently) unlockSilently = true;
+      // parties existantes : les nouveautés arrivent une à une (voir checkUnlocks), comme pour
+      // une nouvelle partie. Les sauvegardes qui avaient tout reçu d'un coup repartent de zéro
+      // (le Sac est conservé ; les cadeaux de découverte ne sont pas doublés).
+      if (patch.relockFeatures) { features.value = {}; unlockEvent.value = null; revealAt.value = { play: playMs.value, session: 0 }; }
     }
 
     // ---------- éclosion, tutoriel ----------
@@ -645,17 +655,30 @@ export const useTamagotchiStore = defineStore(
     }
 
     // ---------- maîtrise (Étoiles) ----------
+    // Tant que les Étoiles ne sont pas découvertes (dernière étape de la chaîne), la maîtrise
+    // attend : elle est versée au moment de la découverte (catchUpMastery).
     function claimMastery(id) {
       const m = masteryById(id);
-      if (!m) return { ok: false, gems: 0 };
+      if (!m || !features.value.etoiles) return { ok: false, gems: 0 };
       try {
         if (inv().hasMastery(id)) return { ok: false, gems: 0 };
         inv().markMastery(id);
-        if (!features.value.etoiles) unlockFeature("etoiles");
         inv().earnGems(m.gems, m.label);
       } catch { return { ok: false, gems: 0 }; }
       addJournal("maitrise", `Maîtrise : ${m.label} !`, "solar:star-bold-duotone");
       return { ok: true, gems: m.gems };
+    }
+
+    function catchUpMastery() {
+      try {
+        const i = inv();
+        for (const m of MASTERY) {
+          const done = m.kind === "days" ? totalDays.value >= m.days
+            : m.kind === "score" ? (i.stats?.best?.[m.activity] || 0) >= m.score
+              : m.kind === "stars" ? Object.values(i.recipeStars || {}).some((n) => n >= m.stars) : false;
+          if (done) claimMastery(m.id);
+        }
+      } catch { /* Sac indisponible */ }
     }
 
     // ---------- nouveautés débloquées une à une ----------
@@ -666,7 +689,7 @@ export const useTamagotchiStore = defineStore(
       if (!FEATURES[key] || features.value[key]) return false;
       const now = Date.now();
       features.value = { ...features.value, [key]: now };
-      lastUnlockAt = now;
+      revealAt.value = { play: playMs.value, session: sessions.value };
       const who = name.value || "Elle";
       let say = "";
       try {
@@ -684,6 +707,9 @@ export const useTamagotchiStore = defineStore(
             }
             break;
           }
+          case "boutique":
+            payWelcomeGift();
+            break;
           case "cuisine":
             inv().grantStarterKit("crepes");
             if (!silent) say = "On fait des crêpes ? J'ai tout ce qu'il faut !";
@@ -701,12 +727,13 @@ export const useTamagotchiStore = defineStore(
             break;
           case "etoiles":
             inv().grantStarterKit("etoiles", { gems: 3 });
+            catchUpMastery(); // maîtrises déjà atteintes : versées maintenant
             break;
         }
       } catch { /* Sac indisponible */ }
       if (!silent) {
         const f = FEATURES[key];
-        unlockEvent.value = { key, label: f.label, icon: f.icon, at: now };
+        unlockEvent.value = { key, label: f.label, icon: f.icon, at: now, seen: false };
         // pas de toast : components/UnlockCard.vue raconte la découverte
         if (say) { try { gameSay(say); } catch { /* hors navigateur */ } }
       }
@@ -720,7 +747,8 @@ export const useTamagotchiStore = defineStore(
       const reach = lvl >= FEATURES[key].level;
       switch (key) {
         case "ballon": return mins >= 3 || reach;
-        case "coins": return f.ballon && ((counters.value["activite:foot"] || 0) > 0 || reach);
+        // d'abord par la 1re partie de foot ; sinon, deux visites plus tard
+        case "coins": return f.ballon && ((counters.value["activite:foot"] || 0) > 0 || (reach && sessions.value - revealAt.value.session >= 2));
         case "sac": return f.coins && (mins >= 6 || reach);
         case "boutique": case "cuisine": return f.sac && reach;
         case "tele": case "defis": return f.cuisine && (mins >= 8 * 60 || totalDays.value >= 2 || reach);
@@ -729,17 +757,42 @@ export const useTamagotchiStore = defineStore(
         default: return false;
       }
     }
-    // Une nouveauté à la fois (sauf rattrapage silencieux, qui débloque tout ce qui est atteint)
-    function checkUnlocks(now = Date.now(), silent = false) {
+    // Assez respiré depuis la nouveauté précédente ? (voir FEATURES.gap / session)
+    function paceOk(key) {
+      const p = FEATURES[key];
+      const since = playMs.value - (revealAt.value.play || 0);
+      const newSession = sessions.value > (revealAt.value.session || 0);
+      const warm = playMs.value - sessionStartPlay >= SESSION_WARMUP_MS;
+      if (newSession && warm) return true;
+      if (!newSession && p.session) return since >= p.gap * 3 * 60000; // très longue visite
+      return since >= p.gap * 60000 && (p.gap > 0 || warm);
+    }
+    // La carte de la nouveauté précédente n'a pas encore été vue : on attend
+    function cardPending(now) {
+      const ev = unlockEvent.value;
+      return !!ev && !ev.seen && now - ev.at < CARD_STALE_MS;
+    }
+    function ackUnlock() {
+      if (unlockEvent.value && !unlockEvent.value.seen) unlockEvent.value = { ...unlockEvent.value, seen: true };
+    }
+    // Une nouveauté à la fois, espacées par le temps de jeu et les visites
+    function checkUnlocks(now = Date.now()) {
       if (!hatched.value || onboardStep.value < 6) return null;
-      if (!silent && now - lastUnlockAt < UNLOCK_GAP_MS) return null;
-      for (let pass = 0; pass < FEATURE_KEYS.length; pass++) {
-        const key = FEATURE_KEYS.find((k) => !features.value[k] && featureDue(k, now));
-        if (!key) return null;
-        unlockFeature(key, { silent });
-        if (!silent) return key;
-      }
-      return null;
+      if (cardPending(now)) return null;
+      const key = FEATURE_KEYS.find((k) => !features.value[k] && featureDue(k, now));
+      if (!key || !paceOk(key)) return null;
+      unlockFeature(key);
+      return key;
+    }
+    // Temps de jeu actif (onglet visible, après le tutoriel) et visites
+    function tickPlay(now) {
+      const visible = typeof document === "undefined" || document.visibilityState === "visible";
+      if (lastPlayTick && visible && hatched.value && onboardStep.value >= 6) playMs.value += Math.min(5000, Math.max(0, now - lastPlayTick));
+      lastPlayTick = now;
+    }
+    function newSession() {
+      sessions.value += 1;
+      sessionStartPlay = playMs.value;
     }
 
     // ---------- activités (mini-jeux 3D) ----------
@@ -1016,6 +1069,7 @@ export const useTamagotchiStore = defineStore(
     function catchUp() {
       const now = Date.now();
       tick.value = now;
+      tickPlay(now);
       if (!lastUpdate.value || lastUpdate.value > now) {
         lastUpdate.value = now;
         return 0;
@@ -1053,16 +1107,21 @@ export const useTamagotchiStore = defineStore(
       return total;
     }
 
+    function payWelcomeGift() {
+      if (!(welcomeGift.value > 0)) return;
+      const n = welcomeGift.value;
+      welcomeGift.value = 0;
+      try { inv().earn(n, "Cadeau : la boutique est ouverte !"); } catch { welcomeGift.value = n; }
+    }
+
     function startDecay() {
       migrate();
-      if (unlockSilently) { unlockSilently = false; checkUnlocks(Date.now(), true); }
+      if (!decayTimer && (!lastUpdate.value || Date.now() - lastUpdate.value > SESSION_GAP_MS)) newSession();
+      else sessionStartPlay = playMs.value;
       if (needQuestUpgrade) { needQuestUpgrade = false; upgradeQuests(); }
-      if (welcomeGift.value > 0) {
-        const n = welcomeGift.value;
-        welcomeGift.value = 0;
-        try { inv().earn(n, "Cadeau : la boutique est ouverte !"); } catch { welcomeGift.value = n; }
-      }
-      if (!bornAt.value) bornAt.value = Date.now();
+      // cadeau de bienvenue des anciennes parties : versé quand la boutique ouvre
+      if (features.value.boutique) payWelcomeGift();
+      if (!bornAt.value) bornAt.value = hatchedAt.value || Date.now();
       if (decayTimer) return;
       awaySeconds.value = lastUpdate.value ? Math.max(0, (Date.now() - lastUpdate.value) / 1000) : 0;
       if (typeof window !== "undefined") {
@@ -1076,6 +1135,10 @@ export const useTamagotchiStore = defineStore(
       if (typeof document !== "undefined" && !visibilityBound) {
         visibilityBound = true;
         document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") { hiddenAt = Date.now(); return; }
+          if (hiddenAt && Date.now() - hiddenAt > SESSION_GAP_MS) newSession();
+          hiddenAt = 0;
+          lastPlayTick = 0; // le temps caché ne compte pas comme du jeu
           if (document.visibilityState === "visible") catchUp();
         });
       }
@@ -1117,6 +1180,7 @@ export const useTamagotchiStore = defineStore(
       quests, journal, bestStreak, totalDays, jokers, nextWishAt, lastWishId, surpriseLog,
       away, tick, level, stageInfo, unlockedPages, welcomeGift, pendingBonusCoins,
       features, tasteSeed, tastes, playsToday, mealBoostUntil, mealBoostActive, playDaysRewarded, returnGift, unlockEvent,
+      playMs, sessions, revealAt, ackUnlock,
       questsAllDone, questBonusReady, idleSuggestion,
       rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, claimQuestBonus, claimReturnGift, addJournal, countEvent,
       canActivity, applyActivity, canEatMeal, eatMeal, playFeel, playsOf,
@@ -1133,6 +1197,7 @@ export const useTamagotchiStore = defineStore(
         "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
         "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
         "welcomeGift", "features", "tasteSeed", "playsToday", "mealBoostUntil", "playDaysRewarded", "returnGift",
+        "playMs", "sessions", "revealAt", "unlockEvent",
       ],
       afterHydrate: (ctx) => { ctx.store.migrate?.(); },
     },

@@ -22,7 +22,7 @@ const TABS = [
 ];
 const fresh = computed(() => store.unlocked.length > gameBus.seenUnlocked && gameBus.albumTab !== "succes");
 watch(() => [gameBus.albumTab, store.unlocked.length], ([tab]) => {
-  if (tab === "succes") gameBus.seenUnlocked = store.unlocked.length;
+  if (tab === "succes") markSeenUnlocked(store.unlocked.length);
 }, { immediate: true });
 </script>
 

@@ -1,25 +1,5 @@
 <template>
   <div class="jours">
-    <!-- série -->
-    <section class="card streak">
-      <div class="top">
-        <Icon name="solar:fire-bold-duotone" class="flame" />
-        <div>
-          <strong class="big">{{ store.streak || 0 }} jour{{ (store.streak || 0) > 1 ? "s" : "" }} de suite</strong>
-          <span class="small">Record : {{ store.bestStreak || 0 }} · {{ store.totalDays || 0 }} jour{{ (store.totalDays || 0) > 1 ? "s" : "" }} passés ensemble</span>
-        </div>
-      </div>
-      <div class="dots" aria-hidden="true">
-        <span v-for="i in 7" :key="i" class="pip" :class="{ on: i <= pipsOn }" />
-      </div>
-      <p class="small">
-        Jokers : <span v-for="j in 2" :key="j" class="joker" :class="{ on: j <= (store.jokers || 0) }">
-          <Icon name="solar:star-bold-duotone" class="joker-ic" />
-        </span>
-        Un joker sauve ta série si tu rates un jour. Tu en gagnes un tous les 7 jours.
-      </p>
-    </section>
-
     <!-- bonus du jour -->
     <section v-if="store.pendingBonus > 0" class="card bonus">
       <Icon name="solar:gift-bold-duotone" class="gift" />
@@ -51,6 +31,21 @@
       <p v-else-if="store.questsAllDone" class="small all-done">Tout est fait, à demain !</p>
     </section>
 
+    <!-- jours passés ensemble (cumulés : rien à perdre si on rate un jour) -->
+    <section class="card streak">
+      <div class="top">
+        <Icon name="solar:calendar-mark-bold-duotone" class="flame" />
+        <div>
+          <strong class="big">{{ store.totalDays || 0 }} jour{{ (store.totalDays || 0) > 1 ? "s" : "" }} ensemble</strong>
+          <span class="small">{{ store.streak || 0 }} de suite · record : {{ store.bestStreak || 0 }}</span>
+        </div>
+      </div>
+      <div class="dots" aria-hidden="true">
+        <span v-for="i in 7" :key="i" class="pip" :class="{ on: i <= pipsOn }" />
+      </div>
+      <p class="small">Un cadeau à 7, 14 et 30 jours de jeu. Rater un jour ne fait rien perdre.</p>
+    </section>
+
     <!-- journal narratif -->
     <section class="card">
       <h3>Journal de {{ store.name || "ta bestiole" }}</h3>
@@ -73,7 +68,7 @@ import { computed } from "vue";
 
 const { store } = useCreatureMood();
 const quests = computed(() => store.quests?.list || []);
-const pipsOn = computed(() => ((store.streak || 0) > 0 ? ((store.streak - 1) % 7) + 1 : 0));
+const pipsOn = computed(() => ((store.totalDays || 0) > 0 ? ((store.totalDays - 1) % 7) + 1 : 0));
 const entries = computed(() => (store.journal || []).slice(0, 40));
 
 // les gains s'envolent en « +N » (CoinBurst) : pas de toast pour un défi
@@ -109,9 +104,6 @@ h3 { margin: 0 0 10px; font: 600 17px "Fredoka", "Nunito", system-ui, sans-serif
 .pip { flex: 1; height: 10px; border-radius: 999px; background: #e4e9ef; }
 .pip.on { background: linear-gradient(180deg, #ffb070, #ff8a3d); }
 .streak p.small { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.joker { display: inline-grid; }
-.joker-ic { width: 20px; height: 20px; color: #cfd6df; }
-.joker.on .joker-ic { color: #f0a500; }
 .bonus { display: flex; align-items: center; gap: 12px; background: linear-gradient(180deg, #fff6d6, #ffe9a8); }
 .gift { flex: none; width: 40px; height: 40px; color: #d9822b; }
 .btn {

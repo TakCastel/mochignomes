@@ -4,7 +4,7 @@
       <CurrencyBar />
     </div>
 
-    <nav class="tabs" role="tablist" aria-label="Rayons du Sac">
+    <nav v-if="tabs.length > 1" class="tabs" role="tablist" aria-label="Rayons du Sac">
       <button
         v-for="t in tabs"
         :key="t.key"
@@ -185,7 +185,9 @@ const has = (k) => !!store.hasFeature?.(k);
 // ---------- onglets ----------
 const tabs = computed(() => [
   { key: "tenues", label: "Tenues", icon: "solar:hanger-bold-duotone", badge: inv.unseenCount || 0 },
-  { key: "frigo", label: "Frigo", icon: "solar:fridge-bold-duotone", badge: inv.mealsCount || 0 },
+  // le frigo arrive avec la cuisine (ou dès qu'il contient quelque chose) ; un compteur de plats
+  // n'est pas une chose à faire : pas de pastille
+  has("cuisine") || inv.mealsCount > 0 || inv.pantryCount > 0 ? { key: "frigo", label: "Frigo", icon: "solar:fridge-bold-duotone", badge: 0 } : null,
   has("collection") ? { key: "collection", label: "Collection", icon: "solar:album-bold-duotone", badge: inv.setsReady.length || 0 } : null,
 ].filter(Boolean));
 const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "tenues");

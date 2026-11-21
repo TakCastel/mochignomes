@@ -84,6 +84,8 @@ function measure() {
 }
 
 onMounted(() => {
+  // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)
+  loadSeenUnlocked(store.unlocked.length);
   store.startDecay();
   // ?palette=lagon : essayer une palette
   const wanted = new URLSearchParams(window.location.search).get("palette");

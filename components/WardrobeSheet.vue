@@ -1,15 +1,17 @@
 <template>
   <!-- Garde-robe : onglet « Tenues » du Sac. Tout se porte tout de suite, c'est gratuit. -->
   <div class="wardrobe">
-    <div class="top">
-      <div class="count">
+    <div v-if="store.features?.collection || ownedCount >= 3" class="top">
+      <!-- le compte de la collection n'apparaît qu'avec la Collection -->
+      <div v-if="store.features?.collection" class="count">
         <Icon name="solar:hanger-bold-duotone" class="count-ic" />
         <div>
           <b>{{ inv.collected }}</b><span> / {{ inv.totalVariants }}</span>
           <small>coloris dans ta collection</small>
         </div>
       </div>
-      <button class="pill" :disabled="!ownedCount" @click="shuffle">
+      <span v-else />
+      <button v-if="ownedCount >= 3" class="pill" @click="shuffle">
         <Icon name="solar:magic-stick-3-bold-duotone" class="pill-ic" />
         Au hasard
       </button>

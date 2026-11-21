@@ -1,25 +1,25 @@
 <template>
   <section class="panel" aria-label="Actions">
     <button
-      v-for="a in actions"
+      v-for="a in shownActions"
       :key="a.key"
       class="tile"
       :class="{
-        best: a.key === best && !a.wanted,
-        wanted: a.wanted,
+        best: primary?.kind === 'best' && primary.key === a.key,
+        wanted: primary?.kind === 'wanted' && primary.key === a.key,
         glow: a.glow,
         off: !!a.reason,
         cooling: a.ring > 0,
         wiggle: wiggling === a.key,
       }"
-      :aria-label="a.label + (a.reason ? ` (${a.reason})` : a.wanted ? ' (elle en a envie)' : a.key === best ? ' (conseillé)' : '')"
+      :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
       <span v-if="a.ring > 0" class="ring" :style="{ '--p': a.ring }" aria-hidden="true" />
       <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
       <span class="lbl">{{ a.label }}</span>
       <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
-      <span v-if="a.wanted" class="dot" aria-hidden="true" />
+      <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
       <span v-for="f in floats.filter((x) => x.key === a.key)" :key="f.id" class="float" :style="{ '--fx': f.dx + 'px' }">{{ f.text }}</span>
     </button>
   </section>
@@ -107,9 +107,11 @@ const actions = computed(() =>
   BASE.map((a) => {
     if (a.key === "jouer" && suggestedActivity.value) {
       const act = activityById(suggestedActivity.value);
+      const w = store.wish;
       return {
         ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, ring: 0, locked: false,
-        activity: act.id, wanted: true, glow: gameBus.highlight?.action === a.key,
+        activity: act.id, wanted: w?.action === "activite" && w.target === act.id, suggest: true,
+        glow: gameBus.highlight?.action === a.key,
       };
     }
     if (a.key === "nourrir" && suggestCooking.value) {
@@ -132,6 +134,19 @@ const actions = computed(() =>
     };
   })
 );
+
+// Une action pas encore apprise (Danser) n'apparaît pas du tout : pas de tuile cadenassée
+const shownActions = computed(() => actions.value.filter((a) => !a.locked));
+
+// UN seul appel à l'action à la fois : son envie > l'activité proposée > le besoin le plus bas
+const primary = computed(() => {
+  const list = shownActions.value;
+  const wish = list.find((a) => a.wanted && !a.reason);
+  if (wish) return { key: wish.key, kind: "wanted" };
+  const sug = list.find((a) => a.suggest);
+  if (sug) return { key: sug.key, kind: "wanted" };
+  return best.value ? { key: best.value, kind: "best" } : null;
+});
 
 // Action conseillée : celle du besoin le plus bas (sans compter Soigner si elle va bien)
 const best = computed(() => {

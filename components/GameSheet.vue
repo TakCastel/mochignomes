@@ -50,10 +50,18 @@ function closeKitchen() {
   closeSheet();
 }
 
+// le sous-titre ne parle que de ce qui est déjà découvert
+const sacSubtitle = computed(() => {
+  const parts = ["Ses tenues"];
+  if (store.features?.cuisine) parts.push("son frigo");
+  if (store.features?.collection) parts.push("sa collection");
+  return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} et ${parts.at(-1)}` : parts[0];
+});
+
 const meta = computed(() => {
   switch (gameBus.page) {
     case "jours":
-      return { title: "Jours", subtitle: `${store.streak || 0} jour${(store.streak || 0) > 1 ? "s" : ""} de suite`, icon: "solar:calendar-bold-duotone" };
+      return { title: "Jours", subtitle: "Bonus, défis et journal", icon: "solar:calendar-bold-duotone" };
     case "album":
       return {
         title: "Album",
@@ -63,9 +71,9 @@ const meta = computed(() => {
         icon: "solar:gallery-bold-duotone",
       };
     case "sac":
-      return { title: "Sac", subtitle: "Ses tenues, son frigo, sa collection", icon: "solar:bag-4-bold-duotone" };
+      return { title: "Sac", subtitle: sacSubtitle.value, icon: "solar:bag-4-bold-duotone" };
     case "boutique":
-      return { title: "Boutique", subtitle: "Vêtements, épicerie et objets", icon: "solar:shop-bold-duotone" };
+      return { title: "Boutique", subtitle: store.features?.cuisine ? "Vêtements et épicerie" : "Des vêtements pour elle", icon: "solar:shop-bold-duotone" };
     default: {
       const d = (store.lastUpdate, ageInDays(store));
       return {

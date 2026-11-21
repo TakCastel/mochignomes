@@ -17,6 +17,10 @@
       </div>
     </section>
 
+    <p v-if="sulking" class="note sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
+    <p v-if="store.illness" class="note sick">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
+    <p v-else-if="store.exhausted" class="note tired">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
+
     <!-- raccourcis : ses journées, l'album, ses jeux (hors de la barre du bas) -->
     <nav v-if="shortcuts.length" class="shortcuts" aria-label="Plus">
       <button v-for="c in shortcuts" :key="c.key" class="short" @click="c.run">
@@ -26,9 +30,8 @@
       </button>
     </nav>
 
-    <p v-if="sulking" class="note sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
-    <p v-if="store.illness" class="note sick">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
-    <p v-else-if="store.exhausted" class="note tired">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
+    <!-- carnet « Ce qu'elle aime » : ses goûts découverts en jouant -->
+    <TastesCard />
 
     <!-- croissance -->
     <section class="card">
@@ -38,19 +41,6 @@
         <p class="small">Prochain stade : <strong>{{ stage.nextLabel }}</strong>. {{ stage.hint }}</p>
       </template>
       <p v-else class="small">Elle a fini de grandir. Elle compte sur toi pour la suite.</p>
-    </section>
-
-    <!-- santé -->
-    <section class="card">
-      <h3>Santé et forme</h3>
-      <ul class="bars">
-        <li v-for="s in statRows" :key="s.key">
-          <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
-          <span class="bar-label">{{ s.label }}</span>
-          <div class="bar thin"><div class="fill" :style="{ width: s.width + '%', background: s.color }" /></div>
-          <span class="bar-value">{{ Math.round(s.value) }}</span>
-        </li>
-      </ul>
     </section>
 
     <!-- caractère -->
@@ -72,8 +62,18 @@
       </details>
     </section>
 
-    <!-- carnet « Ce qu'elle aime » : ses goûts découverts en jouant -->
-    <TastesCard />
+    <!-- santé (déjà visible en jauges sur l'écran principal : en dernier) -->
+    <section class="card">
+      <h3>Santé et forme</h3>
+      <ul class="bars">
+        <li v-for="s in statRows" :key="s.key">
+          <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
+          <span class="bar-label">{{ s.label }}</span>
+          <div class="bar thin"><div class="fill" :style="{ width: s.width + '%', background: s.color }" /></div>
+          <span class="bar-value">{{ Math.round(s.value) }}</span>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -92,7 +92,8 @@ const traitRows = computed(() =>
 
 const pages = computed(() => store.unlockedPages || []);
 const questReady = computed(() =>
-  (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0 || !!store.questBonusReady);
+  (store.features?.defis && (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed))
+  || store.pendingBonus > 0 || !!store.questBonusReady);
 const shortcuts = computed(() => [
   pages.value.includes("jours") && { key: "jours", label: "Jours", icon: "solar:calendar-bold-duotone", badge: questReady.value, run: () => openPage("jours") },
   pages.value.includes("album") && { key: "album", label: "Album", icon: "solar:gallery-bold-duotone", badge: store.unlocked.length > gameBus.seenUnlocked, run: () => openPage("album") },

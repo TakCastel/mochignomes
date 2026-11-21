@@ -12,6 +12,11 @@
           <Icon :name="away.surprise.icon || 'solar:gift-bold-duotone'" class="s-icon" />
           <span>{{ away.surprise.text }}</span>
         </div>
+        <!-- retour après une pause : un cadeau, jamais de reproche (versé en disant bonjour) -->
+        <div v-if="store.returnGift > 0" class="surprise">
+          <Icon name="solar:dollar-minimalistic-bold-duotone" class="s-icon" />
+          <span>Elle t'a gardé {{ store.returnGift }} pièces.</span>
+        </div>
         <button class="cta" type="button" @click="hello">Coucou !</button>
       </section>
     </div>
@@ -36,6 +41,7 @@ const since = computed(() => {
 });
 
 function hello() {
+  if (store.returnGift > 0) store.claimReturnGift?.();
   store.dismissAway?.();
   gameCommand("react", "calin");
 }

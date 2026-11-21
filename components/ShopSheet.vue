@@ -11,7 +11,7 @@
     </div>
 
     <!-- onglets -->
-    <nav class="tabs" role="tablist" aria-label="Rayons de la boutique">
+    <nav v-if="tabs.length > 1" class="tabs" role="tablist" aria-label="Rayons de la boutique">
       <button
         v-for="t in tabs"
         :key="t.key"
@@ -107,15 +107,8 @@
           </button>
           <span v-for="f in floats.filter((x) => x.key === ing.id)" :key="f.id" class="float">+{{ f.n }}</span>
         </div>
-        <div v-for="ing in groceriesSoon" :key="ing.id" class="card row soon">
-          <span class="food">{{ ing.emoji }}</span>
-          <span class="row-txt">
-            <strong>{{ ing.label }}</strong>
-            <span class="sub">Arrive bientôt dans l'épicerie</span>
-          </span>
-          <Icon name="solar:lock-keyhole-bold" class="row-lock" />
-        </div>
       </div>
+      <p v-if="groceriesSoon.length" class="foot-note">D'autres ingrédients arriveront bientôt dans l'épicerie.</p>
       <button v-if="store.hasFeature?.('cuisine')" class="link" @click="emit('navigate', { to: 'cuisine' })">
         <Icon name="solar:chef-hat-bold-duotone" class="link-ic" />Aller cuisiner
       </button>
@@ -124,7 +117,7 @@
     <!-- ============ OBJETS ============ -->
     <section v-else-if="tab === 'objets'" class="pane">
       <div class="rows">
-        <div v-for="p in propRows" :id="'shop-' + p.prop.id" :key="p.prop.id" class="card row" :class="{ soon: p.state === 'soon' || p.state === 'locked', focus: focusId === p.prop.id }">
+        <div v-for="p in propRows.filter((r) => r.state === 'buy' || r.state === 'owned')" :id="'shop-' + p.prop.id" :key="p.prop.id" class="card row" :class="{ focus: focusId === p.prop.id }">
           <span class="prop-art"><Icon :name="p.prop.icon" class="prop-ic" /></span>
           <span class="row-txt">
             <strong>{{ p.prop.label }}</strong>
@@ -332,12 +325,22 @@ const curIcon = (cur) => (cur === "gems" ? "solar:star-bold-duotone" : "solar:do
 const colorLabel = (k) => (COLORS[k]?.label || k).toLowerCase();
 const basePrice = (id, color) => priceFor(id, color, inv.owned[id] || []);
 
+// objets (avant les onglets : le rayon Objets n'apparaît que s'il y a quelque chose à acheter)
+const propRows = computed(() => PROPS.map((p) => {
+  const act = activityById(p.activity);
+  if (p.soon) return { prop: p, state: "soon", sub: "Bientôt !" };
+  if (inv.hasProp(p.id)) return { prop: p, state: "owned", sub: act ? `Pour : ${act.label.toLowerCase()}` : "" };
+  if (act?.feature && !has(act.feature)) return { prop: p, state: "locked", sub: "Elle le découvrira en grandissant" };
+  return { prop: p, state: "buy", sub: act ? `Pour : ${act.label.toLowerCase()}` : "" };
+}));
 // ---------- onglets ----------
 const testMode = purchasesTestMode();
+// un rayon n'apparaît que lorsqu'il sert : l'épicerie avec la cuisine, les objets s'il y a
+// quelque chose à acheter (ils sont sinon offerts à la découverte de l'activité)
 const tabs = computed(() => [
   { key: "vetements", label: "Vêtements", icon: "solar:t-shirt-bold-duotone" },
-  has("cuisine") || has("boutique") ? { key: "epicerie", label: "Épicerie", icon: "solar:cart-large-2-bold-duotone" } : null,
-  { key: "objets", label: "Objets", icon: "solar:box-bold-duotone" },
+  has("cuisine") ? { key: "epicerie", label: "Épicerie", icon: "solar:cart-large-2-bold-duotone" } : null,
+  propRows.value.some((p) => p.state === "buy") ? { key: "objets", label: "Objets", icon: "solar:box-bold-duotone" } : null,
   testMode ? { key: "etoiles", label: "Test", icon: "solar:star-bold-duotone" } : null,
 ].filter(Boolean));
 const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "vetements");
@@ -551,13 +554,7 @@ function buyIng(ing) {
 }
 
 // ---------- objets ----------
-const propRows = computed(() => PROPS.map((p) => {
-  const act = activityById(p.activity);
-  if (p.soon) return { prop: p, state: "soon", sub: "Bientôt !" };
-  if (inv.hasProp(p.id)) return { prop: p, state: "owned", sub: act ? `Pour : ${act.label.toLowerCase()}` : "" };
-  if (act?.feature && !has(act.feature)) return { prop: p, state: "locked", sub: "Elle le découvrira en grandissant" };
-  return { prop: p, state: "buy", sub: act ? `Pour : ${act.label.toLowerCase()}` : "" };
-}));
+
 function buyPropRow(p) {
   const res = inv.buyProp(p.id);
   if (!res.ok) { gameToast(res.reason, p.icon); buzz(30); return; }

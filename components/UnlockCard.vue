@@ -17,11 +17,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 import { COLORS } from "~/lib/catalog";
 
 const { store } = useCreatureMood();
-const dismissedAt = ref(0);
+const turn = useOverlayTurn();
 let hideTimer = null;
 
 const who = () => store.name || "Elle";
@@ -61,7 +61,8 @@ function describe(key) {
 
 const card = computed(() => {
   const ev = store.unlockEvent;
-  if (!ev || ev.at <= dismissedAt.value) return null;
+  // une carte à la fois : attend son tour (retrouvailles d'abord) et l'écran principal libre
+  if (!ev || ev.seen || turn.value !== "unlock") return null;
   const d = describe(ev.key);
   if (!d) return null;
   return { ...d, icon: ev.icon || "solar:gift-bold-duotone", at: ev.at };
@@ -70,12 +71,12 @@ const card = computed(() => {
 // s'efface tout seul au bout d'un moment (la nouveauté reste accessible)
 watch(() => card.value?.at, (at) => {
   clearTimeout(hideTimer);
-  if (at) hideTimer = setTimeout(() => { dismissedAt.value = at; }, 16000);
+  if (at) hideTimer = setTimeout(() => store.ackUnlock(), 16000);
 }, { immediate: true });
 onBeforeUnmount(() => clearTimeout(hideTimer));
 
 function dismiss() {
-  if (card.value) dismissedAt.value = card.value.at;
+  store.ackUnlock();
 }
 function go() {
   const run = card.value?.run;

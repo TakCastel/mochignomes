@@ -23,7 +23,7 @@
         <!-- 1. Choisir une recette -->
         <div v-if="phase === 'list'" class="body list">
           <article
-            v-for="c in cards"
+            v-for="c in shownCards"
             :key="c.r.id"
             class="card"
             :class="{ locked: c.locked, ready: c.ready && !c.locked, wanted: c.wanted, flash: flashId === c.r.id }"
@@ -84,7 +84,8 @@
               </template>
             </div>
           </article>
-          <p v-if="!cards.length" class="empty">Aucune recette pour l'instant.</p>
+          <p v-if="!shownCards.length" class="empty">Aucune recette pour l'instant.</p>
+          <p v-if="hiddenCount" class="empty">Encore {{ hiddenCount }} recette{{ hiddenCount > 1 ? "s" : "" }} à découvrir en grandissant.</p>
         </div>
 
         <!-- 2. Cuire au bon moment -->
@@ -269,6 +270,11 @@ const cards = computed(() => {
   const rank = (c) => (c.r.id === props.focus || c.wanted ? 0 : c.locked ? 4 : c.ready ? 1 : c.affordable && !c.unbuyable ? 2 : 3);
   return list.sort((a, b) => rank(a) - rank(b) || (a.r.minLevel || 1) - (b.r.minLevel || 1));
 });
+
+// on ne montre que les recettes faisables (ou déjà connues) : les autres arrivent avec les niveaux
+// et l'épicerie complète, sans cartes cadenassées
+const shownCards = computed(() => cards.value.filter((c) => c.known || c.ready || c.wanted || c.r.id === props.focus || (!c.locked && !c.unbuyable)));
+const hiddenCount = computed(() => cards.value.length - shownCards.value.length);
 
 function buyMissing(c) {
   const miss = missingIngredients(c.r.id, inv.pantry);

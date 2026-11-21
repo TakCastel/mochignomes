@@ -33,16 +33,19 @@ const active = computed(() => {
   return p;
 });
 
-// pastilles : défi prêt à réclamer ou succès pas encore vu (Elle), coffre gratuit (Boutique),
-// nouveautés ou set à réclamer (Sac), envie de plat (Cuisine)
+// Pastille : UNE seule à la fois dans la barre, pour la chose la plus utile à faire
+// (récompense à prendre > nouveau vêtement ou set complet > coffre gratuit). Une envie de plat
+// se voit déjà dans sa bulle et sur la tuile Manger : pas de pastille en plus.
+// Seulement pour ce qui est réellement à faire, jamais pour une nouveauté pas encore découverte.
 const questReady = computed(() =>
   pages.value.includes("jours") && (
-    (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0 || !!store.questBonusReady
+    (has("defis") && (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed))
+    || store.pendingBonus > 0 || !!store.questBonusReady
   ));
-const newUnlocked = computed(() => pages.value.includes("album") && store.unlocked.length > gameBus.seenUnlocked);
-const sacBadge = computed(() => inv.unseenCount > 0 || (has("collection") && inv.setsReady.length > 0));
-const shopBadge = computed(() => !!inv.chestReady);
-const kitchenBadge = computed(() => store.wish?.action === "repas");
+const sacBadge = computed(() => has("sac") && (inv.unseenCount > 0 || (has("collection") && inv.setsReady.length > 0)));
+const shopBadge = computed(() => has("boutique") && !!inv.chestReady);
+const badgeKey = computed(() =>
+  (questReady.value && "elle") || (sacBadge.value && "sac") || (shopBadge.value && "boutique") || "");
 
 function goHome() {
   closePage();
@@ -58,15 +61,7 @@ const ALL = [
 ];
 // les entrées pas encore débloquées n'apparaissent pas
 const items = computed(() =>
-  ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({
-    ...t,
-    badge:
-      (t.key === "elle" && (questReady.value || newUnlocked.value)) ||
-      (t.key === "sac" && sacBadge.value) ||
-      (t.key === "boutique" && shopBadge.value) ||
-      (t.key === "cuisine" && kitchenBadge.value),
-  }))
-);
+  ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({ ...t, badge: badgeKey.value === t.key })));
 </script>
 
 <style scoped>

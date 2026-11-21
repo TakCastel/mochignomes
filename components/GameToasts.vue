@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { ACHIEVEMENTS } from "~/lib/achievements";
 import { levelInfo } from "~/stores/useTamagotchiStore";
 
@@ -25,17 +25,32 @@ watch(level, (lvl, old) => {
   }
 });
 
-function checkAchievements() {
+// Plusieurs succès d'un coup (ex. ancienne partie au démarrage) : un seul bandeau.
+// Avant l'Album (où on les retrouve), ils s'accumulent sans bruit.
+// Au démarrage (ancienne partie, retour) : rattrapage silencieux, rien ne s'empile sur
+// la carte des retrouvailles ; ils sont simplement marqués comme vus.
+let booted = false;
+onMounted(() => setTimeout(() => {
+  checkAchievements(true);
+  booted = true;
+}, 1500));
+function checkAchievements(silent = false) {
+  if (!booted && !silent) return;
+  const fresh = [];
   for (const a of ACHIEVEMENTS) {
     if (store.unlocked.includes(a.id)) continue;
     const [value, goal] = a.progress(store);
     if (value >= goal) {
       store.unlocked.push(a.id);
-      gameToast(`Succès : ${a.label}`, a.icon);
+      fresh.push(a);
     }
   }
+  if (silent) { markSeenUnlocked(store.unlocked.length); return; }
+  if (!fresh.length || !(store.unlockedPages || []).includes("album")) return;
+  const [first] = fresh;
+  gameToast(fresh.length > 1 ? `${fresh.length} nouveaux succès dans l'Album !` : `Succès : ${first.label}`, first.icon);
 }
-watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpdate || 0) / 60000)], checkAchievements);
+watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpdate || 0) / 60000)], () => checkAchievements());
 </script>
 
 <style scoped>

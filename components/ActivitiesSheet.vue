@@ -48,7 +48,7 @@ const cards = computed(() => {
   void store.tick; void store.energy; void store.isSleeping;
   const seen = inventory.stats?.tastesSeen || [];
   const favActivity = seen.includes("activity") ? store.tastes?.activity : null;
-  return ACTIVITIES.map((a) => {
+  const list = ACTIVITIES.map((a) => {
     const can = store.canActivity(a.id);
     let state = "ready";
     let reason = "";
@@ -68,9 +68,14 @@ const cards = computed(() => {
       state,
       reason,
       prop: can.needProp || "",
-      mastery: a.soon ? [] : MASTERY.filter((m) => m.kind === "score" && m.activity === a.id).map((m) => ({ ...m, done: mastered.includes(m.id) })),
+      // les défis de maîtrise parlent d'Étoiles : seulement une fois les Étoiles découvertes
+      mastery: a.soon || !store.features?.etoiles ? [] : MASTERY.filter((m) => m.kind === "score" && m.activity === a.id).map((m) => ({ ...m, done: mastered.includes(m.id) })),
     };
   }).sort((x, y) => RANK[x.state] - RANK[y.state]);
+  // une activité pas encore découverte reste une surprise (aucune carte « secret ») ;
+  // les cartes « bientôt » n'apparaissent qu'une fois toutes les activités découvertes
+  const hidden = list.some((c) => c.state === "locked");
+  return list.filter((c) => c.state !== "locked" && (c.state !== "soon" || !hidden));
 });
 </script>
 
