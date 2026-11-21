@@ -838,14 +838,14 @@ export const useTamagotchiStore = defineStore(
       const f = features.value;
       const lvl = topLevel.value;
       const reach = lvl >= FEATURES[key].level;
-      const did = (k) => (counters.value[k] || 0) > 0;
       // chaîne de la première visite : la suivante arrive une fois le tuto de la précédente fini
       // (checkUnlocks attend qu'aucun tuto ne soit en cours)
       switch (key) {
         // dès la fin du tutoriel
         case "ballon": return true;
-        // la 1re partie de foot rapporte les premières pièces
-        case "coins": return f.ballon && (did("activite:foot") || reach);
+        // la 1re partie de foot rapporte les premières pièces (débloquées sur place, voir l'activité) ;
+        // tuto du ballon passé sans jouer : elles arrivent quand même, sinon la chaîne resterait bloquée
+        case "coins": return !!f.ballon;
         case "sac": return !!f.coins;
         case "boutique": return !!f.sac;
         case "cuisine": return !!f.boutique;
@@ -1165,8 +1165,9 @@ export const useTamagotchiStore = defineStore(
         scheduleWish(now);
         return;
       }
-      // pas de nouvelle envie pendant le tuto d'une nouveauté : une seule chose à faire à la fois
-      if (wish.value || isSleeping.value || exhausted.value || guide.value) return;
+      // pas de nouvelle envie pendant le tuto d'une nouveauté ni tant que sa carte « Nouveau ! » attend :
+      // une seule chose à faire à la fois
+      if (wish.value || isSleeping.value || exhausted.value || guide.value || cardPending(now)) return;
       if (!nextWishAt.value) { scheduleWish(now); return; }
       if (now >= nextWishAt.value) {
         let bag = {};
