@@ -1,7 +1,8 @@
 # Déploiement Netlify : jeu 100 % navigateur (ssr: false), généré en site statique
+# (sur Netlify, Nitro écrit le site généré dans dist/)
 [build]
   command = "npm run generate"
-  publish = ".output/public"
+  publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
