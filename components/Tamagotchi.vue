@@ -152,7 +152,9 @@ watch(() => [gameBus.activity, activeActivity.value], ([a, b]) => { if (a || b) 
 // vue studio (HOME_VIEW dans lib/world3d.js) : fond bleu à la maison, prairie pendant les activités
 const studio = ref(false);
 const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
-watch(playing, (p) => creature.value?.setPlaying?.(p));
+// décor pendant l'activité : le foot se joue sur un terrain simplifié, les autres dans la prairie
+const playView = computed(() => (!playing.value ? false : (activeActivity.value || gameBus.activity) === "foot" ? "terrain" : true));
+watch(playView, (v) => creature.value?.setPlaying?.(v));
 // flèches « tourner » : à hauteur des pieds, de part et d'autre de la créature (elle fait ~0,8 fois sa hauteur de large),
 // sans sortir de l'écran ; elles s'écartent un peu quand on zoome
 // Sac ouvert (volet latéral) : pas d'anneau, il déborderait de la place libre ; on la tourne au doigt
@@ -460,7 +462,7 @@ onMounted(async () => {
     if (props.frame) creature.value.setFrame(props.frame);
     studio.value = !!creature.value.isStudio?.();
     emit("studio", studio.value);
-    creature.value.setPlaying?.(playing.value);
+    creature.value.setPlaying?.(playView.value);
     // partagée avec les activités 3D, la cuisine et l'essayage
     setLiveCreature(creature.value);
     // objets possédés posés dans le pré : les toucher lance l'activité
