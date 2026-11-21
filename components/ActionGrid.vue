@@ -243,12 +243,14 @@ function press(a) {
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--gap, 12px);
-  padding: 14px 10px;
-  border-radius: 26px;
-  background: var(--glass);
+  position: relative;
+  padding: 16px 10px 14px;
+  border-radius: 28px;
+  /* niveau 2 : verre clair lumineux, c'est le panneau héros */
+  background: var(--hud-light);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow), var(--glass-edge);
+  box-shadow: 0 12px 30px rgba(24, 64, 128, 0.26), var(--glass-edge), inset 0 -10px 22px rgba(108, 194, 255, 0.22);
   animation: panel-in 0.55s var(--spring) 0.1s both;
 }
 @keyframes panel-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } }
@@ -280,10 +282,23 @@ function press(a) {
   border: 3px solid #fff;
   border-radius: 50%;
   /* pastille pastel de la couleur de l'action : le contour blanc de l'objet ressort dessus */
-  background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--c1) 28%, #fff), color-mix(in srgb, var(--c1) 72%, #fff) 78%);
-  box-shadow: 0 4px 10px color-mix(in srgb, var(--c2) 22%, transparent), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 -3px 6px color-mix(in srgb, var(--c2) 14%, transparent);
+  background: radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--c1) 34%, #fff), color-mix(in srgb, var(--c1) 88%, #fff) 70%, color-mix(in srgb, var(--c2) 38%, var(--c1)) 100%);
+  box-shadow: 0 6px 12px color-mix(in srgb, var(--c2) 34%, transparent), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 -4px 8px color-mix(in srgb, var(--c2) 26%, transparent);
   transition: transform 0.42s var(--spring-strong), box-shadow 0.2s;
 }
+/* reflet de verre en haut du disque */
+.disc::after {
+  content: "";
+  position: absolute;
+  top: 5%;
+  left: 17%;
+  width: 66%;
+  height: 34%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+.disc .emoji, .disc .ic { position: relative; z-index: 1; }
 /* pression : le disque s'écrase vite puis rebondit au relâcher */
 .tile:active .disc { transform: scale(0.86); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); transition-duration: 0.08s; }
 .disc .emoji { transition: transform 0.5s var(--spring-strong); }
@@ -321,10 +336,24 @@ function press(a) {
   0%, 100% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55), 0 4px 10px rgba(30, 70, 120, 0.15); }
   50% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 18px 8px rgba(108, 194, 255, 0.35), 0 4px 10px rgba(30, 70, 120, 0.15); }
 }
-.off .ic { opacity: 0.45; }
-.off .disc { filter: grayscale(0.7); }
-.off .lbl { opacity: 0.6; }
-.lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* indisponible : disque désaturé mais clair, objet encore lisible (pas « cassé ») */
+.off .disc { filter: saturate(0.4) brightness(1.03); box-shadow: 0 3px 8px rgba(40, 70, 110, 0.16), inset 0 -3px 6px rgba(80, 100, 130, 0.12); }
+.off .emoji, .off .ic { opacity: 0.8; }
+.off .lbl { color: var(--ink-3); background: rgba(255, 255, 255, 0.5); }
+.lbl {
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 1px 3px rgba(30, 70, 120, 0.12);
+  font: 800 11px/1 var(--font-text);
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.35s var(--spring-strong);
+}
+.tile:active .lbl { transform: scale(0.94); }
 /* anneau de recharge : rempli en continu par une animation linéaire
    (durée = recharge totale, délai négatif = temps déjà écoulé) */
 @property --p {
@@ -400,6 +429,6 @@ function press(a) {
 @media (prefers-reduced-motion: reduce) {
   .wanted .disc, .glow .disc, .wiggle .disc, .tile, .panel { animation: none; }
   .best .disc { animation: none; box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55); }
-  .disc, .disc .emoji { transition: none; }
+  .disc, .disc .emoji, .lbl { transition: none; }
 }
 </style>
