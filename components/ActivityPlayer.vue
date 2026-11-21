@@ -85,8 +85,8 @@
         <p v-if="result.falloff < 1 && !act?.noScore" class="ui-caption">Elle préfère varier : les gains baissent un peu aujourd'hui.</p>
 
         <div class="ui-actions">
-          <button class="ui-btn ui-btn--secondary" @click="close">Retour</button>
           <button v-if="canReplay" class="ui-btn ui-btn--primary" @click="replay">Rejouer</button>
+          <button class="ui-btn ui-btn--secondary" @click="close">Retour</button>
         </div>
       </div>
     </div>

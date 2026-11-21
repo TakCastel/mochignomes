@@ -35,7 +35,7 @@ function describe(key) {
     case "ballon":
       return { title: `${who()} a trouvé un ballon !`, text: "Il est posé dans l'herbe. Touche-le (ou ce bouton) pour jouer au foot avec elle.", cta: "Jouer au ballon", run: () => launchActivity("foot") };
     case "coins":
-      return { title: "Tes premières pièces !", text: "Les parties, ses envies exaucées et les défis en rapportent. Garde-les pour lui faire plaisir." };
+      return { title: "Tes premières pièces !", text: "Garde-les bien : très vite, une boutique ouvre pour lui acheter des vêtements de toutes les couleurs. Les parties, ses envies exaucées et les défis en rapportent." };
     case "sac": {
       const c = COLORS[store.tastes?.color]?.label?.toLowerCase();
       return { title: "Un t-shirt rien que pour elle", text: c ? `En ${c}, sa couleur préférée ! Il l'attend dans le Sac.` : "Dans sa couleur préférée ! Il l'attend dans le Sac.", cta: "Ouvrir le Sac", run: () => openPage("sac", { tab: "tenues", focus: "tshirt" }) };
