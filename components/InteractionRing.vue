@@ -21,6 +21,7 @@
           'is-glow': a.glow,
           'is-off': !!a.reason,
           'is-wiggle': wiggling === a.key,
+          'is-back': a.back,
         }"
         :style="{ '--c1': a.color[0], '--c2': a.color[1] }"
         :aria-disabled="a.reason ? 'true' : undefined"
@@ -32,7 +33,7 @@
           <span v-if="a.cool" :key="a.cool.readyAt" class="cool-fill" :style="a.cool.style" aria-hidden="true" />
         </span>
         <span class="lbl">{{ a.label }}</span>
-        <span class="obj" aria-hidden="true">
+        <span v-if="!a.back" class="obj" aria-hidden="true">
           <img v-if="a.img" :src="a.img" class="emoji" alt="" draggable="false" />
           <Icon v-else :name="a.icon" mode="svg" class="ic" />
         </span>
@@ -498,6 +499,8 @@ onBeforeUnmount(() => {
 .pill-btn.is-right { padding: 0 26px 0 14px; }
 .pill-btn.is-primary { scale: 1.08; }
 .pill-btn.is-big { min-width: 140px; height: 48px; padding: 0 18px 0 34px; }
+/* « Retour » : pas d'objet qui déborde, texte centré */
+.pill-btn.is-back { padding: 0 16px; }
 .body {
   position: absolute;
   inset: 0;
