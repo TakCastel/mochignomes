@@ -42,7 +42,7 @@ npm run dev
 ## ☁️ Déploiement sur Netlify
 
 Le jeu tourne entièrement dans le navigateur (`ssr: false`) et se publie comme un site statique.
-Tout est réglé dans `netlify.toml` (commande `npm run generate`, dossier `.output/public`, Node 22,
+Tout est réglé dans `netlify.toml` (commande `npm run generate`, dossier `dist`, Node 22,
 redirection monopage, cache du service worker désactivé).
 
 1. Sur [Netlify](https://app.netlify.com/) : **Add new site → Import an existing project → GitHub**, choisir le dépôt.
