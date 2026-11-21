@@ -122,10 +122,10 @@ function tap(n) {
 /* jauge brillante : reflet en haut, remplissage à ressort */
 .fill { position: relative; display: block; height: 100%; border-radius: 999px; transition: width 0.8s var(--spring), background 0.4s; box-shadow: 0 0 8px rgba(255, 255, 255, 0.25); }
 .fill::after { content: ""; position: absolute; left: 3px; right: 3px; top: 1px; height: 40%; border-radius: inherit; background: rgba(255, 255, 255, 0.6); }
-.good { background: linear-gradient(180deg, #8ff06a, #3fc22b); }
-.ok { background: linear-gradient(180deg, #f1ef5e, #cfd11f); }
-.low { background: linear-gradient(180deg, #ffc067, #ff8f1f); }
-.bad { background: linear-gradient(180deg, #ff8579, #ec3f35); }
+.fill.good { background: linear-gradient(180deg, #8ff06a, #3fc22b); }
+.fill.ok { background: linear-gradient(180deg, #f1ef5e, #cfd11f); }
+.fill.low { background: linear-gradient(180deg, #ffc067, #ff8f1f); }
+.fill.bad { background: linear-gradient(180deg, #ff8579, #ec3f35); }
 /* besoin critique : la pastille et la barre palpitent */
 .cell.bad .chip { animation: alert 1.2s ease-in-out infinite; }
 .fill.bad { animation: pulse 1.2s ease-in-out infinite; }

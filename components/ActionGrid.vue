@@ -384,7 +384,7 @@ function press(a) {
   animation: pulse 1.3s ease-in-out infinite;
 }
 .glow .disc { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
-.dot { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
+.dot { position: absolute; z-index: 2; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
   50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }
@@ -412,6 +412,7 @@ function press(a) {
   100% { transform: translate(calc(-50% + var(--fx)), -58px) scale(0.95); opacity: 0; }
 }
 .lock {
+  z-index: 2;
   position: absolute;
   top: 2px;
   right: 2px;
