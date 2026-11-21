@@ -389,8 +389,10 @@ function onPoke(p) {
   // le menu vient de se fermer à cause de CE toucher (pointerdown hors menu) : bascule = il reste fermé
   if (!ring.value && now - ringClosedAt < 650) return;
   if (ring.value) {
-    // déjà ouvert : un toucher le ferme, mais en rafale il reste ouvert
-    if (n < 3) closeRing();
+    // déjà ouvert : un toucher le ferme, mais en rafale il reste ouvert ;
+    // épinglé pendant le tutoriel et sur l'étape d'un tuto (Foot, Télé…) : il reste ouvert
+    const pinned = (store.onboardStep ?? 6) < 6 || (!!ring.value.focus && currentGuideStep(store)?.ring === ring.value.focus);
+    if (n < 3 && !pinned) closeRing();
     return;
   }
   if (n >= 3) return; // en rafale on ne rouvre pas à chaque toucher
