@@ -77,7 +77,7 @@
           </span>
         </button>
       </div>
-      <p class="ui-foot-note">Tout s'achète avec des pièces gagnées en jouant. Touche un article pour choisir sa couleur et l'essayer.</p>
+      <p class="ui-foot-note">Tout s'achète avec des pièces gagnées en jouant. Clique sur un article pour choisir sa couleur et l'essayer.</p>
     </section>
 
     <!-- ============ ÉPICERIE ============ -->

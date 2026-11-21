@@ -1,6 +1,6 @@
 <template>
   <div class="ui-stack acts">
-    <p class="ui-text">Ses jeux, ses records. Tu peux aussi toucher les objets posés dans le pré.</p>
+    <p class="ui-text">Ses jeux, ses records. Tu peux aussi cliquer sur les objets posés dans le pré.</p>
     <article
       v-for="c in cards"
       :key="c.id"

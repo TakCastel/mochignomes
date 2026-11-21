@@ -33,7 +33,7 @@ const pages = () => store.unlockedPages || [];
 function describe(key) {
   switch (key) {
     case "ballon":
-      return { title: `${who()} a trouvé un ballon !`, text: "Touche ce bouton pour jouer au ballon avec elle !", cta: "Jouer au ballon", run: () => launchActivity("foot") };
+      return { title: `${who()} a trouvé un ballon !`, text: "Clique sur ce bouton pour jouer au ballon avec elle !", cta: "Jouer au ballon", run: () => launchActivity("foot") };
     case "coins":
       return { title: "Tes premières pièces !", text: "Garde-les bien : très vite, une boutique ouvre pour lui acheter des vêtements de toutes les couleurs. Les parties, ses envies exaucées et les défis en rapportent." };
     case "sac": {
