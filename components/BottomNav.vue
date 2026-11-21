@@ -9,7 +9,7 @@
           <stop offset="1" style="stop-color: var(--panel-bottom, #e9f0fa)" />
         </linearGradient>
       </defs>
-      <path :d="path" fill="url(#navFill)" stroke="#dbe5f2" stroke-width="1" />
+      <path :d="path" fill="url(#navFill)" style="stroke: var(--hud-line, #dbe5f2)" stroke-width="1" />
     </svg>
 
     <!-- bouton principal : la bulle 3D de l'onglet actif, logé dans l'onglet -->
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
   top: calc(-1 * var(--tab));
   overflow: visible;
   pointer-events: none;
-  filter: drop-shadow(0 -3px 6px rgba(30, 55, 100, 0.08)) drop-shadow(0 -10px 22px rgba(30, 55, 100, 0.12));
+  filter: var(--nav-shadow, drop-shadow(0 -3px 6px rgba(30, 55, 100, 0.08)) drop-shadow(0 -10px 22px rgba(30, 55, 100, 0.12)));
 }
 .orb-track {
   position: absolute;
@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
   animation: ic-in 0.5s var(--spring-strong);
 }
 .orb-track:active .orb { transform: scale(0.92); transition: transform 0.08s; }
-.orb .badge { top: 3px; right: 3px; box-shadow: 0 0 0 2px #fff; }
+.orb .badge { top: 3px; right: 3px; box-shadow: 0 0 0 2px var(--surface); }
 /* l'humeur posée sur l'onglet : pastille de couleur + mot, sans fond à elle */
 .mood {
   position: absolute;
