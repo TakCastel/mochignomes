@@ -22,7 +22,7 @@
 
     <!-- ============ TENUES : la garde-robe ============ -->
     <section v-if="tab === 'tenues'" class="pane">
-      <WardrobeSheet :focus="focusItem" />
+      <WardrobeSheet :focus="focusItem" @shop="(id) => emit('navigate', { to: 'boutique', tab: 'vetements', focus: id || '' })" />
     </section>
 
     <!-- ============ FRIGO ============ -->

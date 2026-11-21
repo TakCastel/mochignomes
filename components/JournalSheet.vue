@@ -25,13 +25,13 @@
       <Icon name="solar:gift-bold-duotone" class="gift" />
       <div class="grow">
         <strong>Bonus du jour</strong>
-        <span class="small">+{{ store.pendingBonus }} points t'attendent</span>
+        <span class="small">+{{ store.pendingBonus }} xp{{ store.pendingBonusCoins ? ` et ${store.pendingBonusCoins} pièces` : "" }} t'attendent</span>
       </div>
       <button class="btn" @click="claimBonus">Récupérer</button>
     </section>
 
-    <!-- défis -->
-    <section class="card">
+    <!-- défis (après leur découverte) -->
+    <section v-if="store.features?.defis" class="card">
       <h3>Les 3 défis du jour</h3>
       <ul class="quests">
         <li v-for="q in quests" :key="q.id" :class="{ claimed: q.claimed }">
@@ -41,10 +41,14 @@
             <span class="small">{{ Math.min(q.progress, q.target) }} / {{ q.target }}</span>
           </div>
           <button v-if="q.claimed" class="done" aria-label="Récupéré"><Icon name="solar:check-circle-bold" class="done-ic" /></button>
-          <button v-else class="btn" :disabled="q.progress < q.target" @click="claim(q)">+10</button>
+          <button v-else class="btn" :disabled="q.progress < q.target" @click="claim(q)">{{ rewardLabel(q) }}</button>
         </li>
         <li v-if="!quests.length" class="empty">Les défis arrivent avec le prochain jour.</li>
       </ul>
+      <button v-if="store.questBonusReady" class="btn wide" @click="claimQuestBonus">
+        <Icon name="solar:gift-bold-duotone" class="btn-ic" />Bonus des 3 défis
+      </button>
+      <p v-else-if="store.questsAllDone" class="small all-done">Tout est fait, à demain !</p>
     </section>
 
     <!-- journal narratif -->
@@ -72,13 +76,17 @@ const quests = computed(() => store.quests?.list || []);
 const pipsOn = computed(() => ((store.streak || 0) > 0 ? ((store.streak - 1) % 7) + 1 : 0));
 const entries = computed(() => (store.journal || []).slice(0, 40));
 
+// les gains s'envolent en « +N » (CoinBurst) : pas de toast pour un défi
+const rewardLabel = (q) => (store.features?.coins && q.coins ? `+${q.coins}` : `+${q.xp ?? 10} xp`);
 function claim(q) {
   store.claimQuest(q.id);
-  gameToast("Défi réussi, +10 points !", "solar:cup-star-bold-duotone");
 }
 function claimBonus() {
-  const n = store.claimBonus();
-  gameToast(`Bonus du jour : +${n} points`, "solar:gift-bold-duotone");
+  store.claimBonus();
+}
+function claimQuestBonus() {
+  const r = store.claimQuestBonus();
+  if (r.ok) gameToast("Les 3 défis du jour sont faits, bravo !", "solar:cup-star-bold-duotone");
 }
 function when(t) {
   const d = new Date(t);
@@ -131,4 +139,7 @@ h3 { margin: 0 0 10px; font: 600 17px "Fredoka", "Nunito", system-ui, sans-serif
 .empty { font-weight: 700; color: #6b7686; font-size: 14px; }
 .log li { display: flex; gap: 10px; align-items: flex-start; font-weight: 700; font-size: 14px; color: var(--ink); }
 .log-ic { flex: none; width: 24px; height: 24px; color: #7a8494; margin-top: 1px; }
+.wide { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; }
+.btn-ic { width: 22px; height: 22px; }
+.all-done { text-align: center; margin-top: 10px; }
 </style>

@@ -24,6 +24,9 @@
       <button v-if="c.state === 'ready' || c.state === 'tired'" class="play" :disabled="c.state !== 'ready'" @click="emit('launch', c.id)">
         <Icon name="solar:play-bold" class="play-ic" />
       </button>
+      <button v-else-if="c.state === 'prop' && c.prop && store.features?.boutique" class="play shop" :aria-label="`Trouver ${c.reason} à la boutique`" @click="navigate({ to: 'boutique', tab: 'objets', focus: c.prop })">
+        <Icon name="solar:shop-bold-duotone" class="play-ic" />
+      </button>
     </article>
   </div>
 </template>
@@ -64,6 +67,7 @@ const cards = computed(() => {
       fav: favActivity === a.id,
       state,
       reason,
+      prop: can.needProp || "",
       mastery: a.soon ? [] : MASTERY.filter((m) => m.kind === "score" && m.activity === a.id).map((m) => ({ ...m, done: mastered.includes(m.id) })),
     };
   }).sort((x, y) => RANK[x.state] - RANK[y.state]);
@@ -109,4 +113,5 @@ h3 { margin: 0; font-size: 16px; font-weight: 900; color: #2b3440; display: flex
 .play:active { transform: translateY(2px); box-shadow: 0 2px 0 #2f8f22; }
 .play:disabled { background: #d9dee5; box-shadow: 0 4px 0 #c3cad3; cursor: default; }
 .play-ic { width: 24px; height: 24px; color: #fff; }
+.play.shop { background: linear-gradient(180deg, #ffc76a, #f29a1a); box-shadow: 0 4px 0 #c97a0c; }
 </style>

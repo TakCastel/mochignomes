@@ -707,7 +707,7 @@ export const useTamagotchiStore = defineStore(
       if (!silent) {
         const f = FEATURES[key];
         unlockEvent.value = { key, label: f.label, icon: f.icon, at: now };
-        safeToast(`Nouveau : ${f.label} !`, f.icon);
+        // pas de toast : components/UnlockCard.vue raconte la découverte
         if (say) { try { gameSay(say); } catch { /* hors navigateur */ } }
       }
       return true;

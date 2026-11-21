@@ -17,6 +17,15 @@
       </div>
     </section>
 
+    <!-- raccourcis : ses journées, l'album, ses jeux (hors de la barre du bas) -->
+    <nav v-if="shortcuts.length" class="shortcuts" aria-label="Plus">
+      <button v-for="c in shortcuts" :key="c.key" class="short" @click="c.run">
+        <Icon :name="c.icon" class="short-ic" />
+        <span>{{ c.label }}</span>
+        <span v-if="c.badge" class="short-dot" aria-hidden="true" />
+      </button>
+    </nav>
+
     <p v-if="sulking" class="note sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
     <p v-if="store.illness" class="note sick">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
     <p v-else-if="store.exhausted" class="note tired">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
@@ -63,17 +72,8 @@
       </details>
     </section>
 
-    <!-- préférences découvertes -->
-    <section class="card">
-      <h3>Ce que tu as découvert</h3>
-      <ul class="prefs">
-        <li v-for="p in prefs" :key="p.label" :class="{ locked: !p.value }">
-          <span class="plabel">{{ p.label }}</span>
-          <strong>{{ p.value || "???" }}</strong>
-        </li>
-      </ul>
-      <p class="small">Continue de passer du temps avec elle pour en savoir plus.</p>
-    </section>
+    <!-- carnet « Ce qu'elle aime » : ses goûts découverts en jouant -->
+    <TastesCard />
   </div>
 </template>
 
@@ -90,18 +90,14 @@ const traitRows = computed(() =>
   Object.entries(TRAIT_INFO).map(([key, info]) => ({ key, ...info, value: store.traits[key] || 0 }))
 );
 
-const n = (k) => store.counters[k] || 0;
-const prefs = computed(() => {
-  const acts = [
-    ["Jouer", n("jouer")], ["Danser", n("danser")], ["Les câlins", n("calin") + n("chatouiller")], ["Manger", n("nourrir")],
-  ].sort((a, b) => b[1] - a[1]);
-  const rituals = [["Le bain", n("laver")], ["Les câlins", n("calin")]].sort((a, b) => b[1] - a[1]);
-  return [
-    { label: "Activité préférée", value: acts[0][1] >= 5 ? acts[0][0] : "" },
-    { label: "Petit rituel", value: rituals[0][1] >= 5 ? rituals[0][0] : "" },
-    { label: "Souvenirs", value: n("photo") >= 3 ? `${n("photo")} photos` : "" },
-  ];
-});
+const pages = computed(() => store.unlockedPages || []);
+const questReady = computed(() =>
+  (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0 || !!store.questBonusReady);
+const shortcuts = computed(() => [
+  pages.value.includes("jours") && { key: "jours", label: "Jours", icon: "solar:calendar-bold-duotone", badge: questReady.value, run: () => openPage("jours") },
+  pages.value.includes("album") && { key: "album", label: "Album", icon: "solar:gallery-bold-duotone", badge: store.unlocked.length > gameBus.seenUnlocked, run: () => openPage("album") },
+  store.features?.ballon && { key: "activites", label: "Jeux", icon: "solar:cup-star-bold-duotone", badge: false, run: () => openSheet("activites") },
+].filter(Boolean));
 
 const editing = ref(false);
 const draft = ref("");
@@ -193,8 +189,24 @@ h3 { margin: 0 0 10px; font: 600 17px "Fredoka", "Nunito", system-ui, sans-serif
 .how { margin-top: 12px; font-size: 14px; color: #5b6676; }
 .how summary { cursor: pointer; font-weight: 800; min-height: 32px; }
 .how ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
-.prefs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.prefs li { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 14px; background: #f1f5f9; }
-.prefs li.locked strong { color: #a5afbd; letter-spacing: 2px; }
-.plabel { font-weight: 700; font-size: 14px; color: #5b6676; }
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
+.short {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  color: #3c9a22;
+  font: 800 13px "Nunito", system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(40, 55, 80, 0.1);
+  cursor: pointer;
+}
+.short span { color: var(--ink); }
+.short-ic { width: 28px; height: 28px; }
+.short-dot { position: absolute; top: 8px; right: calc(50% - 22px); width: 10px; height: 10px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 0 2px #fff; }
 </style>

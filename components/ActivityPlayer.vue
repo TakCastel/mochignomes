@@ -29,6 +29,8 @@
     <Transition name="pop">
       <div v-if="phase === 'intro'" :key="count" class="count">{{ count > 0 ? count : "Go !" }}</div>
     </Transition>
+    <!-- premières parties : comment jouer -->
+    <p v-if="phase === 'intro' && tip" class="tip">{{ tip }}</p>
 
     <!-- pause -->
     <div v-if="paused && phase === 'play'" class="center">
@@ -49,7 +51,10 @@
         <span class="badge soft"><Icon :name="act?.icon || 'solar:gamepad-bold-duotone'" class="badge-ic" /></span>
         <h3>{{ act?.label || "Activité" }}</h3>
         <p class="muted">{{ blockedReason }}</p>
-        <div class="btns"><button class="btn" @click="close">Retour</button></div>
+        <div class="btns">
+          <button class="btn" :class="{ ghost: blockedProp }" @click="close">Retour</button>
+          <button v-if="blockedProp" class="btn" @click="goShop">Voir la boutique</button>
+        </div>
       </div>
     </div>
 
@@ -115,6 +120,13 @@ const score = ref(0);
 const scorePop = ref(false);
 const paused = ref(false);
 const blockedReason = ref("");
+const blockedProp = ref(""); // objet manquant : lien vers la boutique (Objets)
+// conseil affiché pendant le 3-2-1 des premières parties
+const TIPS = {
+  foot: "Touche l'écran quand le cercle autour du ballon devient vert !",
+  course: "Touche pour sauter, glisse à gauche ou à droite pour changer de couloir.",
+};
+const tip = computed(() => ((store.counters?.[`activite:${props.activityId}`] || 0) < 3 ? TIPS[props.activityId] || "" : ""));
 const result = ref(null);
 const hud = reactive({ text: "", timeLeft: null, combo: 0 });
 const timeMax = ref(0);
@@ -138,6 +150,7 @@ function begin() {
   const a = act.value;
   if (!a) return block("Activité inconnue.");
   const can = store.canActivity(props.activityId);
+  blockedProp.value = can.needProp && store.features?.boutique ? can.needProp : "";
   if (!can.ok) return block(can.reason);
   if (!liveCreature.value) return block("La 3D n'est pas disponible sur cet appareil.");
   if (a.noScore) return launch();
@@ -242,6 +255,11 @@ function settle(res) {
 }
 
 function replay() { begin(); }
+function goShop() {
+  const prop = blockedProp.value;
+  emit("close");
+  navigate({ to: "boutique", tab: "objets", focus: prop });
+}
 function close() {
   if (ctrl?.running) ctrl.abort();
   emit("close");
@@ -330,6 +348,23 @@ onBeforeUnmount(() => {
   transition: background 0.25s;
 }
 .ap.dim { background: rgba(30, 45, 35, 0.12); }
+.tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18%);
+  z-index: 3;
+  width: min(340px, calc(100% - 40px));
+  margin: 0;
+  padding: 12px 16px;
+  transform: translateX(-50%);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.2);
+  text-align: center;
+  font-weight: 800;
+  font-size: 15px;
+  pointer-events: none;
+}
 .capture { position: absolute; inset: 0; touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
 
 .hud {

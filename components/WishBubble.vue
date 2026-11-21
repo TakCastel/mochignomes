@@ -11,6 +11,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import * as dialogue from "~/lib/dialogue";
+import { useInventoryStore } from "~/stores/useInventoryStore";
 
 // Bulle de pensée : envie courante, sinon besoin le plus urgent, sinon une petite phrase
 const { store } = useCreatureMood();
@@ -52,9 +53,23 @@ const shown = computed(() => {
   return null;
 });
 
+const inv = useInventoryStore();
 function tap() {
   const a = shown.value?.action;
-  if (a) highlightAction(a);
+  if (!a) return;
+  const w = store.wish;
+  // envies « objets possédés » : on emmène directement au bon endroit
+  if (shown.value.wish && w?.target) {
+    if (a === "activite") return launchActivity(w.target);
+    if (a === "repas") {
+      if ((inv.meals?.[w.target] || 0) > 0) return openSheet("manger");
+      if (store.features?.cuisine) return openKitchen(w.target);
+    }
+    if (a === "tenue" && store.features?.sac) return openPage("sac", { tab: "tenues", focus: w.target });
+  }
+  if (a === "repas" || a === "nourrir") return highlightAction("nourrir");
+  if (a === "activite") return highlightAction("jouer");
+  highlightAction(a);
 }
 
 onMounted(() => {

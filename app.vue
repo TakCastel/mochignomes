@@ -7,17 +7,23 @@
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
     <main class="ui">
-      <ProfileBar class="hit pad" />
+      <!-- pendant une activité 3D, l'interface s'efface (le mini-jeu a son propre HUD) -->
+      <ProfileBar class="hit pad" :class="{ away: playing }" />
       <div ref="middle" class="middle" />
-      <div class="pad stack">
+      <div class="pad stack" :class="{ away: playing }">
         <StatsStrip class="hit" />
         <ActionGrid class="hit" />
       </div>
-      <BottomNav class="hit" :style="{ '--mood': moodColor }" />
+      <BottomNav class="hit" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
     </main>
 
+    <!-- « +N » volants des gains (aucun montant total sur l'écran principal) -->
+    <CoinBurst />
     <GameToasts />
     <GameSheet />
+    <!-- nouveauté débloquée : « Elle a trouvé un ballon ! » -->
+    <UnlockCard v-if="!playing" />
+    <LazyActivityPlayer v-if="gameBus.activity" :key="gameBus.activity" :activity-id="gameBus.activity" @close="closeActivity" />
     <AwayCard />
     <WelcomeCard />
     <NotifPrompt />
@@ -30,8 +36,10 @@ import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
 import { PALETTES, DEFAULT_PALETTE, paletteVars, UI_THEMES } from "~/lib/palettes";
 import { MOOD_LABELS } from "~/lib/creatureLook";
+import { activeActivity } from "~/composables/useLiveCreature";
 
 const store = useTamagotchiStore();
+const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
 const dead = computed(() => store.health <= 0);
 const { mood } = useCreatureMood();
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#52c234");
@@ -175,6 +183,8 @@ body {
 .stack { display: flex; flex-direction: column; gap: var(--gap); }
 /* seuls les éléments d'interface captent le toucher, le reste va à la créature */
 .hit { pointer-events: auto; }
+/* activité en cours : on garde la place (le cadrage de la créature ne bouge pas) mais tout s'efface */
+.ui .away { visibility: hidden; pointer-events: none; }
 .middle {
   position: relative;
   flex: 1;

@@ -297,7 +297,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, unref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { gameToast } from "~/composables/useCreatureMood";
@@ -307,9 +307,7 @@ import {
 } from "~/lib/catalog";
 import { itemIcon, swatchBg, inkFor } from "~/lib/itemIcons";
 import { purchasesTestMode, visiblePacks, buyGemPack } from "~/lib/payments";
-// écrits en parallèle : on n'utilise que ce qui existe (essayage facultatif)
-import * as cosmetics from "~/lib/cosmetics3d";
-import * as live from "~/composables/useLiveCreature";
+import { useOutfitPreview } from "~/composables/useOutfit";
 
 const props = defineProps({
   // onglet initial : "vetements" | "epicerie" | "objets" (| "etoiles" en mode test)
@@ -495,30 +493,17 @@ function wear() {
 }
 
 // ---------- essayage gratuit (aperçu 3D, sans acheter) ----------
-let liveHandle = null;
-try {
-  const fn = live.useLiveCreature || live.default;
-  liveHandle = typeof fn === "function" ? fn() : (live.liveCreature ?? null);
-} catch { liveHandle = null; }
-function creatureNow() {
-  let c = unref(liveHandle);
-  if (c && typeof c === "object" && "creature" in c) c = unref(c.creature);
-  return c || null;
-}
-const canTry = computed(() => typeof cosmetics.previewOutfit === "function" && !!detail.value);
+// useOutfitPreview agit sur la créature habillée par bindOutfit (Tamagotchi.vue)
+const outfitPreview = useOutfitPreview();
+const canTry = computed(() => !!detail.value && !!outfitPreview.creature.value);
 const trying = ref(false);
-let restoreFn = null;
 let hiddenOverlay = null;
 
 function preview() {
-  const c = creatureNow();
-  if (!c || !detail.value) return false;
+  if (!detail.value) return false;
   const item = itemById(detail.value.id);
-  const outfit = { ...inv.outfit, [item.slot]: { id: item.id, color: detail.value.color } };
   try {
-    const r = cosmetics.previewOutfit(c, outfit);
-    if (typeof r === "function") restoreFn = r;
-    return true;
+    return outfitPreview.preview({ [item.slot]: { id: item.id, color: detail.value.color } });
   } catch { return false; }
 }
 function startTry() {
@@ -532,20 +517,14 @@ function startTry() {
   hiddenOverlay = root.value?.closest(".overlay") || null;
   if (hiddenOverlay) hiddenOverlay.classList.add("shop-trying");
 }
-function stopTry(keep = false) {
+function stopTry() {
   if (!trying.value) return;
   trying.value = false;
   emit("tryon", false);
   if (hiddenOverlay) hiddenOverlay.classList.remove("shop-trying");
   hiddenOverlay = null;
-  if (keep) { restoreFn = null; return; }
-  const c = creatureNow();
-  try {
-    if (restoreFn) restoreFn();
-    else if (c && typeof cosmetics.applyOutfit === "function") cosmetics.applyOutfit(c, inv.outfit);
-    else if (c) cosmetics.previewOutfit(c, inv.outfit);
-  } catch { /* la scène se remettra à jour avec la tenue */ }
-  restoreFn = null;
+  // après achat + équipement, la tenue portée contient déjà l'article
+  try { outfitPreview.endPreview(); } catch { /* la scène se remettra à jour avec la tenue */ }
 }
 
 // ---------- épicerie ----------

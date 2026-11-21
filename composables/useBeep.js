@@ -1,10 +1,16 @@
 // Petits bips WebAudio (aucun fichier son). Respecte le réglage « tamagotchi-sound » (0/off = muet).
 //   import { beep } from "~/composables/useBeep";  beep("ball")
 //   const { beep, haptic } = useBeep()
-// kinds : tap, ball, kick, goal, coin, fruit, fail, star, record, zap, count, go, love, end
+// kinds : tap, ball, perfect, kick, goal, coin, fruit, fail, miss, hit, jump, tick, star, record, zap, count, go, love, end
+// (un nom inconnu est ignoré sans erreur)
 const SOUNDS = {
   tap: [[660, 0.05, "sine", 0.12]],
   ball: [[520, 0.06, "triangle", 0.22], [780, 0.05, "triangle", 0.12, 0.04]],
+  perfect: [[660, 0.06, "triangle", 0.22], [990, 0.06, "triangle", 0.18, 0.04], [1320, 0.1, "triangle", 0.14, 0.08]],
+  miss: [[420, 0.12, "triangle", 0.12], [280, 0.18, "triangle", 0.1, 0.1]],
+  hit: [[160, 0.12, "sawtooth", 0.1], [110, 0.16, "sine", 0.18, 0.04]],
+  jump: [[420, 0.1, "sine", 0.16], [720, 0.08, "sine", 0.1, 0.06]],
+  tick: [[1200, 0.03, "square", 0.04]],
   kick: [[180, 0.08, "square", 0.12], [90, 0.08, "sine", 0.2, 0.02]],
   goal: [[523, 0.1, "triangle", 0.2], [659, 0.1, "triangle", 0.2, 0.09], [784, 0.1, "triangle", 0.2, 0.18], [1047, 0.22, "triangle", 0.22, 0.27]],
   coin: [[988, 0.06, "square", 0.08], [1319, 0.12, "square", 0.08, 0.06]],
@@ -36,10 +42,14 @@ function audio() {
 }
 
 export function beep(kind = "tap") {
-  const notes = SOUNDS[kind];
+  const notes = Object.prototype.hasOwnProperty.call(SOUNDS, kind) ? SOUNDS[kind] : null;
   if (!notes || muted()) return;
   const ac = audio();
   if (!ac) return;
+  try { play(ac, notes); } catch { /* audio indisponible */ }
+}
+
+function play(ac, notes) {
   const t0 = ac.currentTime;
   for (const [freq, dur, type, vol, delay = 0] of notes) {
     const o = ac.createOscillator();

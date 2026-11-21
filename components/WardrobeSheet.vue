@@ -105,7 +105,7 @@
 import { computed, ref, watch } from "vue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
-import { gameSay } from "~/composables/useCreatureMood";
+import { gameCommand, gameSay } from "~/composables/useCreatureMood";
 import { COLORS, SLOTS, SLOT_LABELS, SLOT_ICONS, V1_ITEMS, itemById, itemColors } from "~/lib/catalog";
 
 // 'shop' : ouvrir la Boutique (itemId = l'objet dont on veut d'autres couleurs, ou null)
@@ -113,6 +113,8 @@ const emit = defineEmits(["shop"]);
 const props = defineProps({
   // emplacement ouvert au départ (ex. depuis une envie de tenue)
   initialSlot: { type: String, default: "" },
+  // vêtement à mettre en avant (id) : ouvre son emplacement et le sélectionne
+  focus: { type: String, default: "" },
 });
 
 const inv = useInventoryStore();
@@ -126,14 +128,19 @@ const MOOD_ICON = {
 };
 const MOOD_RANK = { love: 3, dislike: 2, like: 1, meh: 0 };
 
+const focusSlot = () => {
+  const it = props.focus ? itemById(props.focus) : null;
+  return it && inv.ownsItem(it.id) ? it.slot : "";
+};
 const firstSlot = () => {
+  if (focusSlot()) return focusSlot();
   if (SLOTS.includes(props.initialSlot)) return props.initialSlot;
   return SLOTS.find((s) => mine(s).length) || "tete";
 };
 const mine = (s) => V1_ITEMS.filter((i) => i.slot === s && inv.ownsItem(i.id));
 
 const slot = ref(firstSlot());
-const selId = ref(inv.outfit[slot.value]?.id || null);
+const selId = ref(focusSlot() ? props.focus : inv.outfit[slot.value]?.id || null);
 const said = ref(null);
 let saidTimer = null;
 
@@ -145,6 +152,10 @@ const wornColor = computed(() => inv.outfit[slot.value]?.color || null);
 const selItem = computed(() => (selId.value ? items.value.find((i) => i.id === selId.value) || null : null));
 
 watch(() => props.initialSlot, (s) => { if (SLOTS.includes(s)) pickSlot(s); });
+watch(() => props.focus, () => {
+  const s = focusSlot();
+  if (s) { slot.value = s; selId.value = props.focus; }
+});
 
 const ownedOf = (id) => {
   const it = itemById(id);
@@ -220,13 +231,13 @@ function shuffle() {
     const r = store.tasteReactionFor("item", e.id, e.color);
     if (!best || MOOD_RANK[r.mood] > MOOD_RANK[best.mood]) best = r;
   }
+  // une seule réplique : dans la bulle du panneau (la créature réagit sans la répéter)
   if (best && (best.mood === "love" || best.mood === "dislike")) {
-    store.showReaction(best);
+    store.showReaction(best, { say: false });
+    gameCommand("react", best.mood === "love" ? "adore" : "deteste");
     showSaid(best);
   } else {
-    const line = Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "Tenue légère aujourd'hui !";
-    gameSay(line);
-    showSaid({ mood: "like", line });
+    showSaid({ mood: "like", line: Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "Tenue légère aujourd'hui !" });
   }
 }
 </script>
