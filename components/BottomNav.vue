@@ -97,8 +97,8 @@ const items = computed(() =>
   animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .ic { width: 30px; height: 30px; }
-.label { font: 800 11px/1 "Nunito", system-ui, sans-serif; }
-.on { background: linear-gradient(180deg, #e9fadf, #d6f3c4); color: #3c9a22; }
+.label { font: 800 11px/1 var(--font-text); }
+.on { background: var(--sel-bg); color: var(--sel-ink); }
 .badge {
   position: absolute;
   top: 4px;
@@ -106,7 +106,7 @@ const items = computed(() =>
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #ff3b3b;
+  background: var(--dot);
   box-shadow: 0 0 0 2px #fff;
 }
 @keyframes pop { from { transform: scale(0.4); opacity: 0; } }

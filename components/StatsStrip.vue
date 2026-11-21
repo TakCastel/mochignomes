@@ -55,8 +55,8 @@ function tap(n) {
   grid-template-columns: repeat(5, 1fr);
   padding: 12px 4px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.16), inset 0 1px 0 #fff;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.16), var(--hl);
 }
 .cell {
   display: flex;
@@ -65,18 +65,28 @@ function tap(n) {
   gap: 9px;
   min-height: 48px;
   padding: 0 9px;
+  position: relative;
   border: 0;
-  border-left: 1px solid #e6eaf0;
   background: none;
   cursor: pointer;
 }
-.cell:first-child { border-left: 0; }
+/* séparateur doux (pas de filet) */
+.cell + .cell::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, transparent, var(--surface-3) 30%, var(--surface-3) 70%, transparent);
+}
 .ic { width: 28px; height: 28px; }
 .track {
   width: 100%;
   height: 10px;
   border-radius: 999px;
-  background: #dfe4ea;
+  background: var(--surface-3);
   overflow: hidden;
   box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.12);
 }

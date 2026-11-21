@@ -213,19 +213,22 @@ function press(a) {
 </script>
 
 <style scoped>
+/* 4 tuiles par rangée ; une rangée incomplète (Danser pas encore appris) se centre */
 .panel {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--gap, 12px);
   padding: 14px;
   border-radius: 26px;
-  background: rgba(244, 246, 249, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), inset 0 1px 0 #fff;
+  background: rgba(244, 246, 249, 0.94);
+  box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), var(--hl);
 }
 /* tuile blanche douce */
 .tile {
   position: relative;
+  flex: 0 0 calc((100% - 3 * var(--gap, 12px)) / 4);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -253,12 +256,12 @@ function press(a) {
 /* action conseillée : fond vert tendre et liseré vert */
 .best {
   border-color: #8fdc6a;
-  background: linear-gradient(180deg, #f3fdec, #e2f7d4);
-  box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), inset 0 1px 0 #fff;
+  background: var(--sel-bg);
+  box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), var(--hl);
 }
 .off .ic { opacity: 0.45; filter: grayscale(0.5); }
 .off .lbl { opacity: 0.6; }
-.lbl { font: 800 11px/1 "Nunito", system-ui, sans-serif; color: #4a5565; padding-bottom: 6px; }
+.lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); padding-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* anneau de recharge */
 .ring {
   position: absolute;
@@ -278,7 +281,7 @@ function press(a) {
   animation: pulse 1.3s ease-in-out infinite;
 }
 .glow { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
-.dot { position: absolute; top: 6px; left: 6px; width: 9px; height: 9px; border-radius: 50%; background: #ff4f86; }
+.dot { position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
   50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }
