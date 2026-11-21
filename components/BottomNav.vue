@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
   align-items: stretch;
   height: var(--nav-h, 64px);
   box-sizing: content-box;
-  padding: 0 10px env(safe-area-inset-bottom, 0px);
+  padding: 0 4px env(safe-area-inset-bottom, 0px);
 }
 .shape {
   position: absolute;
@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
   flex: 1;
-  max-width: 120px;
+  max-width: 84px; /* étroits : le premier et le dernier onglet collent aux bords */
   min-width: 60px;
   min-height: 58px;
   display: flex;
