@@ -79,7 +79,7 @@ function measure() {
   if (!el) return;
   const r = el.getBoundingClientRect();
   // vue studio : la créature seule, un peu plus grande que dans la prairie
-  const size = Math.round(studioHome.value ? Math.min(r.height * 0.64, window.innerWidth * 0.54) : Math.min(r.height * 0.60, window.innerWidth * 0.50));
+  const size = Math.round(studioHome.value ? Math.min(r.height * 0.64, window.innerWidth * 0.48) : Math.min(r.height * 0.60, window.innerWidth * 0.50));
   // studio : créature centrée dans la zone libre (un peu plus bas pour laisser la place à sa bulle),
   // avec de la marge sous les pieds pour les flèches au sol ; prairie : posée en bas comme avant
   const groundLow = r.bottom - Math.min(26, r.height * 0.10);
