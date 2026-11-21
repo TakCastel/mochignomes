@@ -48,7 +48,7 @@ const since = computed(() => {
 function hello() {
   if (store.returnGift > 0) store.claimReturnGift?.();
   store.dismissAway?.();
-  gameCommand("react", "calin");
+  gameCommand("react", "retrouvailles");
 }
 </script>
 
