@@ -500,7 +500,7 @@ watch(() => props.open, (o) => {
     setFraming(true);
     pose("watch");
     if (gourmande()) setTimeout(() => props.open && phase.value === "list" && gameSay("Ça sent bon... j'ai déjà faim !"), 500);
-  } else {
+  } else if (import.meta.client) {
     cancelAnimationFrame(raf);
     clearTimeout(stopTimer);
     setFraming(false);

@@ -3,6 +3,12 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   devtools: { enabled: false },
 
+  // Jeu 100 % navigateur : pas de rendu serveur (Three.js, localStorage, requestAnimationFrame…)
+  ssr: false,
+
+  // Sauvegarde dans localStorage (les cookies sont limités à 4 Ko et partaient avec le navigateur)
+  piniaPluginPersistedstate: { storage: "localStorage" },
+
   modules: [
     "@nuxt/eslint",
     "@nuxt/icon",
