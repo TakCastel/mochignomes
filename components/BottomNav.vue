@@ -275,35 +275,35 @@ onBeforeUnmount(() => {
   will-change: transform;
   -webkit-tap-highlight-color: transparent;
 }
-/* bulle 3D ronde */
+/* bouton 3D carré à coins doux, bleu franc */
 .orb {
   position: relative;
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: 16px;
   color: #fff;
   background:
-    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.55), transparent 42%),
-    linear-gradient(160deg, #6cc3ff 0%, #2f95e8 48%, #1d6fd0 100%);
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.28), transparent 45%),
+    linear-gradient(160deg, #2f9bff 0%, #1677e8 50%, #0b56c2 100%);
   box-shadow:
     inset 0 -5px 8px rgba(10, 50, 130, 0.32),
     inset 0 2px 3px rgba(255, 255, 255, 0.45),
-    0 6px 14px rgba(29, 111, 208, 0.36),
-    0 2px 4px rgba(29, 111, 208, 0.3);
+    0 6px 14px rgba(11, 86, 194, 0.4),
+    0 2px 4px rgba(11, 86, 194, 0.32);
   animation: orb-in 0.55s var(--spring-strong);
 }
-/* reflet en arc sur le haut de la bulle */
+/* reflet discret sur le haut du bouton */
 .orb::before {
   content: "";
   position: absolute;
   top: 5px;
-  left: 12px;
-  right: 12px;
+  left: 8px;
+  right: 8px;
   height: 14px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+  border-radius: 10px 10px 5px 5px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
   pointer-events: none;
 }
 .orb-ic {
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
   animation: ic-in 0.5s var(--spring-strong);
 }
 .orb-track:active .orb { transform: scale(0.92); transition: transform 0.08s; }
-.orb .badge { top: 2px; right: 2px; box-shadow: 0 0 0 2px #fff; }
+.orb .badge { top: 3px; right: 3px; box-shadow: 0 0 0 2px #fff; }
 /* l'humeur posée sur l'onglet : pastille de couleur + mot, sans fond à elle */
 .mood {
   position: absolute;
