@@ -74,6 +74,8 @@ export function openPage(name, opts = {}) {
   gameBus.pageFocusColor = opts.focusColor || "";
   gameBus.pageSlot = opts.slot || "";
   gameBus.page = name;
+  // pages visitées : la chaîne des nouveautés avance quand on essaie la précédente (store.featureDue)
+  try { store.countEvent?.("page:" + name); } catch { /* compteur indisponible */ }
 }
 export function closePage() {
   gameBus.page = null;
