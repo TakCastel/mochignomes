@@ -98,14 +98,14 @@ const ALL = [
 const items = computed(() =>
   ALL.filter((t) => !t.feature || has(t.feature)).map((t) => ({ ...t, badge: badgeKey.value === t.key })));
 
-// ---- barre droite à onglet : l'onglet (bouton actif + humeur) glisse d'une entrée à l'autre,
+// ---- barre droite à onglet arrondi : l'onglet (bouton actif + humeur) glisse d'une entrée à l'autre,
 // s'élargit selon l'humeur et change de côté en douceur (ressorts sur sa position et ses deux bords) ----
 const BUMP_H = 28; // hauteur de l'onglet au-dessus de la barre
-const SLOPE = 14; // largeur d'un flanc (petit = flanc plus droit)
+const SLOPE = 24; // largeur d'un flanc arrondi (raccord creux + coin bombé)
 const ORB = 54; // diamètre de la bulle
-const PAD = 6; // marge entre la bulle et le flanc
+const PAD = 0; // marge entre la bulle et le flanc (le coin arrondi en laisse déjà)
 const MOOD_GAP = 7; // entre la bulle et l'humeur
-const MOOD_END = 10; // après l'humeur, avant le flanc
+const MOOD_END = 2; // après l'humeur, avant le flanc
 const nav = ref(null);
 const btns = ref([]);
 const moodEl = ref(null);

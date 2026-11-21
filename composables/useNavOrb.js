@@ -2,19 +2,27 @@ import { reactive } from "vue";
 
 // Forme courante de l'onglet de la barre du bas, en coordonnées écran, pour que les panneaux
 // au-dessus puissent l'épouser. Écrit par BottomNav, lu par StatsStrip.
-// x : centre du bouton actif ; top : haut de la barre (hors onglet) ; bh : hauteur de l'onglet ;
+// x : centre de la bulle active ; top : haut de la barre (hors onglet) ; bh : hauteur de l'onglet ;
 // l / r : étendue de l'onglet à gauche / à droite de x (pieds compris) ; s : largeur d'un flanc.
 export const navOrb = reactive({ on: false, x: 0, top: 0, bh: 0, l: 0, r: 0, s: 1 });
 
-// flanc d'onglet : presque droit, coins juste adoucis (smoothstep)
-function edge(d, s) {
-  const t = Math.min(1, Math.max(0, d / s));
-  return t * t * (3 - 2 * t);
+// flanc d'onglet arrondi, à d px du pied : raccord creux en bas (rayon f), coin bombé en haut (rayon R),
+// court bord droit entre les deux ; tout se réduit en proportion si l'onglet s'aplatit
+function edge(d, s, bh) {
+  if (d <= 0) return 0;
+  const k = Math.min(1, bh / s);
+  const f = s * 0.4 * k;
+  const R = s * 0.6 * k;
+  if (d < f) return f - Math.sqrt(f * f - d * d);
+  if (d >= s) return bh;
+  if (d <= s - R) return d < f + 0.5 ? f : bh - R; // bord droit
+  const u = s - d;
+  return bh - R + Math.sqrt(R * R - u * u);
 }
 
 // hauteur d'un onglet (centre cx, étendues l/r, flancs s) à l'abscisse px
 export function tabHeight(px, cx, l, r, bh, s) {
-  return bh * edge(px - (cx - l), s) * edge(cx + r - px, s);
+  return Math.min(edge(px - (cx - l), s, bh), edge(cx + r - px, s, bh));
 }
 
 // hauteur de l'onglet à l'abscisse écran px (0 loin de lui) ; pad l'élargit d'autant de chaque côté
