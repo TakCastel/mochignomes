@@ -1,7 +1,10 @@
 <template>
   <!-- Barre étroite (volet latéral du Sac) : on descend emplacement > vêtement > couleur,
        une flèche remonte d'un cran. Elle se voit en grand à gauche. -->
-  <div v-if="compact" class="rail">
+  <div v-if="compact" class="rail-wrap">
+    <!-- changement de sous-menu : on glisse vers la droite en descendant, vers la gauche en remontant -->
+    <Transition :name="`rail-${railDir}`" mode="out-in">
+    <div :key="level" class="rail">
     <!-- 1. les emplacements -->
     <template v-if="level === 'slots'">
       <button
@@ -98,6 +101,8 @@
         <span class="r-lbl">Couleurs</span>
       </button>
     </template>
+    </div>
+    </Transition>
   </div>
 
   <!-- Garde-robe : onglet « Tenues » du Sac. Tout se porte tout de suite, c'est gratuit. -->
@@ -244,6 +249,10 @@ const said = ref(null);
 let saidTimer = null;
 // barre étroite : niveau de sous-menu (un vêtement mis en avant ouvre directement ses couleurs)
 const level = ref(focusSlot() ? "colors" : "slots");
+// sens de l'animation entre sous-menus (lu au rendu : le watch « pre » passe avant)
+const LEVEL_DEPTH = { slots: 0, items: 1, colors: 2 };
+const railDir = ref("in");
+watch(level, (n, o) => { railDir.value = LEVEL_DEPTH[n] >= LEVEL_DEPTH[o] ? "in" : "out"; });
 
 const hasShop = computed(() => !!store.features?.boutique);
 const ownedCount = computed(() => V1_ITEMS.filter((i) => inv.ownsItem(i.id)).length);
@@ -358,7 +367,24 @@ function shuffle() {
 
 <style scoped>
 /* ---------- barre étroite ---------- */
+.rail-wrap { overflow-x: hidden; margin: -6px -8px 0; padding: 6px 8px 4px; }
 .rail { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+/* entre sous-menus : glissement + fondu, puis les boutons arrivent en cascade */
+.rail-in-enter-active, .rail-out-enter-active { transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease-out; }
+.rail-in-leave-active, .rail-out-leave-active { transition: transform 0.14s ease-in, opacity 0.14s ease-in; }
+.rail-in-enter-from, .rail-out-leave-to { transform: translateX(36px); opacity: 0; }
+.rail-in-leave-to, .rail-out-enter-from { transform: translateX(-36px); opacity: 0; }
+.rail-in-enter-active > *, .rail-out-enter-active > * { animation: r-pop 0.32s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
+.rail-in-enter-active > :nth-child(2), .rail-out-enter-active > :nth-child(2) { animation-delay: 0.03s; }
+.rail-in-enter-active > :nth-child(3), .rail-out-enter-active > :nth-child(3) { animation-delay: 0.06s; }
+.rail-in-enter-active > :nth-child(4), .rail-out-enter-active > :nth-child(4) { animation-delay: 0.09s; }
+.rail-in-enter-active > :nth-child(5), .rail-out-enter-active > :nth-child(5) { animation-delay: 0.12s; }
+.rail-in-enter-active > :nth-child(n + 6), .rail-out-enter-active > :nth-child(n + 6) { animation-delay: 0.15s; }
+@keyframes r-pop { from { transform: scale(0.7); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .rail-in-enter-active, .rail-out-enter-active, .rail-in-leave-active, .rail-out-leave-active { transition: none; }
+  .rail-in-enter-active > *, .rail-out-enter-active > * { animation: none; }
+}
 .r-btn {
   position: relative;
   display: flex; flex-direction: column; align-items: center; gap: 3px;

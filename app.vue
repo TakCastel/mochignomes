@@ -10,7 +10,8 @@
       <!-- pendant une activité 3D, l'interface s'efface (le mini-jeu a son propre HUD) -->
       <ProfileBar class="hit pad" :class="{ away: playing }" />
       <div ref="middle" class="middle" />
-      <div class="pad stack" :class="{ away: playing }">
+      <!-- Sac ouvert : on ne regarde que sa tenue, pas ses jauges -->
+      <div class="pad stack" :class="{ away: playing || gameBus.page === 'sac' }">
         <StatsStrip class="hit" />
         <!-- actions : uniquement pendant le tutoriel ; ensuite, tout passe par le menu sur la créature -->
         <ActionGrid v-if="(store.onboardStep ?? 6) < 6" class="hit" />
@@ -85,13 +86,16 @@ function measure() {
     shown = Math.round(Math.min(size, free * 0.78));
     ground = r.top + (free + shown) / 2 + 10;
   }
-  // volet latéral (Sac) : la créature se recentre dans la place libre à gauche, à sa mesure
+  // volet latéral (Sac) : la créature se recentre dans la place libre à gauche et on zoome sur elle.
+  // Les jauges sont masquées : elle descend jusqu'au-dessus de la barre du bas (marge pour les flèches au sol)
   const sideW = gameBus.sideW;
   let centerX;
   if (sideW > 0) {
     const freeW = Math.max(80, window.innerWidth - sideW);
     centerX = Math.round(freeW / 2);
-    shown = Math.round(Math.min(shown, freeW * 0.82));
+    const navTop = document.querySelector(".nav-top")?.getBoundingClientRect().top || r.bottom;
+    ground = Math.max(r.top + 120, navTop - 46);
+    shown = Math.round(Math.max(60, Math.min((ground - r.top - 50) * 0.92, freeW * 0.9)));
   }
   frame.value = {
     ground: Math.round(ground),
