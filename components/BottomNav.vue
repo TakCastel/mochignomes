@@ -72,8 +72,10 @@ const items = computed(() =>
   box-sizing: content-box;
   padding: 0 10px env(safe-area-inset-bottom, 0px);
   border-radius: 28px 28px 0 0;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 -6px 24px rgba(40, 55, 80, 0.12);
+  background: var(--glass-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 -6px 24px rgba(30, 70, 120, 0.14), var(--glass-edge);
   align-items: center;
 }
 .item {
@@ -94,11 +96,15 @@ const items = computed(() =>
   color: #5b6472;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  animation: pop 0.45s var(--spring-strong);
+  transition: transform 0.4s var(--spring-strong), background 0.2s, color 0.2s;
 }
-.ic { width: 30px; height: 30px; }
+.item:active { transform: scale(0.9); transition-duration: 0.08s; }
+.ic { width: 30px; height: 30px; transition: transform 0.45s var(--spring-strong); }
 .label { font: 800 11px/1 var(--font-text); }
-.on { background: var(--sel-bg); color: var(--sel-ink); }
+/* onglet actif : pastille bleu ciel, l'icône saute un peu plus haut */
+.on { background: var(--sel-bg); color: var(--sel-ink); box-shadow: var(--sel-ring); }
+.on .ic { transform: translateY(-2px) scale(1.08); }
 .badge {
   position: absolute;
   top: 4px;

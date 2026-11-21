@@ -1,14 +1,17 @@
 /* ==========================================================================
    Couche de design partagée : jetons + primitives d'interface.
-   Direction artistique = l'écran principal : interface très blanche, un seul
-   accent vert, « plaques » douces en dégradé, ombres tendres (jamais de filet
-   de 1 px), formes arrondies, Fredoka pour les titres, Nunito pour le texte.
+   Direction artistique façon jeu de simulation de vie : panneaux de verre
+   givré blanc posés sur la scène (liseré blanc lumineux), bleu ciel pour la
+   sélection et les titres, vert réservé à la validation, ombres tendres
+   (jamais de filet de 1 px), formes arrondies, animations à ressort
+   (apparitions qui rebondissent, pressions qui s'écrasent).
+   Fredoka pour les titres, Nunito pour le texte.
 
    Règles :
    - action principale  = vert plein (.ui-btn--primary) ;
-   - élément sélectionné = fond vert tendre + anneau vert intérieur (--sel-*),
+   - élément sélectionné = fond bleu ciel tendre + anneau bleu intérieur (--sel-*),
      pareil pour les puces, onglets, tuiles et cartes ; pastille de couleur =
-     anneau vert extérieur ;
+     anneau bleu extérieur ;
    - pastille « à faire » = point rouge (--dot), un seul style partout.
    ========================================================================== */
 
@@ -45,9 +48,27 @@
   --dot: #ff3b3b;
 
   /* sélection */
-  --sel-bg: linear-gradient(180deg, #effbe7, #dcf5cc);
-  --sel-ring: inset 0 0 0 2px #8fdc6a;
-  --sel-ink: #3c9a22;
+  --sel-bg: linear-gradient(180deg, #f0f8ff, #d6ecff);
+  --sel-ring: inset 0 0 0 2px #7cc0f5;
+  --sel-ink: #1f73c2;
+
+  /* bleu ciel de l'interface (titres, sélection, halos) */
+  --sky: #2f95e8;
+  --sky-hi: #6cc2ff;
+  --sky-lo: #1d6fbf;
+  --sky-ink: #1a5fa3;
+  --sky-soft: #e8f4ff;
+
+  /* verre givré des panneaux posés sur la scène */
+  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(238, 246, 255, 0.72));
+  --glass-solid: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 248, 255, 0.92));
+  --glass-blur: blur(18px) saturate(1.5);
+  --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), inset 0 2px 0 #fff;
+  --glass-shadow: 0 10px 30px rgba(30, 70, 120, 0.18);
+
+  /* ressorts */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-strong: cubic-bezier(0.3, 1.9, 0.5, 1);
 
   /* formes */
   --r-xs: 10px;
@@ -204,7 +225,7 @@ button.ui-row:active { transform: scale(0.98); }
   font: 600 17px / 1.2 var(--font-title);
   color: var(--ink);
 }
-.ui-section-title > .ic { flex: none; width: 22px; height: 22px; color: var(--accent); }
+.ui-section-title > .ic { flex: none; width: 22px; height: 22px; color: var(--sky); }
 /* intertitre au-dessus d'un groupe (hors carte) */
 .ui-overline {
   display: flex;
@@ -334,7 +355,7 @@ button.ui-row:active { transform: scale(0.98); }
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.1s;
 }
-.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--accent), 0 4px 10px rgba(40, 55, 80, 0.2); }
+.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--sky), 0 4px 10px rgba(40, 55, 80, 0.2); }
 .ui-swatch.is-off { opacity: 0.4; }
 .ui-swatch-mark {
   position: absolute;
@@ -524,7 +545,7 @@ button.ui-row:active { transform: scale(0.98); }
   text-align: center;
 }
 .ui-dialog > * { max-width: 100%; }
-.ui-dialog-title { margin: 0; font: 700 24px / 1.15 var(--font-title); color: var(--ink); }
+.ui-dialog-title { margin: 0; font: 700 24px / 1.15 var(--font-title); color: var(--sky-ink); }
 .ui-dialog .ui-actions { width: 100%; margin-top: var(--s-2); }
 /* médaillon rond (en-tête de fenêtre, carte de nouveauté) */
 .ui-medal {
@@ -543,6 +564,7 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-medal--sm .ic { width: 26px; height: 26px; }
 .ui-medal--gold { background: radial-gradient(circle at 38% 30%, #ffe58a, #ffb81a 70%); box-shadow: 0 4px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5); }
 .ui-medal--love { background: radial-gradient(circle at 36% 28%, #ffc0d2, #ff6d8a 60%, #e03a64); box-shadow: 0 4px 0 #c22d55, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
+.ui-medal--sky { background: radial-gradient(circle at 38% 30%, var(--sky-hi), var(--sky) 70%); box-shadow: 0 4px 0 var(--sky-lo), inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 0 0 3px #fff; }
 .ui-medal--soft { background: var(--surface-2); box-shadow: inset 0 -3px 0 rgba(40, 55, 80, 0.06); }
 .ui-medal--soft .ic { color: var(--ink-3); }
 
@@ -561,9 +583,108 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-grab { flex: none; width: 44px; height: 5px; margin: 0 auto 10px; border-radius: var(--r-pill); background: var(--knob-side); }
 .ui-sheet-head { flex: none; display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); min-width: 0; }
 .ui-sheet-title { flex: 1; min-width: 0; }
-.ui-sheet-title h2 { margin: 0; font: 700 24px / 1.1 var(--font-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-sheet-title h2 { margin: 0; font: 700 24px / 1.1 var(--font-title); color: var(--sky-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ui-sheet-title p { margin: 2px 0 0; font: 700 var(--t-md) / 1.25 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* ==========================================================================
+   Passe « simulation de vie » : verre givré, ressorts, reflets
+   (vient après les primitives pour les compléter sans les réécrire)
+   ========================================================================== */
+
+/* panneaux en verre givré */
+.ui-card,
+.ui-dialog,
+.ui-half-sheet {
+  background: var(--glass-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.ui-card { box-shadow: var(--glass-shadow), var(--glass-edge); }
+.ui-dialog { box-shadow: var(--sh-pop), var(--glass-edge); }
+.ui-half-sheet { box-shadow: 0 -10px 40px rgba(30, 60, 110, 0.25), var(--glass-edge); }
+.ui-tabs { background: rgba(255, 255, 255, 0.82); box-shadow: var(--sh-1), var(--glass-edge); }
+
+/* fenêtres : arrivée avec un petit rebond */
+.ui-dialog { animation: ui-pop-in 0.42s var(--spring) both; }
+.ui-scrim { animation: ui-fade-in 0.22s ease-out both; }
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: scale(0.82) translateY(14px); }
+  60% { opacity: 1; }
+}
+@keyframes ui-fade-in { from { opacity: 0; } }
+
+/* pressions à ressort : on s'écrase au toucher, on rebondit au relâcher */
+.ui-btn,
+button.ui-tile,
+button.ui-row,
+.ui-chip,
+.ui-tab,
+.ui-icon-btn,
+.ui-swatch {
+  transition: transform 0.38s var(--spring-strong), box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+.ui-btn:active:not(:disabled) { transform: translateY(2px) scale(0.96); transition-duration: 0.08s; }
+button.ui-tile:active,
+.ui-chip:active,
+.ui-tab:active { transform: scale(0.93); transition-duration: 0.08s; }
+button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
+.ui-icon-btn:active { transform: scale(0.88); transition-duration: 0.08s; }
+@media (hover: hover) {
+  .ui-btn:hover:not(:disabled),
+  button.ui-tile:hover,
+  .ui-icon-btn:hover { transform: translateY(-2px); }
+}
+
+/* bouton rond : blanc givré cerclé de bleu ciel */
+.ui-icon-btn {
+  background: var(--glass-solid);
+  box-shadow: 0 4px 12px rgba(30, 70, 120, 0.16), inset 0 0 0 2px rgba(124, 192, 245, 0.55), inset 0 2px 0 #fff;
+}
+
+/* bouton principal : un reflet passe de temps en temps */
+.ui-btn--primary,
+.ui-btn--gold { position: relative; overflow: hidden; isolation: isolate; }
+.ui-btn--primary::after,
+.ui-btn--gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: ui-shine 4.5s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+@keyframes ui-shine {
+  0% { transform: translateX(-120%); }
+  22%, 100% { transform: translateX(120%); }
+}
+
+/* onglet / puce / tuile sélectionnés : petit saut quand on les choisit */
+.ui-tab.is-on,
+.ui-chip.is-on,
+.ui-tile.is-on { animation: ui-select 0.4s var(--spring-strong); }
+@keyframes ui-select { 0% { transform: scale(0.9); } }
+
+/* jauges : reflet brillant et remplissage à ressort */
+.ui-bar > i { position: relative; transition: width 0.7s var(--spring); }
+.ui-bar > i::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 1px;
+  height: 40%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* médaillons : apparition en rebond */
+.ui-medal { animation: ui-medal-in 0.55s var(--spring-strong) 0.08s both; }
+@keyframes ui-medal-in { from { transform: scale(0.3) rotate(-25deg); opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .ui-tile, .ui-row, .ui-btn, .ui-swatch { transition: none; }
+  .ui-tile, .ui-row, .ui-btn, .ui-swatch, .ui-chip, .ui-tab, .ui-icon-btn { transition: none; }
+  .ui-dialog, .ui-scrim, .ui-medal, .ui-tab.is-on, .ui-chip.is-on, .ui-tile.is-on { animation: none; }
+  .ui-btn--primary::after, .ui-btn--gold::after { display: none; }
 }

@@ -8,7 +8,7 @@
             <Icon name="solar:arrow-left-bold" class="ic" />
           </button>
           <div class="title">
-            <span v-if="icon" class="ui-medal ui-medal--sm"><Icon :name="icon" class="ic" /></span>
+            <span v-if="icon" class="ui-medal ui-medal--sm ui-medal--sky"><Icon :name="icon" class="ic" /></span>
             <div class="title-txt">
               <h2>{{ title }}</h2>
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
@@ -70,18 +70,23 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   max-width: 480px;
   max-height: 88%;
   overflow-y: auto;
-  background: linear-gradient(180deg, #ffffff 60%, var(--plate-hi));
+  background: var(--glass-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: var(--ink);
   border-radius: 32px 32px 0 0;
   padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px);
-  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.35), inset 0 2px 0 #fff;
+  box-shadow: 0 -10px 40px rgba(30, 60, 110, 0.3), var(--glass-edge);
 }
+/* page plein écran : fond bleu ciel très léger, comme un ciel dégagé */
 .sheet.full {
   max-height: none;
   height: 100%;
   border-radius: 0;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 20px;
-  background: var(--surface-2);
+  background: linear-gradient(180deg, #e2f0ff 0%, #eef6ff 30%, var(--surface-2) 70%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   box-shadow: none;
   pointer-events: auto;
   -webkit-overflow-scrolling: touch;
@@ -110,6 +115,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 h2 {
   margin: 0;
   font: 700 26px/1.1 var(--font-title);
+  color: var(--sky-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,12 +130,24 @@ h2 {
 }
 .body { min-width: 0; }
 .sheet-enter-active, .sheet-leave-active { transition: background 0.25s; }
-.sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }
+/* la feuille monte avec un léger dépassement, et redescend sans rebond */
+.sheet-enter-active .sheet { transition: transform 0.5s var(--spring); }
+.sheet-leave-active .sheet { transition: transform 0.26s cubic-bezier(0.5, 0, 0.75, 0); }
 .sheet-enter-from, .sheet-leave-to { background: rgba(40, 20, 60, 0); }
 .sheet-enter-from .sheet, .sheet-leave-to .sheet { transform: translateY(100%); }
-.page-enter-active, .page-leave-active { transition: opacity 0.2s, transform 0.25s ease; }
-.page-enter-from, .page-leave-to { opacity: 0; transform: translateY(14px); }
+/* page : arrive en glissant et en grossissant un peu, comme une fenêtre qui s'ouvre */
+.page-enter-active { transition: opacity 0.22s, transform 0.45s var(--spring); }
+.page-leave-active { transition: opacity 0.18s, transform 0.2s ease-in; }
+.page-enter-from { opacity: 0; transform: translateY(22px) scale(0.97); }
+.page-leave-to { opacity: 0; transform: translateY(10px); }
+/* le contenu de la page entre en cascade */
+.page-enter-active .body :deep(.ui-page > *) { animation: rise-in 0.5s var(--spring) both; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(2)) { animation-delay: 0.05s; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(3)) { animation-delay: 0.1s; }
+.page-enter-active .body :deep(.ui-page > *:nth-child(n + 4)) { animation-delay: 0.15s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(16px); } }
 @media (prefers-reduced-motion: reduce) {
   .sheet-enter-active .sheet, .sheet-leave-active .sheet, .page-enter-active, .page-leave-active { transition: none; }
+  .page-enter-active .body :deep(.ui-page > *) { animation: none; }
 }
 </style>

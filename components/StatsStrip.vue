@@ -55,9 +55,13 @@ function tap(n) {
   grid-template-columns: repeat(5, 1fr);
   padding: 12px 4px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.16), var(--hl);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  animation: rise 0.55s var(--spring) 0.05s both;
 }
+@keyframes rise { from { opacity: 0; transform: translateY(18px) scale(0.96); } }
 .cell {
   display: flex;
   flex-direction: column;
@@ -69,7 +73,10 @@ function tap(n) {
   border: 0;
   background: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
+.cell .ic { transition: transform 0.4s var(--spring-strong); }
+.cell:active .ic { transform: scale(0.8); transition-duration: 0.08s; }
 /* séparateur doux (pas de filet) */
 .cell + .cell::before {
   content: "";
@@ -86,11 +93,13 @@ function tap(n) {
   width: 100%;
   height: 10px;
   border-radius: 999px;
-  background: var(--surface-3);
+  background: rgba(200, 214, 230, 0.55);
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.12);
+  box-shadow: inset 0 1px 2px rgba(30, 60, 100, 0.16);
 }
-.fill { display: block; height: 100%; border-radius: 999px; transition: width 0.6s ease, background 0.4s; }
+/* jauge brillante : reflet en haut, remplissage à ressort */
+.fill { position: relative; display: block; height: 100%; border-radius: 999px; transition: width 0.8s var(--spring), background 0.4s; }
+.fill::after { content: ""; position: absolute; left: 3px; right: 3px; top: 1px; height: 40%; border-radius: inherit; background: rgba(255, 255, 255, 0.55); }
 .good { background: linear-gradient(180deg, #7fdc5a, #44b82e); }
 .ok { background: linear-gradient(180deg, #e3e45a, #c2c524); }
 .low { background: linear-gradient(180deg, #ffc067, #ff9a26); }

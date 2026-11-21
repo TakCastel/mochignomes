@@ -1,9 +1,10 @@
 <template>
   <section class="panel" aria-label="Actions">
     <button
-      v-for="a in shownActions"
+      v-for="(a, i) in shownActions"
       :key="a.key"
       class="tile"
+      :style="{ '--i': i }"
       :class="{
         best: primary?.kind === 'best' && primary.key === a.key,
         wanted: primary?.kind === 'wanted' && primary.key === a.key,
@@ -244,9 +245,13 @@ function press(a) {
   gap: var(--gap, 12px);
   padding: 14px 10px;
   border-radius: 26px;
-  background: rgba(244, 246, 249, 0.94);
-  box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), var(--hl);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  animation: panel-in 0.55s var(--spring) 0.1s both;
 }
+@keyframes panel-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } }
 /* bouton = disque rond + libellé dessous */
 .tile {
   position: relative;
@@ -261,7 +266,10 @@ function press(a) {
   background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* les boutons sortent l'un après l'autre en rebondissant */
+  animation: tile-in 0.5s var(--spring-strong) calc(0.18s + var(--i, 0) * 45ms) both;
 }
+@keyframes tile-in { from { opacity: 0; transform: scale(0.3) translateY(10px); } }
 .disc {
   position: relative;
   display: grid;
@@ -274,9 +282,16 @@ function press(a) {
   /* pastille pastel de la couleur de l'action : le contour blanc de l'objet ressort dessus */
   background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--c1) 28%, #fff), color-mix(in srgb, var(--c1) 72%, #fff) 78%);
   box-shadow: 0 4px 10px color-mix(in srgb, var(--c2) 22%, transparent), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 -3px 6px color-mix(in srgb, var(--c2) 14%, transparent);
-  transition: transform 0.08s, box-shadow 0.08s;
+  transition: transform 0.42s var(--spring-strong), box-shadow 0.2s;
 }
-.tile:active .disc { transform: scale(0.93); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
+/* pression : le disque s'écrase vite puis rebondit au relâcher */
+.tile:active .disc { transform: scale(0.86); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); transition-duration: 0.08s; }
+.disc .emoji { transition: transform 0.5s var(--spring-strong); }
+.tile:active .disc .emoji { transform: scale(1.12) rotate(-6deg); transition-duration: 0.1s; }
+@media (hover: hover) {
+  .tile:hover .disc { transform: translateY(-3px); }
+  .tile:hover .disc .emoji { transform: scale(1.08) rotate(-4deg); }
+}
 /* icône Solar bicolore : ton clair pour le fond de l'objet, ton soutenu pour le dessin */
 .ic {
   width: 58%;
@@ -297,11 +312,14 @@ function press(a) {
     drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
     drop-shadow(0 3px 3px rgba(40, 55, 80, 0.25));
 }
-/* action conseillée : fond vert tendre et liseré vert */
+/* action conseillée : halo bleu ciel qui respire doucement */
 .best .disc {
-  border-color: #8fdc6a;
-  background: var(--sel-bg);
-  box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), var(--hl);
+  border-color: #fff;
+  animation: halo 1.8s ease-in-out infinite;
+}
+@keyframes halo {
+  0%, 100% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55), 0 4px 10px rgba(30, 70, 120, 0.15); }
+  50% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 18px 8px rgba(108, 194, 255, 0.35), 0 4px 10px rgba(30, 70, 120, 0.15); }
 }
 .off .ic { opacity: 0.45; }
 .off .disc { filter: grayscale(0.7); }
@@ -358,9 +376,11 @@ function press(a) {
   animation: up 1.05s ease-out forwards;
 }
 @keyframes up {
-  0% { transform: translate(calc(-50% + var(--fx)), 6px) scale(0.7); opacity: 0; }
-  20% { opacity: 1; }
-  100% { transform: translate(calc(-50% + var(--fx)), -52px) scale(1); opacity: 0; }
+  0% { transform: translate(calc(-50% + var(--fx)), 6px) scale(0.4); opacity: 0; }
+  18% { transform: translate(calc(-50% + var(--fx)), -14px) scale(1.25); opacity: 1; }
+  30% { transform: translate(calc(-50% + var(--fx)), -18px) scale(1); }
+  75% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--fx)), -58px) scale(0.95); opacity: 0; }
 }
 .lock {
   position: absolute;
@@ -378,6 +398,8 @@ function press(a) {
   80% { transform: rotate(2deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wanted .disc, .glow .disc, .wiggle .disc { animation: none; }
+  .wanted .disc, .glow .disc, .wiggle .disc, .tile, .panel { animation: none; }
+  .best .disc { animation: none; box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55); }
+  .disc, .disc .emoji { transition: none; }
 }
 </style>

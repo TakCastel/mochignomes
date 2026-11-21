@@ -62,9 +62,13 @@ onMounted(() => store.initName());
   max-width: 260px;
   padding: 6px 14px 6px 6px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 6px 20px rgba(40, 55, 80, 0.16), var(--hl);
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow), var(--glass-edge);
+  animation: slide-in 0.55s var(--spring) both;
 }
+@keyframes slide-in { from { opacity: 0; transform: translateX(-24px) scale(0.94); } }
 .avatar {
   flex: none;
   width: 56px;
@@ -83,7 +87,7 @@ onMounted(() => store.initName());
 .info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
   font: 700 18px/1.1 var(--font-title);
-  color: var(--ink);
+  color: var(--sky-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -111,11 +115,16 @@ onMounted(() => store.initName());
   box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.1);
 }
 .track span {
+  position: relative;
   display: block;
   height: 100%;
   border-radius: 999px;
   background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  transition: width 0.8s var(--spring);
 }
+/* reflet brillant sur la jauge */
+.track span::after { content: ""; position: absolute; left: 3px; right: 3px; top: 1px; height: 40%; border-radius: inherit; background: rgba(255, 255, 255, 0.55); }
+/* bouton rond givré cerclé de bleu ciel */
 .round {
   position: relative;
   display: grid;
@@ -124,11 +133,19 @@ onMounted(() => store.initName());
   height: 48px;
   border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 6px 18px rgba(40, 55, 80, 0.18);
+  background: var(--glass-solid);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 6px 18px rgba(30, 70, 120, 0.18), inset 0 0 0 2px rgba(124, 192, 245, 0.55), inset 0 2px 0 #fff;
   cursor: pointer;
+  transition: transform 0.4s var(--spring-strong);
+  animation: pop-in 0.5s var(--spring-strong) 0.15s both;
 }
-.round:active, .avatar:active { transform: scale(0.95); }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.4); } }
+.round .ic { color: var(--sky-lo); transition: transform 0.6s var(--spring); }
+.round:active .ic { transform: rotate(60deg); }
+.round:active, .avatar:active { transform: scale(0.9); transition-duration: 0.08s; }
+.avatar { transition: transform 0.4s var(--spring-strong); }
 .ic { width: 26px; height: 26px; color: #4a5260; }
 @media (max-width: 370px) {
   .avatar { width: 52px; height: 52px; }
