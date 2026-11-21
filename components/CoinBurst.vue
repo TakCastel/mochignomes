@@ -40,7 +40,7 @@ const COINS = [
   { i: 5, dx: -60, dy: -44, d: 0.12, r: -70 },
 ];
 
-const iconOf = (b) => (b.currency === "gems" ? "solar:star-bold-duotone" : "solar:dollar-minimalistic-bold-duotone");
+const iconOf = (b) => (b.currency === "gems" ? "solar:star-bold-duotone" : "mochi:coin");
 function posOf(b) {
   const lift = b.stack * 34;
   if (b.x != null && b.y != null) return { left: b.x + "px", top: b.y - lift + "px" };
@@ -70,7 +70,7 @@ if (props.auto) {
   min-height: 36px;
   padding: 0 14px 0 8px;
   border-radius: var(--r-pill);
-  background: #fff;
+  background: var(--surface);
   color: var(--coin-ink);
   font: 700 var(--t-xl)/1 var(--font-title);
   font-variant-numeric: tabular-nums;

@@ -1,8 +1,8 @@
 <template>
   <Transition name="msheet">
     <div v-if="open" class="m-overlay" @click.self="close">
-      <section class="ui-half-sheet m-sheet" role="dialog" aria-modal="true" aria-label="Manger">
-        <div class="ui-grab" />
+      <section ref="mSheet" class="ui-half-sheet m-sheet" :class="{ 'is-tall': tall }" role="dialog" aria-modal="true" aria-label="Manger">
+        <div class="grab-zone" v-on="grab"><div class="ui-grab" /></div>
         <header class="ui-sheet-head">
           <span class="ui-medal ui-medal--sm"><Icon name="solar:donut-bitten-bold-duotone" class="ic" /></span>
           <div class="ui-sheet-title">
@@ -79,9 +79,13 @@ import { useInventoryStore } from "~/stores/useInventoryStore";
 import { V1_RECIPES, missingIngredients, starMult } from "~/lib/catalog";
 import { useCreatureMood, gameCommand, gameSay } from "~/composables/useCreatureMood";
 import { beep, haptic } from "~/composables/useBeep";
+import { useSheetDrag } from "~/composables/useSheetDrag";
 
 const props = defineProps({ open: { type: Boolean, default: false } });
 const emit = defineEmits(["close", "cook"]);
+// volet tirable par sa poignée (bas = fermer, haut = agrandir)
+const mSheet = ref(null);
+const { tall, grab } = useSheetDrag(mSheet, () => close());
 
 const { store } = useCreatureMood();
 const inv = useInventoryStore();
@@ -166,12 +170,13 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   position: fixed; inset: 0; z-index: 20; display: flex; align-items: flex-end; justify-content: center;
   background: linear-gradient(180deg, rgba(30, 40, 70, 0) 30%, rgba(30, 40, 70, 0.22));
 }
-.m-sheet { max-height: 62vh; max-height: 62dvh; }
+.m-sheet { max-height: calc(62vh + var(--nav-h, 78px)); max-height: calc(62dvh + var(--nav-h, 78px)); }
+.m-sheet.is-tall { max-height: 92vh; max-height: 92dvh; }
 .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--s-2); padding: 2px 2px 6px; }
 .off { opacity: 0.6; }
 .dish { background: radial-gradient(circle at 35% 30%, #fff, var(--d1) 65%); }
 .dish .ic { color: var(--d2); }
-.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: #fff; color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
+.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
 .ui-row-sub.love { color: var(--love-ink); }
 .pill { flex: none; font: 700 var(--t-md) var(--font-title); padding: 4px 10px; }
 .pill .ic { width: 15px; height: 15px; }

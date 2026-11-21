@@ -1,0 +1,182 @@
+/* ==========================================================================
+   Thèmes d'interface (Réglages > Affichage > Thème). « Blanc » est celui du
+   :root (ui.css) ; les autres surchargent les jetons sur <html data-theme>
+   (posé par app.vue). Le décor 3D garde sa palette, seule l'interface change.
+   ========================================================================== */
+
+/* ---------- Sombre : ardoise bleutée, bleu ciel conservé pour la sélection ---------- */
+html[data-theme="sombre"] {
+  color-scheme: dark;
+  --ink: #eef2f8;
+  --ink-2: #bcc5d3;
+  --ink-3: #8c97a8;
+  --ink-4: #5c6677;
+  --accent: #5ccc3e;
+  --accent-hi: #86e263;
+  --accent-lo: #3f9e26;
+  --accent-ink: #92e46f;
+  --accent-soft: #22351e;
+  --surface: #232937;
+  --surface-2: #1a1f2a;
+  --surface-3: #313949;
+  --tint: 16%;
+  --panel-top: #262d3b;
+  --panel-bottom: #1d2330;
+  --plate-hi: #262d3b;
+  --plate-lo: #1d2330;
+  --plate-shade: rgba(0, 0, 0, 0.45);
+  --knob-side: #10141c;
+  --coin-ink: #ffd36b;
+  --gem-ink: #c9adff;
+  --love-ink: #ff8fb4;
+  --warn-ink: #ffb26e;
+  --sel-bg: linear-gradient(180deg, #24405e, #1d3550);
+  --sel-ring: inset 0 0 0 2px #4ea6ee;
+  --sel-ink: #9fd2ff;
+  --sky-ink: #9fd2ff;
+  --sky-lo: #6cb6f5;
+  --sky-soft: #1f3550;
+  --glass: linear-gradient(180deg, rgba(35, 41, 55, 0.86), rgba(26, 31, 42, 0.78));
+  --glass-solid: linear-gradient(180deg, rgba(35, 41, 55, 0.97), rgba(26, 31, 42, 0.94));
+  --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.08), inset 0 2px 0 var(--glint);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --hud-ink: #e6edfb;
+  --hud-ink-2: #a3b3cf;
+  --hud-band: #1a1f2a;
+  --hud-line: #343d50;
+  --hud-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --hud-pill: linear-gradient(180deg, #2c3443 0%, #262d3b 55%, #1f2531 100%);
+  --hud-pill-hover: linear-gradient(180deg, #343d4f, #2b3445 60%, #232a38);
+  --hud-pill-shadow: 0 2px 0 #0d1118, 0 4px 10px rgba(0, 0, 0, 0.4);
+  --track-lo: #141821;
+  --track-hi: #2a3141;
+  --ui-card: #232937;
+  --ui-card-2: #1a1f2a;
+  --ui-cream: #2e2a22;
+  --ui-line: #343d50;
+  --ui-sh-1: 0 2px 0 #0d1118;
+  --ui-sh-2: 0 6px 16px rgba(0, 0, 0, 0.4);
+  --ui-sh-3: 0 12px 28px rgba(0, 0, 0, 0.5);
+  --ui-soft: 0 2px 4px rgba(0, 0, 0, 0.25), 0 6px 16px rgba(0, 0, 0, 0.3);
+  --glint: rgba(255, 255, 255, 0.07);
+  --sh-1: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --sh-2: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --sh-3: 0 10px 28px rgba(0, 0, 0, 0.45);
+  --sh-pop: 0 18px 48px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(5, 8, 15, 0.6);
+}
+html[data-theme="sombre"] .ui-stars .ic:not(.on) { color: #3d4657; }
+
+/* ---------- Contrasté : noir sur blanc, contours francs, sélection bleu foncé ---------- */
+html[data-theme="contraste"] {
+  --ink: #000000;
+  --ink-2: #111111;
+  --ink-3: #2b2b2b;
+  --ink-4: #5a5a5a;
+  --accent: #1e7d00;
+  --accent-hi: #2a9a0a;
+  --accent-lo: #0f4d00;
+  --accent-ink: #0f5a00;
+  --accent-soft: #e2ffd2;
+  --surface: #ffffff;
+  --surface-2: #ffffff;
+  --surface-3: #c8c8c8;
+  --tint: 60%;
+  --panel-top: #ffffff;
+  --panel-bottom: #ffffff;
+  --plate-hi: #ffffff;
+  --plate-lo: #ffffff;
+  --plate-shade: rgba(0, 0, 0, 0.5);
+  --knob-side: #000000;
+  --coin-ink: #6b4a00;
+  --gem-ink: #4a1fb0;
+  --love-ink: #9a0f45;
+  --warn-ink: #8a3d00;
+  --sel-bg: #dce9ff;
+  --sel-ring: inset 0 0 0 3px #003a94;
+  --sel-ink: #003a94;
+  --sky: #0050c8;
+  --sky-hi: #1f6be0;
+  --sky-lo: #003a94;
+  --sky-ink: #00307a;
+  --sky-soft: #dce9ff;
+  --hud-ink: #000000;
+  --hud-ink-2: #1a1a1a;
+  --hud-band: #ffffff;
+  --hud-line: #000000;
+  --hud-pill: #ffffff;
+  --hud-pill-hover: #eef4ff;
+  --hud-pill-shadow: 0 0 0 2px #000000;
+  --track-lo: #8c8c8c;
+  --track-hi: #b5b5b5;
+  --ui-card: #ffffff;
+  --ui-card-2: #ffffff;
+  --ui-cream: #ffffff;
+  --ui-line: #000000;
+  --ui-on-bg: #0050c8;
+  --ui-on-shadow: inset 0 0 0 3px #000000;
+  --scrim: rgba(0, 0, 0, 0.7);
+}
+/* contour noir sur toutes les plaques (outline : ne gêne pas l'aplat de sélection) */
+html[data-theme="contraste"] :is(.ui-card, .ui-tile, .ui-row, .ui-chip, .ui-tab, .ui-btn--secondary, .ui-btn--soft, .ui-empty, .ui-thumb, .ui-dialog, .ui-icon-btn, .ui-half-sheet) {
+  outline: 2px solid #000000;
+  outline-offset: -2px;
+}
+html[data-theme="contraste"] :is(.ui-btn--primary, .ui-btn--danger, .ui-btn--gold) {
+  outline: 2px solid #000000;
+  outline-offset: 0;
+}
+html[data-theme="contraste"] :is(.ui-btn--primary, .ui-btn--gold)::after { display: none; }
+html[data-theme="contraste"] :focus-visible { outline: 3px solid #ff6a00 !important; outline-offset: 2px !important; }
+
+/* ---------- Crème : blanc cassé chaud, accents caramel, doux pour les yeux ---------- */
+html[data-theme="creme"] {
+  --ink: #3d2f22;
+  --ink-2: #6b5946;
+  --ink-3: #998670;
+  --ink-4: #c4b39b;
+  --accent-soft: #eef6dc;
+  --surface: #fffaf0;
+  --surface-2: #f7efdf;
+  --surface-3: #ecdfc8;
+  --panel-top: #fffaf0;
+  --panel-bottom: #f7efdf;
+  --plate-hi: #fffaf0;
+  --plate-lo: #f4ead6;
+  --plate-shade: rgba(90, 60, 20, 0.2);
+  --knob-side: #e2d1b2;
+  --sel-bg: linear-gradient(180deg, #fff4e3, #fbe2c0);
+  --sel-ring: inset 0 0 0 2px #e9a560;
+  --sel-ink: #a35a14;
+  --sky: #d9822b;
+  --sky-hi: #f2a65a;
+  --sky-lo: #b2641a;
+  --sky-ink: #8a4a12;
+  --sky-soft: #fbebd6;
+  --glass: linear-gradient(180deg, rgba(255, 250, 240, 0.86), rgba(250, 238, 218, 0.74));
+  --glass-solid: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(250, 240, 222, 0.92));
+  --glass-shadow: 0 10px 30px rgba(110, 70, 20, 0.18);
+  --hud-ink: #5a3b1e;
+  --hud-ink-2: #8f7255;
+  --hud-band: #f5ecdb;
+  --hud-line: #e6d6b8;
+  --hud-shadow: 0 6px 18px rgba(110, 70, 20, 0.16);
+  --hud-pill: linear-gradient(180deg, #fffaf0 0%, #faf1e1 55%, #efe2c9 100%);
+  --hud-pill-hover: linear-gradient(180deg, #fffaf0, #fdeed8 60%, #f5dfbd);
+  --hud-pill-shadow: 0 2px 0 #e0cba6, 0 4px 10px rgba(110, 70, 20, 0.14);
+  --track-lo: #e3d3b6;
+  --track-hi: #efe4d0;
+  --ui-card: #fffaf0;
+  --ui-card-2: #f7efdf;
+  --ui-line: #e6d6b8;
+  --ui-sh-1: 0 2px 0 #e0cba6;
+  --ui-sh-2: 0 6px 16px rgba(110, 70, 20, 0.12);
+  --ui-sh-3: 0 12px 28px rgba(110, 70, 20, 0.2);
+  --ui-soft: 0 2px 4px rgba(110, 70, 20, 0.06), 0 6px 16px rgba(110, 70, 20, 0.08);
+  --ui-on-bg: linear-gradient(180deg, #f2a65a, #d9822b 60%, #c06e1e);
+  --ui-on-shadow: 0 4px 12px rgba(217, 130, 43, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --glint: #fffdf8;
+  --sh-1: 0 2px 6px rgba(90, 60, 20, 0.09);
+  --sh-2: 0 4px 14px rgba(90, 60, 20, 0.11);
+  --sh-3: 0 10px 28px rgba(90, 60, 20, 0.18);
+}

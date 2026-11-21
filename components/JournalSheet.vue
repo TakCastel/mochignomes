@@ -94,7 +94,7 @@ function when(t) {
 <style scoped>
 .grow { flex: 1; min-width: 0; display: grid; gap: 3px; }
 .mt { margin-top: var(--s-3); }
-.bonus { display: flex; align-items: center; gap: var(--s-3); background: linear-gradient(180deg, #fff8e0, #ffeec0); }
+.bonus { display: flex; align-items: center; gap: var(--s-3); background: linear-gradient(180deg, color-mix(in srgb, #fff8e0 var(--tint), var(--surface)), color-mix(in srgb, #ffeec0 var(--tint), var(--surface))); }
 .quests, .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .quests .ui-row { min-height: 0; }
 .quests .claimed { opacity: 0.6; }

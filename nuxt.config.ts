@@ -39,6 +39,8 @@ export default defineNuxtConfig({
   // Icônes embarquées dans l'appli : aucun appel réseau pour les afficher
   icon: {
     serverBundle: { collections: ["ph", "solar"] },
+    // icônes du jeu en couleur (SVG locaux) : mochi:coin = pièce d'or (Fluent Emoji, MIT)
+    customCollections: [{ prefix: "mochi", dir: "./assets/icons/mochi" }],
     clientBundle: {
       scan: true,
       icons: [
@@ -92,5 +94,7 @@ export default defineNuxtConfig({
     "@fontsource/nunito/800.css",
     // couche de design partagée (jetons + primitives .ui-*)
     "~/assets/css/ui.css",
+    // thèmes d'interface (blanc, sombre, contrasté, crème)
+    "~/assets/css/themes.css",
   ],
 });

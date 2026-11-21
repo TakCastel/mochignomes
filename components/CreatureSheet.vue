@@ -76,7 +76,7 @@
       <ul class="bars traits">
         <li v-for="t in traitRows" :key="t.key">
           <span class="bar-label">{{ t.label }}</span>
-          <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.round(t.value * 100) + '%', background: t.color }" /></div>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.round(t.value * 100) + '%', '--c': t.color }" /></div>
           <span class="bar-value">{{ Math.round(t.value * 100) }}</span>
         </li>
       </ul>
@@ -96,7 +96,7 @@
         <li v-for="s in statRows" :key="s.key">
           <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
           <span class="bar-label">{{ s.label }}</span>
-          <div class="ui-bar ui-bar--thin"><i :style="{ width: s.width + '%', background: s.color }" /></div>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: s.width + '%', '--c': s.color }" /></div>
           <span class="bar-value">{{ Math.round(s.value) }}</span>
         </li>
       </ul>
@@ -165,13 +165,13 @@ function saveName() {
   border-radius: var(--r-lg);
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
-  box-shadow: 0 0 0 4px #fff, 0 6px 14px rgba(40, 55, 80, 0.2);
+  box-shadow: 0 0 0 4px var(--surface), 0 6px 14px rgba(40, 55, 80, 0.2);
 }
 .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateY(4%); }
-.photo.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.photo.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, var(--surface)), color-mix(in srgb, var(--av, #ffc98a) 42%, var(--surface))); }
 .photo.live img { transform: none; }
 .look-row { display: flex; align-items: center; gap: var(--s-3); }
-.swatch { flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 3px #fff, var(--sh-1); }
+.swatch { flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface), var(--sh-1); }
 .look-main { display: grid; gap: 2px; min-width: 0; flex: 1; }
 .look-name { font: 700 var(--t-lg) / 1.15 var(--font-title); color: var(--ink); }
 .look-sub { font: 700 var(--t-sm) / 1.3 var(--font-text); color: var(--ink-3); }
@@ -225,8 +225,9 @@ function saveName() {
 .short .ui-dot { right: calc(50% - 26px); }
 
 .bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.bars li { display: grid; grid-template-columns: 24px minmax(0, 84px) 1fr 30px; align-items: center; gap: var(--s-2); }
-.traits li { grid-template-columns: minmax(0, 96px) 1fr 30px; }
+/* mêmes colonnes pour Caractère et Santé : les jauges commencent et finissent au même endroit */
+.bars li { display: grid; grid-template-columns: 24px 100px minmax(0, 1fr) 34px; align-items: center; gap: var(--s-2); }
+.traits li { grid-template-columns: calc(124px + var(--s-2)) minmax(0, 1fr) 34px; }
 .bar-icon { width: 24px; height: 24px; }
 .bar-label { font: 800 var(--t-md) var(--font-text); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bar-value { text-align: right; font: 700 var(--t-md) var(--font-title); font-variant-numeric: tabular-nums; color: var(--ink-2); }

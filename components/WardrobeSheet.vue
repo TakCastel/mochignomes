@@ -35,14 +35,6 @@
       </button>
     </div>
 
-    <!-- sa réaction au dernier essayage -->
-    <Transition name="pop">
-      <p v-if="said" :key="said.id" class="ui-note" :class="said.mood === 'love' ? 'ui-note--love' : said.mood === 'dislike' ? '' : 'ui-note--accent'">
-        <Icon :name="MOOD_ICON[said.mood] || 'solar:chat-round-dots-bold-duotone'" class="ic" />
-        <span>« {{ said.line }} »</span>
-      </p>
-    </Transition>
-
     <!-- objets possédés pour cet emplacement -->
     <div v-if="items.length" class="grid">
       <button
@@ -260,7 +252,7 @@ function shuffle() {
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px;
   background: var(--surface-3); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
 }
-.slot.worn .slot-badge { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15), 0 0 0 2px #fff, 0 2px 6px rgba(40, 55, 80, 0.2); }
+.slot.worn .slot-badge { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.15), 0 0 0 2px var(--surface), 0 2px 6px rgba(40, 55, 80, 0.2); }
 .slot-ic { width: 22px; height: 22px; color: var(--ink-2); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.7)); }
 .slot.worn .slot-ic { color: rgba(255, 255, 255, 0.95); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
 .slot-lbl { font-size: var(--t-xs); }

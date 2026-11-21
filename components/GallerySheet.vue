@@ -65,7 +65,7 @@ function remove(p) {
   gap: 8px;
   padding: 24px 12px;
   text-align: center;
-  color: color-mix(in srgb, var(--ink) 78%, #fff);
+  color: color-mix(in srgb, var(--ink) 78%, var(--surface));
   font-weight: 700;
 }
 .empty-icon { width: 60px; height: 60px; color: #ff8a3d; }
@@ -84,8 +84,8 @@ function remove(p) {
   padding: 4px;
   border: 0;
   border-radius: 16px;
-  background: #fff;
-  box-shadow: 3px 4px 8px var(--plate-shade), -2px -2px 6px #fff;
+  background: var(--surface);
+  box-shadow: 3px 4px 8px var(--plate-shade), -2px -2px 6px var(--glint);
   cursor: pointer;
 }
 .thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: block; }
@@ -106,7 +106,7 @@ figcaption { margin: 8px 0; color: #fff; font-weight: 800; }
   padding: 10px 16px;
   border: 0;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--ink);
   font: 800 14px "Nunito", system-ui, sans-serif;
   box-shadow: 0 3px 0 var(--knob-side);

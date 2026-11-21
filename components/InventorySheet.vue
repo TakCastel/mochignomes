@@ -29,7 +29,7 @@
         <h3 class="ui-section-title"><Icon name="solar:chef-hat-bold-duotone" class="ic" />Plats prêts</h3>
         <div v-if="mealRows.length" class="ui-stack ui-stack--sm">
           <div v-for="m in mealRows" :key="m.recipe.id" class="ui-row is-well" :class="{ 'is-love': m.fav }">
-            <span class="ui-thumb">{{ m.recipe.emoji }}<small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
+            <span class="ui-thumb"><FoodImg :id="m.recipe.id" :emoji="m.recipe.emoji" /><small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
             <span class="ui-row-main">
               <span class="ui-row-title">{{ m.recipe.label }}</span>
               <span class="ui-row-sub">
@@ -58,7 +58,7 @@
         <h3 class="ui-section-title"><Icon name="solar:fridge-bold-duotone" class="ic" />Ingrédients</h3>
         <div v-if="pantryRows.length" class="pantry">
           <div v-for="p in pantryRows" :key="p.ing.id" class="ui-tile is-ghost">
-            <span class="ing-emoji">{{ p.ing.emoji }}</span>
+            <span class="ing-emoji"><FoodImg :id="p.ing.id" :emoji="p.ing.emoji" /></span>
             <span class="ui-tile-sub">{{ p.ing.label }}</span>
             <span class="ui-num ing-qty">×{{ p.qty }}</span>
           </div>
@@ -114,7 +114,7 @@
             </button>
             <Icon v-else-if="s.claimed" name="solar:check-circle-bold" class="done-ic" />
             <span v-else class="reward">
-              <span class="ui-price small"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />+{{ s.set.reward.coins }}</span>
+              <span class="ui-price small"><Icon name="mochi:coin" class="ic" />+{{ s.set.reward.coins }}</span>
               <span v-if="s.set.reward.gems" class="ui-price small ui-price--gems"><Icon name="solar:star-bold-duotone" class="ic" />+{{ s.set.reward.gems }}</span>
             </span>
           </div>
@@ -149,7 +149,7 @@
         <h3 class="ui-section-title"><Icon name="solar:chef-hat-bold-duotone" class="ic" />Recettes découvertes</h3>
         <div class="coll-grid">
           <div v-for="r in recipeRows" :key="r.recipe.id" class="ui-tile coll recipe" :class="{ 'is-ghost': !r.known }">
-            <span class="coll-art"><span class="r-emoji">{{ r.recipe.emoji }}</span></span>
+            <span class="coll-art"><span class="r-emoji"><FoodImg :id="r.recipe.id" :emoji="r.recipe.emoji" /></span></span>
             <span class="ui-tile-label coll-name">{{ r.known ? r.recipe.label : "???" }}</span>
             <span class="ui-stars small">
               <Icon v-for="s in 3" :key="s" name="solar:star-bold" class="ic" :class="{ on: s <= r.stars }" />
@@ -275,7 +275,7 @@ function claim(setId) {
 .mt { margin-top: var(--s-3); }
 
 /* frigo */
-.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: #fff; color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
+.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
 .pantry { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: var(--s-2); }
 .pantry .ui-tile { cursor: default; padding: 10px 4px 8px; gap: 2px; }
 .ing-emoji { font-size: 30px; line-height: 1.1; }
@@ -293,7 +293,7 @@ function claim(setId) {
   border-radius: 50%;
   background: conic-gradient(var(--accent) calc(var(--p) * 360deg), var(--surface-3) 0);
 }
-.progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #fff; }
+.progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--surface); }
 .ring-val { position: relative; font-size: 24px; font-weight: 700; color: var(--ink); }
 .ring-val small { font-size: var(--t-md); }
 .sum-txt { display: grid; gap: 2px; min-width: 0; }
@@ -301,12 +301,12 @@ function claim(setId) {
 
 /* collections */
 .set { align-items: flex-start; }
-.set.ready { background: linear-gradient(135deg, #fffaf0, #fff0d1); box-shadow: inset 0 0 0 2px #ffd27a; animation: glow 1.6s ease-in-out infinite; }
+.set.ready { background: linear-gradient(135deg, color-mix(in srgb, #fffaf0 var(--tint), var(--surface)), color-mix(in srgb, #fff0d1 var(--tint), var(--surface))); box-shadow: inset 0 0 0 2px #ffd27a; animation: glow 1.6s ease-in-out infinite; }
 @keyframes glow { 50% { box-shadow: inset 0 0 0 2px #ffd27a, 0 0 0 4px rgba(255, 200, 80, 0.4); } }
 .set .ui-row-main { gap: 6px; }
 .set-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .set-items { display: flex; flex-wrap: wrap; gap: 4px; }
-.mini { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--r-xs); background: #fff; cursor: pointer; }
+.mini { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: var(--r-xs); background: var(--surface); cursor: pointer; }
 .mini-ic { width: 20px; height: 20px; color: var(--ink); opacity: 0.14; }
 .mini.have .mini-ic { opacity: 1; }
 .set > .ui-btn, .set > .done-ic, .set > .reward { align-self: center; }

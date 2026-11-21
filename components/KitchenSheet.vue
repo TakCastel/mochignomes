@@ -1,8 +1,8 @@
 <template>
   <Transition name="ksheet">
     <div v-if="open" class="k-overlay" @click.self="onBackdrop">
-      <section class="ui-half-sheet k-sheet" role="dialog" aria-modal="true" aria-label="Cuisine">
-        <div class="ui-grab" />
+      <section ref="kSheet" class="ui-half-sheet k-sheet" :class="{ 'is-tall': tall }" role="dialog" aria-modal="true" aria-label="Cuisine">
+        <div class="grab-zone" v-on="grab"><div class="ui-grab" /></div>
         <header class="ui-sheet-head">
           <button v-if="phase !== 'list'" class="ui-icon-btn" aria-label="Retour aux recettes" @click="backToList">
             <Icon name="solar:arrow-left-bold" class="ic" />
@@ -13,7 +13,7 @@
             <p>{{ headSub }}</p>
           </div>
           <span class="ui-price coins" :aria-label="`${inv.coins} pièces`">
-            <Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />{{ inv.coins }}
+            <Icon name="mochi:coin" class="ic" />{{ inv.coins }}
           </span>
           <button class="ui-icon-btn" aria-label="Fermer la cuisine" @click="close">
             <Icon name="solar:close-circle-bold" class="ic" />
@@ -22,70 +22,83 @@
 
         <!-- 1. Choisir une recette -->
         <div v-if="phase === 'list'" class="body list">
-          <article
-            v-for="c in shownCards"
-            :key="c.r.id"
-            class="ui-card card"
-            :class="{ locked: c.locked, ready: c.ready && !c.locked, wanted: c.wanted, flash: flashId === c.r.id }"
-          >
-            <div class="card-top">
-              <span class="ui-thumb dish" :style="{ '--d1': c.tint[0], '--d2': c.tint[1] }">
-                <Icon :name="c.r.icon" class="dish-ic" />
-                <Icon v-if="c.locked" name="solar:lock-keyhole-bold" class="dish-lock" />
-              </span>
-              <div class="card-main">
-                <div class="name-row">
-                  <h3 class="ui-row-title">{{ c.r.label }}</h3>
-                  <span v-if="!c.known && !c.locked" class="ui-tag ui-tag--gold">À découvrir · +10</span>
-                  <span v-else-if="c.best" class="ui-stars" :aria-label="`Meilleure note : ${c.best} étoiles`">
-                    <Icon v-for="i in 3" :key="i" name="solar:star-bold" class="ic" :class="{ on: i <= c.best }" />
-                  </span>
-                </div>
-                <p v-if="c.wanted" class="hint wish"><Icon name="solar:chat-round-dots-bold-duotone" class="hint-ic" />Elle en a envie !</p>
-                <p v-else-if="c.taste === 'love'" class="hint love"><Icon name="solar:heart-bold-duotone" class="hint-ic" />Son plat préféré</p>
-                <p v-else-if="c.taste === 'dislike'" class="hint meh"><Icon name="solar:emoji-funny-circle-bold-duotone" class="hint-ic" />Elle n'aime pas trop ça</p>
-                <div class="fx">
-                  <span class="ui-tag ui-tag--violet fx-main" :title="'Énergie'"><Icon name="solar:bolt-bold-duotone" class="ic" />+{{ c.r.effects.energy || 0 }} énergie</span>
-                  <span v-for="f in c.minor" :key="f.key" class="fx-small" :style="{ color: f.color }">
-                    <Icon :name="f.icon" class="fx-sic" />{{ f.v > 0 ? "+" : "" }}{{ f.v }}
-                  </span>
+          <template v-for="sec in sections" :key="sec.key">
+            <h3 v-if="sec.title" class="ui-overline sec">{{ sec.title }}</h3>
+            <article
+              v-for="c in sec.cards"
+              :key="c.r.id"
+              class="ui-card card"
+              :class="{ locked: c.locked, ready: c.ready && !c.locked, wanted: c.wanted || c.r.id === focus, flash: flashId === c.r.id }"
+              :style="{ '--i': c.idx }"
+            >
+              <div class="card-top">
+                <span class="ui-thumb dish">
+                  <img v-if="!imgFail[c.r.id]" class="dish-img" :src="foodSrc(c.r.id)" alt="" draggable="false" @error="imgFail[c.r.id] = true" />
+                  <Icon v-else :name="c.r.icon" class="dish-ic" />
+                  <Icon v-if="c.locked" name="solar:lock-keyhole-bold" class="dish-lock" />
+                </span>
+                <div class="card-main">
+                  <div class="name-row">
+                    <h4 class="ui-row-title">{{ c.r.label }}</h4>
+                    <span v-if="!c.known && !c.locked" class="spark" aria-label="Recette à découvrir : +10 à la première réussite" title="À découvrir">
+                      <Icon name="solar:stars-bold-duotone" class="ic" />+10
+                    </span>
+                    <span v-else-if="c.best" class="ui-stars" :aria-label="`Meilleure note : ${c.best} étoiles`">
+                      <Icon v-for="i in 3" :key="i" name="solar:star-bold" class="ic" :class="{ on: i <= c.best }" />
+                    </span>
+                  </div>
+                  <p class="benefit"><Icon name="solar:bolt-bold-duotone" class="ic" />+{{ c.r.effects.energy || 0 }} énergie</p>
+                  <p v-if="c.wanted" class="hint"><Icon name="solar:chat-round-dots-bold-duotone" class="hint-ic" />Elle en a envie !</p>
+                  <p v-else-if="c.taste === 'love'" class="hint"><Icon name="solar:heart-bold-duotone" class="hint-ic" />Son plat préféré</p>
+                  <p v-else-if="c.taste === 'dislike'" class="hint dim"><Icon name="solar:emoji-funny-circle-bold-duotone" class="hint-ic" />Elle n'aime pas trop ça</p>
                 </div>
               </div>
-            </div>
 
-            <ul class="ings" aria-label="Ingrédients">
-              <li v-for="g in c.ings" :key="g.id" class="ui-tag ing" :class="g.have >= g.need ? 'ui-tag--accent' : 'ui-tag--warn'">
-                <Icon :name="g.icon" class="ic" />
-                <span class="ing-l">{{ g.label }}</span>
-                <span class="ing-n">{{ Math.min(g.have, g.need) }}/{{ g.need }}</span>
-              </li>
-            </ul>
+              <p v-if="!c.ready && !c.locked" class="miss">Il manque : {{ c.missText }}</p>
 
-            <div class="card-actions">
-              <template v-if="c.locked">
-                <span class="ui-caption lock-note"><Icon name="solar:lock-keyhole-bold" class="lock-ic" />Au niveau {{ c.r.minLevel }}</span>
-              </template>
-              <template v-else-if="c.ready">
-                <button v-if="c.quick" class="ui-btn ui-btn--secondary ui-btn--sm" @click="quickCook(c)">
-                  <Icon name="solar:magic-stick-3-bold-duotone" class="ic" />Comme d'habitude
-                </button>
-                <button class="ui-btn ui-btn--primary ui-btn--sm" @click="startCook(c)">
-                  <Icon name="solar:fire-bold-duotone" class="ic" />Cuisiner
-                </button>
-              </template>
-              <template v-else>
-                <span v-if="c.unbuyable" class="ui-caption lock-note">{{ c.unbuyable }} bientôt à l'épicerie</span>
-                <button v-else class="ui-btn ui-btn--secondary ui-btn--sm buy" :disabled="!c.affordable" @click="buyMissing(c)">
-                  <Icon name="solar:cart-large-2-bold-duotone" class="ic" />
-                  <template v-if="c.affordable">
-                    <span class="buy-l">Acheter ce qui manque</span>
-                    <span class="ui-price"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />{{ c.cost }}</span>
+              <div class="card-foot">
+                <ul class="ings" aria-label="Ingrédients">
+                  <li
+                    v-for="g in c.ings"
+                    :key="g.id"
+                    class="ing"
+                    :class="{ off: g.have < g.need }"
+                    :title="g.label"
+                    :aria-label="`${g.label}${g.need > 1 ? ' ×' + g.need : ''}${g.have < g.need ? ', manquant' : ''}`"
+                  >
+                    <img v-if="!imgFail[g.id]" class="ing-img" :src="foodSrc(g.id)" alt="" draggable="false" @error="imgFail[g.id] = true" />
+                    <Icon v-else :name="g.icon" class="ing-ic" />
+                    <b v-if="g.need > 1" class="ing-n">×{{ g.need }}</b>
+                  </li>
+                </ul>
+
+                <div class="card-actions">
+                  <template v-if="c.locked">
+                    <span class="ui-caption lock-note"><Icon name="solar:lock-keyhole-bold" class="lock-ic" />Au niveau {{ c.r.minLevel }}</span>
                   </template>
-                  <span v-else class="buy-l">Il manque {{ c.cost - inv.coins }} pièce{{ c.cost - inv.coins > 1 ? "s" : "" }}</span>
-                </button>
-              </template>
-            </div>
-          </article>
+                  <template v-else-if="c.ready">
+                    <button v-if="c.quick" class="ui-btn ui-btn--secondary ui-btn--sm" @click="quickCook(c)">
+                      <Icon name="solar:magic-stick-3-bold-duotone" class="ic" />Comme d'habitude
+                    </button>
+                    <button class="ui-btn ui-btn--primary ui-btn--sm" @click="startCook(c)">
+                      <Icon name="solar:fire-bold-duotone" class="ic" />Cuisiner
+                    </button>
+                  </template>
+                  <template v-else>
+                    <span v-if="c.unbuyable" class="ui-caption lock-note">Bientôt à l'épicerie</span>
+                    <button v-else class="ui-btn ui-btn--secondary ui-btn--sm buy" :disabled="!c.affordable" @click="buyMissing(c)">
+                      <Icon name="solar:cart-large-2-bold-duotone" class="ic" />
+                      <template v-if="c.affordable">
+                        <span class="buy-l">Acheter</span>
+                        <span class="ui-price"><Icon name="mochi:coin" class="ic" />{{ c.cost }}</span>
+                      </template>
+                      <span v-else class="buy-l">Il manque {{ c.cost - inv.coins }} pièce{{ c.cost - inv.coins > 1 ? "s" : "" }}</span>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </article>
+          </template>
           <div v-if="!shownCards.length" class="ui-empty"><p>Aucune recette pour l'instant.</p></div>
           <p v-if="hiddenCount" class="ui-foot-note">Encore {{ hiddenCount }} recette{{ hiddenCount > 1 ? "s" : "" }} à découvrir en grandissant.</p>
         </div>
@@ -136,7 +149,8 @@
         <div v-else-if="phase === 'result'" class="body result">
           <div class="plate">
             <span class="ui-thumb dish big" :style="{ '--d1': tint(current)[0], '--d2': tint(current)[1] }">
-              <Icon :name="current?.icon || 'ph:cookie-fill'" class="dish-ic" />
+              <img v-if="current && !imgFail[current.id]" class="dish-img" :src="foodSrc(current.id)" alt="" draggable="false" @error="imgFail[current.id] = true" />
+              <Icon v-else :name="current?.icon || 'ph:cookie-fill'" class="dish-ic" />
             </span>
             <div class="stars-big small">
               <Icon v-for="i in 3" :key="i" name="solar:star-bold" class="sb" :class="{ on: i <= stars }" :style="{ '--i': i }" />
@@ -187,10 +201,11 @@
 // gourmande, goûte). Choisir une recette → UNE étape de timing « cuire » → 1 à 3 étoiles →
 // « Lui donner » ou « Garder au frigo ». Une recette déjà réussie à 3★ se refait d'un geste.
 // Le plat est mis au frigo dès la fin de la cuisson (inv.cook) : fermer en cours de route ne perd rien.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { V1_RECIPES, ingredientById, missingIngredients, groceryIngredients, starMult } from "~/lib/catalog";
 import { useCreatureMood, gameCommand, gameSay, gameToast } from "~/composables/useCreatureMood";
+import { useSheetDrag } from "~/composables/useSheetDrag";
 import { beep, haptic } from "~/composables/useBeep";
 import * as live from "~/composables/useLiveCreature";
 
@@ -200,6 +215,9 @@ const props = defineProps({
   focus: { type: String, default: "" },
 });
 const emit = defineEmits(["close"]);
+// volet tirable par sa poignée (bas = fermer, haut = agrandir)
+const kSheet = ref(null);
+const { tall, grab } = useSheetDrag(kSheet, () => close());
 
 const { store } = useCreatureMood();
 const inv = useInventoryStore();
@@ -209,6 +227,9 @@ const current = ref(null); // recette en cours
 const stars = ref(0);
 const firstTime = ref(false);
 const flashId = ref("");
+// images des plats et ingrédients (Fluent Emoji 3D) ; si l'une manque, on retombe sur l'icône du catalogue
+const imgFail = reactive({});
+const foodSrc = (id) => `/icons/food/${id}.svg`;
 
 // ---------- aperçu des effets ----------
 const MINOR = [
@@ -252,13 +273,16 @@ const cards = computed(() => {
       const ing = ingredientById(id);
       return { id, need, have: inv.pantry[id] || 0, label: ing?.label || id, icon: ing?.icon || "ph:cookie-fill" };
     });
+    const missText = Object.entries(miss)
+      .map(([id, n]) => `${ingredientById(id)?.label || id}${n > 1 ? ` ×${n}` : ""}`)
+      .join(", ");
     const unbuyableIds = Object.keys(miss).filter((id) => !shopIds.value.has(id));
     const cost = Object.entries(miss).reduce((s, [id, n]) => s + (ingredientById(id)?.price || 0) * n, 0);
     const locked = (store.topLevel || store.level || 1) < (r.minLevel || 1);
     const ready = !Object.keys(miss).length;
     const known = (inv.recipesKnown || []).includes(r.id);
     return {
-      r, ings, cost, locked, ready, known,
+      r, ings, missText, cost, locked, ready, known,
       best: inv.recipeStars?.[r.id] || 0,
       quick: ready && inv.canQuickCook?.(r.id),
       affordable: inv.coins >= cost,
@@ -278,10 +302,23 @@ const cards = computed(() => {
 const shownCards = computed(() => cards.value.filter((c) => c.known || c.ready || c.wanted || c.r.id === props.focus || (!c.locked && !c.unbuyable)));
 const hiddenCount = computed(() => cards.value.length - shownCards.value.length);
 
+// prêtes d'abord (mises en avant), puis celles auxquelles il manque quelque chose
+const sections = computed(() => {
+  const isReady = (c) => c.ready && !c.locked;
+  const ready = shownCards.value.filter(isReady);
+  const other = shownCards.value.filter((c) => !isReady(c));
+  let n = 0;
+  const out = [];
+  if (ready.length) out.push({ key: "ready", title: other.length ? "Prêtes à cuisiner" : "", cards: ready.map((c) => ({ ...c, idx: n++ })) });
+  if (other.length) out.push({ key: "other", title: "À préparer", cards: other.map((c) => ({ ...c, idx: n++ })) });
+  return out;
+});
+const readyCount = computed(() => shownCards.value.filter((c) => c.ready && !c.locked).length);
+
 function buyMissing(c) {
   const miss = missingIngredients(c.r.id, inv.pantry);
   const cost = Object.entries(miss).reduce((s, [id, n]) => s + (ingredientById(id)?.price || 0) * n, 0);
-  if (inv.coins < cost) { gameToast("Pas assez de pièces.", "solar:dollar-minimalistic-bold-duotone"); return; }
+  if (inv.coins < cost) { gameToast("Pas assez de pièces.", "mochi:coin"); return; }
   for (const [id, n] of Object.entries(miss)) {
     const res = inv.buyIngredient(id, n);
     if (!res?.ok) { gameToast(res?.reason || "Achat impossible.", "solar:cart-large-2-bold-duotone"); return; }
@@ -427,7 +464,10 @@ function keep() {
 // ---------- navigation ----------
 const headTitle = computed(() => (phase.value === "list" ? "Cuisine" : current.value?.label || "Cuisine"));
 const headSub = computed(() => ({
-  list: inv.mealsCount ? `${inv.mealsCount} plat${inv.mealsCount > 1 ? "s" : ""} au frigo` : "Un bon repas lui rend de l'énergie",
+  list: [
+    readyCount.value ? `${readyCount.value} prête${readyCount.value > 1 ? "s" : ""}` : "Rien de prêt",
+    inv.mealsCount ? `${inv.mealsCount} au frigo` : "",
+  ].filter(Boolean).join(" · "),
   cook: "Cuire au bon moment",
   result: "C'est prêt !",
   fed: "Bon appétit !",
@@ -535,51 +575,84 @@ onBeforeUnmount(() => {
   /* très léger : elle doit rester visible au-dessus */
   background: linear-gradient(180deg, rgba(30, 40, 70, 0) 30%, rgba(30, 40, 70, 0.18));
 }
-.k-sheet { height: 54vh; height: 54dvh; min-height: 360px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); }
+.k-sheet { height: calc(54vh + var(--nav-h, 78px)); height: calc(54dvh + var(--nav-h, 78px)); min-height: 420px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 12px); }
+.k-sheet.is-tall { height: 92vh; height: 92dvh; }
 .coins {
   flex: none; min-height: 36px; padding: 0 12px 0 8px; border-radius: var(--r-pill);
-  background: #fff; color: var(--ink); font-size: 15px; box-shadow: var(--sh-1), var(--hl);
+  background: var(--surface); color: var(--hud-ink); font-size: 15px; box-shadow: var(--ui-soft);
 }
 .body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
 /* ---------- cartes ---------- */
-.list { display: flex; flex-direction: column; gap: 10px; padding: 2px 2px 8px; }
-.card { padding: var(--s-3); }
-.card.ready { box-shadow: inset 0 0 0 2px #bfe9a8, var(--sh-2); }
-.card.wanted { background: linear-gradient(180deg, #fff8fa, #ffeef3); box-shadow: inset 0 0 0 2px #ffc2d4, var(--sh-2); }
-.card.locked { opacity: 0.62; filter: grayscale(0.4); }
-.card.flash { animation: flash 0.6s ease-out; }
-@keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(79, 191, 52, 0.6); transform: scale(1.02); } 100% { box-shadow: 0 0 0 14px rgba(79, 191, 52, 0); transform: scale(1); } }
-.card-top { display: flex; gap: var(--s-3); align-items: flex-start; }
-.dish { width: 54px; height: 54px; border-radius: var(--r-md); background: radial-gradient(circle at 35% 30%, #fff, var(--d1) 65%); }
-.dish-ic { width: 32px; height: 32px; color: var(--d2); filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.18)); }
-.dish-lock { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: #fff; color: var(--ink-3); }
-.dish.big { width: 96px; height: 96px; border-radius: 30px; }
-.dish.big .dish-ic { width: 58px; height: 58px; }
+.list { display: flex; flex-direction: column; gap: 10px; padding: 2px 4px 10px; }
+.sec { margin: 6px 4px 0; font: 800 var(--t-sm) var(--font-text); letter-spacing: 0.02em; }
+.sec:first-child { margin-top: 0; }
+/* blanche, ombre douce, aucun contour ; arrivée en cascade avec un petit ressort */
+.card {
+  position: relative; display: flex; flex-direction: column; gap: 10px; padding: 12px;
+  color: var(--hud-ink);
+  animation: card-in 0.45s var(--spring) both;
+  animation-delay: calc(min(var(--i, 0), 8) * 55ms);
+}
+/* mise en avant : ce qu'elle réclame, ou la recette demandée */
+.card.wanted { background: var(--sky-soft); }
+/* pas faisable maintenant : plus discrète, sans ombre */
+.card:not(.ready):not(.wanted) { background: var(--hud-band); box-shadow: none; }
+.card:not(.ready) .dish { opacity: 0.8; }
+.card.locked { opacity: 0.6; filter: grayscale(0.5); }
+.card.flash::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; animation: flash 0.6s ease-out; }
+@keyframes card-in { 0% { opacity: 0; transform: translateY(14px) scale(0.97); } 100% { opacity: 1; transform: none; } }
+@keyframes flash { 0% { box-shadow: 0 0 0 0 rgba(79, 191, 52, 0.6); } 100% { box-shadow: 0 0 0 14px rgba(79, 191, 52, 0); } }
+.card-top { display: flex; gap: 12px; align-items: center; }
+.dish { position: relative; flex: none; width: 66px; height: 66px; display: grid; place-items: center; }
+.dish-img {
+  width: 48px; height: 48px; object-fit: contain; pointer-events: none; user-select: none;
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 3px 3px rgba(30, 55, 100, 0.22));
+}
+.dish-ic { width: 34px; height: 34px; color: var(--sky); }
+.dish-lock { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: var(--surface); color: var(--hud-ink-2); }
+.dish.big { width: 96px; height: 96px; background: radial-gradient(circle at 35% 30%, #fff, var(--d1) 70%); }
+.dish.big .dish-img { width: 70px; height: 70px; }
+.dish.big .dish-ic { width: 58px; height: 58px; color: var(--d2); }
 .card-main { flex: 1; min-width: 0; }
-.name-row { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; }
-.hint { display: flex; align-items: center; gap: 4px; margin: 3px 0 0; font: 800 var(--t-sm) var(--font-text); }
+.name-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.name-row .ui-row-title { margin: 0; min-width: 0; font-size: 17px; }
+/* découverte : un petit signe, pas un badge */
+.spark { display: inline-flex; align-items: center; gap: 2px; flex: none; font: 800 var(--t-sm) var(--font-text); color: var(--hud-ink-2); }
+.spark .ic { width: 15px; height: 15px; color: var(--sky); }
+.benefit { display: flex; align-items: center; gap: 4px; margin: 3px 0 0; font: 800 15px var(--font-text); color: var(--sky-ink); }
+.benefit .ic { width: 17px; height: 17px; flex: none; color: var(--sky); }
+.hint { display: flex; align-items: center; gap: 4px; margin: 3px 0 0; font: 700 var(--t-sm) var(--font-text); color: var(--sky-ink); }
+.hint.dim { color: var(--hud-ink-2); }
 .hint-ic { width: 16px; height: 16px; flex: none; }
-.hint.love, .hint.wish { color: var(--love-ink); }
-.hint.meh { color: var(--ink-3); }
+.miss { margin: -2px 0 0; font: 800 var(--t-md) var(--font-text); color: var(--hud-ink-2); }
+.card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 10px; }
+.ings { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ing { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 4px rgba(30, 55, 100, 0.12); }
+.ing-img { width: 28px; height: 28px; object-fit: contain; pointer-events: none; user-select: none; transition: filter 0.25s, opacity 0.25s; }
+.ing-ic { width: 22px; height: 22px; color: var(--sky); }
+.ing-n { position: absolute; right: -3px; bottom: -3px; min-width: 18px; padding: 0 4px; border-radius: 999px; background: var(--hud-ink); color: #fff; font: 800 11px/18px var(--font-text); text-align: center; }
+/* ingrédient manquant : grisé */
+.ing.off { background: transparent; box-shadow: inset 0 0 0 0 transparent; }
+.ing.off .ing-img { filter: grayscale(1); opacity: 0.35; }
+.ing.off .ing-ic { color: var(--hud-ink-2); opacity: 0.5; }
+.ing.off .ing-n { background: var(--hud-ink-2); }
+.card-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.lock-note { display: inline-flex; align-items: center; gap: 4px; }
+.lock-ic { width: 14px; height: 14px; }
+.buy { white-space: normal; max-width: 100%; }
+.buy .ui-price { font-size: var(--t-md); }
+.buy .ui-price .ic { color: var(--coin); }
+.buy-l { font-size: var(--t-md); }
+/* résultat / repas servi : puces d'effets */
 .fx { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
 .fx.center { justify-content: center; margin: var(--s-2) 0; }
 .fx-main { font: 700 13px var(--font-title); padding: 3px 9px 3px 6px; }
 .fx-main .ic { width: 16px; height: 16px; }
 .fx-small { display: inline-flex; align-items: center; gap: 2px; font: 700 var(--t-sm) var(--font-title); }
-.fx-small.big { font-size: var(--t-lg); padding: 3px 10px; border-radius: var(--r-pill); background: #fff; box-shadow: var(--sh-1); animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.fx-small.big { font-size: var(--t-lg); padding: 3px 10px; border-radius: var(--r-pill); background: var(--surface); box-shadow: var(--sh-1); animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
 .fx-small.xp { color: var(--accent-ink); }
 .fx-sic { width: 15px; height: 15px; }
-.ings { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
-.ing { padding: 4px 9px 4px 6px; font-size: var(--t-sm); }
-.ing .ic { width: 15px; height: 15px; }
-.ing-n { opacity: 0.85; }
-.card-actions { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-3); }
-.lock-note { display: inline-flex; align-items: center; gap: 4px; }
-.lock-ic { width: 14px; height: 14px; }
-.buy { white-space: normal; max-width: 100%; }
-.buy .ui-price .ic { color: var(--coin); }
-.buy-l { font-size: var(--t-md); }
 .stop {
   min-height: 58px; min-width: 200px; font-size: 22px; color: #fff; border-radius: var(--r-pill);
   background: linear-gradient(180deg, #ffb347, #f07f1c); box-shadow: 0 5px 0 #c25a12, inset 0 2px 0 rgba(255, 255, 255, 0.4);
@@ -655,6 +728,6 @@ onBeforeUnmount(() => {
 .ksheet-enter-from .k-sheet, .ksheet-leave-to .k-sheet { transform: translateY(100%); }
 @media (prefers-reduced-motion: reduce) {
   .ksheet-enter-active .k-sheet, .ksheet-leave-active .k-sheet { transition: none; }
-  .stop, .pan.sizzle, .steam i, .core { animation: none; }
+  .stop, .pan.sizzle, .steam i, .core, .card, .card.flash::after { animation: none; }
 }
 </style>

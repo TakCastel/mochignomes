@@ -1,23 +1,38 @@
 <template>
-  <section class="strip" aria-label="Besoins">
-    <button v-for="n in rows" :key="n.key" class="cell" :aria-label="`${n.label} : ${Math.round(n.value)} sur 100`" @click="tap(n)">
-      <Icon :name="n.icon" class="ic" :style="{ color: n.color }" />
-      <span class="track"><span class="fill" :class="n.level" :style="{ width: n.width + '%' }" /></span>
+  <!-- panneau des besoins : un rectangle blanc, deux colonnes ; médaillon rond à gauche,
+       libellé bleu marine puis jauge épaisse et brillante, humeur dans la dernière case -->
+  <section class="needs" aria-label="Besoins">
+    <button v-for="(n, i) in rows" :key="n.key" class="need" :class="['is-' + n.level, { 'is-up': bumped[n.key] }]" :style="{ '--i': i }" :aria-label="`${n.label} : ${Math.round(n.value)} sur 100`" @click="tap(n)">
+      <span class="medal"><Icon :name="n.glyph" class="glyph" /></span>
+      <span class="body">
+        <span class="name">{{ n.label }}</span>
+        <span class="track"><span class="fill" :style="{ width: n.width + '%' }" /></span>
+      </span>
     </button>
+    <div class="mood" :style="{ '--i': rows.length }" aria-live="polite">
+      <span class="mood-dot" :style="{ '--d': moodInfo[1] }" />
+      <span class="body">
+        <span class="name">Humeur</span>
+        <span class="mood-v">{{ moodInfo[0] }}</span>
+      </span>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, reactive, watch } from "vue";
+import { MOOD_LABELS } from "~/lib/creatureLook";
 
-const { store } = useCreatureMood();
+const { store, mood } = useCreatureMood();
+const moodInfo = computed(() => MOOD_LABELS[mood.value] || ["Sereine", "#4fc3a1"]);
 const STAT_ACTION = { hunger: "nourrir", cleanliness: "laver", fun: "jouer", energy: "coucher", health: "soigner" };
+// icon : pastille du message (gameToast) ; glyph : pictogramme blanc dans le médaillon
 const NEEDS = [
-  { key: "hunger", label: "Ventre", icon: "solar:donut-bitten-bold-duotone", color: "#e8892a" },
-  { key: "cleanliness", label: "Propreté", icon: "solar:waterdrop-bold-duotone", color: "#3b9cf0" },
-  { key: "fun", label: "Jeu", icon: "solar:football-bold-duotone", color: "#2fae4a" },
-  { key: "energy", label: "Énergie", icon: "solar:bolt-bold-duotone", color: "#7a5ce6" },
-  { key: "health", label: "Santé", icon: "solar:heart-bold-duotone", color: "#ef5b9a" },
+  { key: "hunger", label: "Ventre", icon: "solar:donut-bitten-bold-duotone", glyph: "solar:donut-bitten-bold" },
+  { key: "cleanliness", label: "Propreté", icon: "solar:waterdrop-bold-duotone", glyph: "solar:waterdrop-bold" },
+  { key: "fun", label: "Jeu", icon: "solar:football-bold-duotone", glyph: "solar:football-bold" },
+  { key: "energy", label: "Énergie", icon: "solar:bolt-bold-duotone", glyph: "solar:bolt-bold" },
+  { key: "health", label: "Santé", icon: "solar:heart-bold-duotone", glyph: "solar:heart-bold" },
 ];
 const PHRASES = {
   hunger: ["a très faim", "a un peu faim", "n'a pas faim", "est bien rassasiée"],
@@ -29,13 +44,26 @@ const PHRASES = {
 function level(v) {
   return v >= 60 ? "good" : v >= 40 ? "ok" : v >= 20 ? "low" : "bad";
 }
-// la barre verte devient jaune, orange puis rouge quand le besoin monte
+// la jauge verte devient jaune, orange puis rouge quand le besoin monte
 const rows = computed(() =>
   NEEDS.map((n) => {
     const value = store[n.key];
-    return { ...n, value, level: level(value), width: Math.max(5, Math.min(value, 100)) };
+    return { ...n, value, level: level(value), width: Math.max(4, Math.min(value, 100)) };
   })
 );
+
+// quand une valeur monte d'au moins 5, le médaillon bondit
+const bumped = reactive({});
+const last = {};
+watch(rows, (list) => {
+  for (const n of list) {
+    if (last[n.key] !== undefined && n.value - last[n.key] >= 5) {
+      bumped[n.key] = true;
+      setTimeout(() => (bumped[n.key] = false), 650);
+    }
+    last[n.key] = n.value;
+  }
+}, { immediate: true });
 
 // un tap sur une jauge ne change jamais d'écran : il dit l'état et montre l'action liée
 function tap(n) {
@@ -50,51 +78,135 @@ function tap(n) {
 </script>
 
 <style scoped>
-.strip {
+/* un seul panneau blanc opaque, filet fin */
+.needs {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  padding: 12px 4px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.16), var(--hl);
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 0;
+  padding: 4px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
+  animation: rise 0.5s var(--spring) both;
 }
-.cell {
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+.need,
+.mood {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 9px;
-  min-height: 48px;
-  padding: 0 9px;
-  position: relative;
-  border: 0;
-  background: none;
-  cursor: pointer;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 3px 8px 3px 4px;
+  animation: fade 0.4s ease-out calc(0.1s + var(--i, 0) * 40ms) both;
 }
-/* séparateur doux (pas de filet) */
-.cell + .cell::before {
+@keyframes fade { from { opacity: 0; } }
+.need {
+  --c: #49c13a;
+  --c-hi: #8ee86a;
+  --c-lo: #2f9a24;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.need.is-ok { --c: #f5c518; --c-hi: #ffe46b; --c-lo: #c49a08; }
+.need.is-low { --c: #ff9a26; --c-hi: #ffc46e; --c-lo: #d0700c; }
+.need.is-bad { --c: #ea4338; --c-hi: #ff8a7e; --c-lo: #b52a20; }
+.body { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.name {
+  font: 800 13px/1 var(--font-text);
+  color: var(--hud-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.medal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 28%, var(--c-hi), var(--c) 62%, var(--c-lo));
+  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
+  transition: background 0.4s, transform 0.4s var(--spring-strong);
+}
+.glyph { width: 20px; height: 20px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
+.need:active .medal { transform: scale(0.84); transition-duration: 0.08s; }
+.need.is-up .medal { animation: bump 0.6s var(--spring-strong); }
+@keyframes bump { 40% { transform: scale(1.15); } }
+/* gouttière creusée dans le panneau : ombre intérieure en haut, liseré clair en bas */
+.track {
+  display: block;
+  height: 18px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
+}
+/* remplissage en relief : dégradé de tube arrondi, liseré lumineux fin en haut, ombre douce en bas */
+.fill {
+  position: relative;
+  display: block;
+  min-width: 14px;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c-hi) 70%, var(--surface)) 0%,
+    var(--c-hi) 22%,
+    var(--c) 58%,
+    var(--c-lo) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -2px 2px color-mix(in srgb, var(--c-lo) 60%, transparent),
+    0 1px 2px color-mix(in srgb, var(--c-lo) 45%, transparent);
+  transition: width 0.7s var(--spring), background 0.4s;
+}
+/* reflet qui balaie la jauge de temps en temps, chaque jauge à son tour */
+.fill::after {
   content: "";
   position: absolute;
-  left: -1px;
-  top: 4px;
-  bottom: 4px;
-  width: 2px;
-  border-radius: 2px;
-  background: linear-gradient(180deg, transparent, var(--surface-3) 30%, var(--surface-3) 70%, transparent);
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.5) 48%, rgba(255, 255, 255, 0.5) 52%, transparent 70%);
+  transform: translateX(-110%);
+  animation: sheen 6s ease-in-out calc(1.5s + var(--i, 0) * 0.35s) infinite;
+  pointer-events: none;
 }
-.ic { width: 28px; height: 28px; }
-.track {
-  width: 100%;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--surface-3);
+@keyframes sheen {
+  0% { transform: translateX(-110%); }
+  14%, 100% { transform: translateX(110%); }
+}
+/* besoin critique : le médaillon palpite */
+.need.is-bad .medal { animation: alert 1.1s ease-in-out infinite; }
+@keyframes alert { 50% { transform: scale(1.15); } }
+/* humeur */
+.mood-dot {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.55), var(--d) 60%);
+  background-color: var(--d);
+  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
+}
+.mood-v {
+  display: block;
+  height: 20px;
+  font: 700 16px/20px var(--font-title);
+  color: var(--hud-ink);
+  white-space: nowrap;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.12);
+  text-overflow: ellipsis;
 }
-.fill { display: block; height: 100%; border-radius: 999px; transition: width 0.6s ease, background 0.4s; }
-.good { background: linear-gradient(180deg, #7fdc5a, #44b82e); }
-.ok { background: linear-gradient(180deg, #e3e45a, #c2c524); }
-.low { background: linear-gradient(180deg, #ffc067, #ff9a26); }
-.bad { background: linear-gradient(180deg, #ff7a6e, #e8443a); animation: pulse 1.2s ease-in-out infinite; }
-@keyframes pulse { 50% { opacity: 0.55; } }
-@media (prefers-reduced-motion: reduce) { .bad { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .needs, .need, .mood, .need.is-bad .medal, .need.is-up .medal { animation: none; }
+  .fill, .medal { transition: none; }
+  .fill::after { animation: none; display: none; }
+}
 </style>

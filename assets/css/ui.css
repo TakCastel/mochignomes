@@ -1,14 +1,17 @@
 /* ==========================================================================
    Couche de design partagée : jetons + primitives d'interface.
-   Direction artistique = l'écran principal : interface très blanche, un seul
-   accent vert, « plaques » douces en dégradé, ombres tendres (jamais de filet
-   de 1 px), formes arrondies, Fredoka pour les titres, Nunito pour le texte.
+   Direction artistique façon jeu de simulation de vie : panneaux de verre
+   givré blanc posés sur la scène (liseré blanc lumineux), bleu ciel pour la
+   sélection et les titres, vert réservé à la validation, ombres tendres
+   (jamais de filet de 1 px), formes arrondies, animations à ressort
+   (apparitions qui rebondissent, pressions qui s'écrasent).
+   Fredoka pour les titres, Nunito pour le texte.
 
    Règles :
    - action principale  = vert plein (.ui-btn--primary) ;
-   - élément sélectionné = fond vert tendre + anneau vert intérieur (--sel-*),
+   - élément sélectionné = fond bleu ciel tendre + anneau bleu intérieur (--sel-*),
      pareil pour les puces, onglets, tuiles et cartes ; pastille de couleur =
-     anneau vert extérieur ;
+     anneau bleu extérieur ;
    - pastille « à faire » = point rouge (--dot), un seul style partout.
    ========================================================================== */
 
@@ -26,6 +29,7 @@
   --surface: #ffffff;
   --surface-2: #f4f7fb; /* creux dans une carte, fond de page */
   --surface-3: #e6ebf1; /* pistes de jauges, éléments éteints */
+  --tint: 100%; /* force des fonds teintés (doré, rose…) posés sur la surface */
   --panel-top: #ffffff;
   --panel-bottom: #f4f7fb;
   --plate-hi: #ffffff;
@@ -45,9 +49,54 @@
   --dot: #ff3b3b;
 
   /* sélection */
-  --sel-bg: linear-gradient(180deg, #effbe7, #dcf5cc);
-  --sel-ring: inset 0 0 0 2px #8fdc6a;
-  --sel-ink: #3c9a22;
+  --sel-bg: linear-gradient(180deg, #f0f8ff, #d6ecff);
+  --sel-ring: inset 0 0 0 2px #7cc0f5;
+  --sel-ink: #1f73c2;
+
+  /* bleu ciel de l'interface (titres, sélection, halos) */
+  --sky: #2f95e8;
+  --sky-hi: #6cc2ff;
+  --sky-lo: #1d6fbf;
+  --sky-ink: #1a5fa3;
+  --sky-soft: #e8f4ff;
+
+  /* verre givré des panneaux posés sur la scène */
+  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(238, 246, 255, 0.72));
+  --glass-solid: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 248, 255, 0.92));
+  --glass-blur: blur(18px) saturate(1.5);
+  --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), inset 0 2px 0 var(--glint);
+  --glass-shadow: 0 10px 30px rgba(30, 70, 120, 0.18);
+
+  /* HUD de l'écran principal, façon jeu de simulation de vie : panneaux blancs nets,
+     bandes gris-bleu très clair, filets fins, texte bleu marine, pilules blanches */
+  --hud-ink: #2c4f9e; /* texte bleu marine */
+  --hud-ink-2: #6f86b3; /* texte bleu discret */
+  --hud-band: #eef2f7; /* bande gris-bleu sous les libellés */
+  --hud-line: #d6dfea; /* filet entre les cases */
+  --hud-shadow: 0 6px 18px rgba(30, 55, 100, 0.18);
+  --hud-pill: linear-gradient(180deg, #ffffff 0%, #f6f8fb 55%, #e6ecf3 100%);
+  --hud-pill-hover: linear-gradient(180deg, #ffffff, #eef5ff 60%, #dde9f7);
+  --track-lo: #cdd6e2; /* piste des jauges */
+  --track-hi: #e4eaf1;
+  --hud-pill-shadow: 0 2px 0 #c9d4e2, 0 4px 10px rgba(30, 55, 100, 0.16);
+
+  /* matière unique de l'interface : cartes blanches opaques, filet fin, ombres en échelle */
+  --ui-card: #ffffff;
+  --ui-card-2: #f4f7fb;
+  --ui-cream: #fff8ea;
+  --ui-line: #d6dfea;
+  --ui-sh-1: 0 2px 0 #c9d4e2;
+  --ui-sh-2: 0 6px 16px rgba(30, 55, 100, 0.14);
+  --ui-sh-3: 0 12px 28px rgba(30, 55, 100, 0.22);
+  --ui-ok: #49c13a;
+  --ui-warn: #ff9a26;
+  --ui-bad: #ea4338;
+  --ui-gold: #ffc21a;
+  --ui-mid: #f5c518;
+
+  /* ressorts */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-strong: cubic-bezier(0.3, 1.9, 0.5, 1);
 
   /* formes */
   --r-xs: 10px;
@@ -66,7 +115,8 @@
   --s-6: 24px;
 
   /* ombres (aucun filet : relief par l'ombre et le reflet) */
-  --hl: inset 0 1px 0 #fff;
+  --glint: #ffffff; /* reflet clair sur le haut des plaques */
+  --hl: inset 0 1px 0 var(--glint);
   --sh-1: 0 2px 6px rgba(40, 55, 80, 0.08);
   --sh-2: 0 4px 14px rgba(40, 55, 80, 0.1);
   --sh-3: 0 10px 28px rgba(40, 55, 80, 0.18);
@@ -118,7 +168,7 @@
   padding: var(--s-3) var(--s-1) 10px;
   border: 0;
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #ffffff, #f3f5f8);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), var(--hl);
   color: var(--ink);
   font: inherit;
@@ -149,7 +199,7 @@ button.ui-tile:active { transform: scale(0.96); }
   padding: 10px var(--s-3);
   border: 0;
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #ffffff, #f4f6f9);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   box-shadow: 0 4px 10px rgba(40, 55, 80, 0.08), var(--hl);
   color: var(--ink);
   font: inherit;
@@ -159,7 +209,7 @@ button.ui-row { width: 100%; cursor: pointer; -webkit-tap-highlight-color: trans
 button.ui-row:active { transform: scale(0.98); }
 .ui-row.is-well { background: var(--surface-2); box-shadow: none; }
 .ui-row.is-on { background: var(--sel-bg); box-shadow: var(--sel-ring); }
-.ui-row.is-love { background: linear-gradient(180deg, #fff8fa, #ffecf2); box-shadow: inset 0 0 0 2px #ffc2d4, 0 4px 10px rgba(255, 79, 134, 0.12); }
+.ui-row.is-love { background: linear-gradient(180deg, color-mix(in srgb, #fff8fa var(--tint), var(--surface)), color-mix(in srgb, #ffecf2 var(--tint), var(--surface))); box-shadow: inset 0 0 0 2px #ffc2d4, 0 4px 10px rgba(255, 79, 134, 0.12); }
 .ui-row-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .ui-row-title {
   display: flex;
@@ -181,7 +231,7 @@ button.ui-row:active { transform: scale(0.98); }
   width: 48px;
   height: 48px;
   border-radius: var(--r-sm);
-  background: radial-gradient(circle at 38% 30%, #fff, var(--surface-2) 70%);
+  background: radial-gradient(circle at 38% 30%, var(--surface), var(--surface-2) 70%);
   box-shadow: 0 2px 6px rgba(40, 55, 80, 0.08), var(--hl);
   font-size: 28px;
   line-height: 1;
@@ -204,7 +254,7 @@ button.ui-row:active { transform: scale(0.98); }
   font: 600 17px / 1.2 var(--font-title);
   color: var(--ink);
 }
-.ui-section-title > .ic { flex: none; width: 22px; height: 22px; color: var(--accent); }
+.ui-section-title > .ic { flex: none; width: 22px; height: 22px; color: var(--sky); }
 /* intertitre au-dessus d'un groupe (hors carte) */
 .ui-overline {
   display: flex;
@@ -252,7 +302,7 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-btn--primary:active:not(:disabled) { box-shadow: 0 2px 0 var(--accent-lo); }
 .ui-btn--secondary {
   color: var(--ink);
-  background: linear-gradient(180deg, #ffffff, var(--plate-lo));
+  background: linear-gradient(180deg, var(--surface), var(--plate-lo));
   box-shadow: 0 4px 0 var(--knob-side), 0 6px 14px rgba(40, 55, 80, 0.08), var(--hl);
 }
 .ui-btn--secondary:active:not(:disabled) { box-shadow: 0 2px 0 var(--knob-side); }
@@ -309,7 +359,7 @@ button.ui-row:active { transform: scale(0.98); }
   padding: 0 14px;
   border: 0;
   border-radius: var(--r-pill);
-  background: #fff;
+  background: var(--surface);
   color: var(--ink-2);
   font: 800 var(--t-md) / 1 var(--font-text);
   white-space: nowrap;
@@ -329,12 +379,12 @@ button.ui-row:active { transform: scale(0.98); }
   padding: 0;
   border: 0;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 3px #fff, inset 0 -4px 0 3px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(40, 55, 80, 0.18);
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 -4px 0 3px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(40, 55, 80, 0.18);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.1s;
 }
-.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--accent), 0 4px 10px rgba(40, 55, 80, 0.2); }
+.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 3px var(--sky), 0 4px 10px rgba(40, 55, 80, 0.2); }
 .ui-swatch.is-off { opacity: 0.4; }
 .ui-swatch-mark {
   position: absolute;
@@ -343,7 +393,7 @@ button.ui-row:active { transform: scale(0.98); }
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   color: var(--accent-lo);
   box-shadow: var(--sh-1);
 }
@@ -357,7 +407,7 @@ button.ui-row:active { transform: scale(0.98); }
   gap: var(--s-1);
   padding: var(--s-1);
   border-radius: var(--r-md);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--sh-1), var(--hl);
 }
 .ui-tab {
@@ -392,7 +442,7 @@ button.ui-row:active { transform: scale(0.98); }
   height: 10px;
   border-radius: 50%;
   background: var(--dot);
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   pointer-events: none;
 }
 .ui-badge {
@@ -407,7 +457,7 @@ button.ui-row:active { transform: scale(0.98); }
   color: #fff;
   font: 800 var(--t-xs) / 18px var(--font-text);
   text-align: center;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   pointer-events: none;
 }
 /* petite étiquette ; couleur via --c */
@@ -418,7 +468,7 @@ button.ui-row:active { transform: scale(0.98); }
   gap: 3px;
   padding: 3px 8px;
   border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--c) 14%, #fff);
+  background: color-mix(in srgb, var(--c) 14%, var(--surface));
   color: color-mix(in srgb, var(--c) 82%, #000);
   font: 800 var(--t-xs) / 1.1 var(--font-text);
   white-space: nowrap;
@@ -448,9 +498,44 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-stars .ic.on { color: #ffc21a; }
 
 /* ---------- jauges ---------- */
-.ui-bar { height: 10px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.1); }
-.ui-bar--thin { height: 8px; }
-.ui-bar > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, var(--accent-hi), var(--accent)); transition: width 0.4s; }
+/* jauge unique du jeu, identique à celles de l'écran principal (besoins, niveau) :
+   gouttière creusée de 18 px + remplissage en tube. Couleur via --c sur la barre ou sur le <i>. */
+.ui-bar {
+  --c: var(--accent);
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 18px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 var(--glint), 0 1px 0 var(--glint);
+}
+.ui-bar--thin { height: 18px; } /* conservé pour compatibilité : toutes les jauges ont la même taille */
+.ui-bar > i {
+  position: relative;
+  display: block;
+  min-width: 14px;
+  max-width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--c) 45%, #fff) 0%,
+    color-mix(in srgb, var(--c) 75%, #fff) 22%,
+    var(--c) 58%,
+    color-mix(in srgb, var(--c) 78%, #000) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -2px 2px color-mix(in srgb, var(--c) 45%, transparent),
+    0 1px 2px color-mix(in srgb, var(--c) 35%, transparent);
+  transition: width 0.7s var(--spring), background 0.4s;
+}
+/* à zéro : gouttière vide, pas de petit bout de remplissage */
+/* jauge de temps (chrono) : suit le temps sans rebond */
+.ui-bar--live > i { transition: width 0.3s linear; }
+.ui-bar > i[style*="width: 0%"], .ui-bar > i[style*="width:0%"] { display: none; }
 
 /* ---------- messages ---------- */
 .ui-empty {
@@ -475,7 +560,7 @@ button.ui-row:active { transform: scale(0.98); }
   margin: 0;
   padding: 10px var(--s-3);
   border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--c) 11%, #fff);
+  background: color-mix(in srgb, var(--c) 11%, var(--surface));
   color: color-mix(in srgb, var(--c) 85%, #000);
   font: 800 var(--t-md) / 1.35 var(--font-text);
 }
@@ -519,12 +604,12 @@ button.ui-row:active { transform: scale(0.98); }
   padding: var(--s-6) var(--s-5) var(--s-5);
   border-radius: var(--r-xl);
   background: linear-gradient(180deg, var(--panel-top) 60%, var(--panel-bottom));
-  box-shadow: var(--sh-pop), inset 0 2px 0 #fff;
+  box-shadow: var(--sh-pop), inset 0 2px 0 var(--glint);
   color: var(--ink);
   text-align: center;
 }
 .ui-dialog > * { max-width: 100%; }
-.ui-dialog-title { margin: 0; font: 700 24px / 1.15 var(--font-title); color: var(--ink); }
+.ui-dialog-title { margin: 0; font: 700 24px / 1.15 var(--font-title); color: var(--sky-ink); }
 .ui-dialog .ui-actions { width: 100%; margin-top: var(--s-2); }
 /* médaillon rond (en-tête de fenêtre, carte de nouveauté) */
 .ui-medal {
@@ -543,6 +628,7 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-medal--sm .ic { width: 26px; height: 26px; }
 .ui-medal--gold { background: radial-gradient(circle at 38% 30%, #ffe58a, #ffb81a 70%); box-shadow: 0 4px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5); }
 .ui-medal--love { background: radial-gradient(circle at 36% 28%, #ffc0d2, #ff6d8a 60%, #e03a64); box-shadow: 0 4px 0 #c22d55, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
+.ui-medal--sky { background: radial-gradient(circle at 38% 30%, var(--sky-hi), var(--sky) 70%); box-shadow: 0 4px 0 var(--sky-lo), inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 0 0 3px var(--surface); }
 .ui-medal--soft { background: var(--surface-2); box-shadow: inset 0 -3px 0 rgba(40, 55, 80, 0.06); }
 .ui-medal--soft .ic { color: var(--ink-3); }
 
@@ -552,18 +638,187 @@ button.ui-row:active { transform: scale(0.98); }
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  background: linear-gradient(180deg, #ffffff 60%, var(--plate-hi));
+  background: linear-gradient(180deg, var(--surface) 60%, var(--plate-hi));
   color: var(--ink);
   border-radius: 32px 32px 0 0;
   padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
-  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.28), inset 0 2px 0 #fff;
+  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.28), inset 0 2px 0 var(--glint);
 }
 .ui-grab { flex: none; width: 44px; height: 5px; margin: 0 auto 10px; border-radius: var(--r-pill); background: var(--knob-side); }
 .ui-sheet-head { flex: none; display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); min-width: 0; }
 .ui-sheet-title { flex: 1; min-width: 0; }
-.ui-sheet-title h2 { margin: 0; font: 700 24px / 1.1 var(--font-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-sheet-title h2 { margin: 0; font: 700 24px / 1.1 var(--font-title); color: var(--sky-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ui-sheet-title p { margin: 2px 0 0; font: 700 var(--t-md) / 1.25 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+/* ==========================================================================
+   Passe « simulation de vie » : verre givré, ressorts, reflets
+   (vient après les primitives pour les compléter sans les réécrire)
+   ========================================================================== */
+
+/* panneaux : cartes blanches opaques, filet fin (plus de verre sur l'écran principal) */
+.ui-card,
+.ui-dialog,
+.ui-half-sheet {
+  background: var(--ui-card);
+}
+.ui-card { border-radius: 16px; box-shadow: var(--ui-sh-2), 0 0 0 1px var(--ui-line); }
+.ui-dialog { box-shadow: var(--sh-pop), 0 0 0 1px var(--ui-line); }
+.ui-half-sheet { border-radius: 24px 24px 0 0; box-shadow: 0 -8px 30px rgba(30, 55, 100, 0.2), 0 0 0 1px var(--ui-line); }
+.ui-tabs { background: var(--ui-card-2); box-shadow: inset 0 0 0 1px var(--ui-line); }
+
+/* fenêtres : arrivée avec un petit rebond */
+.ui-dialog { animation: ui-pop-in 0.42s var(--spring) both; }
+.ui-scrim { animation: ui-fade-in 0.22s ease-out both; }
+@keyframes ui-pop-in {
+  from { opacity: 0; transform: scale(0.82) translateY(14px); }
+  60% { opacity: 1; }
+}
+@keyframes ui-fade-in { from { opacity: 0; } }
+
+/* pressions à ressort : on s'écrase au toucher, on rebondit au relâcher */
+.ui-btn,
+button.ui-tile,
+button.ui-row,
+.ui-chip,
+.ui-tab,
+.ui-icon-btn,
+.ui-swatch {
+  transition: transform 0.38s var(--spring-strong), box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+.ui-btn:active:not(:disabled) { transform: translateY(2px) scale(0.96); transition-duration: 0.08s; }
+button.ui-tile:active,
+.ui-chip:active,
+.ui-tab:active { transform: scale(0.93); transition-duration: 0.08s; }
+button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
+.ui-icon-btn:active { transform: scale(0.88); transition-duration: 0.08s; }
+@media (hover: hover) {
+  .ui-btn:hover:not(:disabled),
+  button.ui-tile:hover,
+  .ui-icon-btn:hover { transform: translateY(-2px); }
+}
+
+/* bouton rond : blanc givré cerclé de bleu ciel */
+.ui-icon-btn {
+  background: var(--ui-card);
+  box-shadow: var(--ui-sh-2), inset 0 0 0 1px var(--ui-line);
+}
+
+/* bouton principal : un reflet passe de temps en temps */
+.ui-btn--primary,
+.ui-btn--gold { position: relative; overflow: hidden; isolation: isolate; }
+.ui-btn--primary::after,
+.ui-btn--gold::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: ui-shine 4.5s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+@keyframes ui-shine {
+  0% { transform: translateX(-120%); }
+  22%, 100% { transform: translateX(120%); }
+}
+
+/* onglet / puce / tuile sélectionnés : petit saut quand on les choisit */
+.ui-tab.is-on,
+.ui-chip.is-on,
+.ui-tile.is-on { animation: ui-select 0.4s var(--spring-strong); }
+@keyframes ui-select { 0% { transform: scale(0.9); } }
+
+
+/* médaillons : apparition en rebond */
+.ui-medal { animation: ui-medal-in 0.55s var(--spring-strong) 0.08s both; }
+@keyframes ui-medal-in { from { transform: scale(0.3) rotate(-25deg); opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .ui-tile, .ui-row, .ui-btn, .ui-swatch { transition: none; }
+  .ui-tile, .ui-row, .ui-btn, .ui-swatch, .ui-chip, .ui-tab, .ui-icon-btn { transition: none; }
+  .ui-dialog, .ui-scrim, .ui-medal, .ui-tab.is-on, .ui-chip.is-on, .ui-tile.is-on { animation: none; }
+  .ui-btn--primary::after, .ui-btn--gold::after { display: none; }
+}
+
+/* ==========================================================================
+   Écrans secondaires (feuilles, pages) au style de l'écran principal :
+   blanc net, ombres douces SANS contour, texte bleu marine ; la sélection est
+   un aplat bleu ciel franc avec texte blanc (ni liseré, ni aplat pâle délavé).
+   Vient en dernier : complète les primitives ci-dessus sans changer les classes.
+   ========================================================================== */
+:root {
+  --ui-soft: 0 2px 4px rgba(30, 55, 100, 0.06), 0 6px 16px rgba(30, 55, 100, 0.08);
+  --ui-on-bg: linear-gradient(180deg, #5cb3f5, var(--sky) 60%, #2584d6);
+  --ui-on-shadow: 0 4px 12px rgba(47, 149, 232, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* cartes, lignes, tuiles : blanc, ombre douce */
+.ui-card { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--ui-soft); }
+.ui-row, .ui-tile { background: var(--surface); box-shadow: var(--ui-soft); }
+.ui-row-title { font: 800 15.5px / 1.2 var(--font-text); color: var(--hud-ink); }
+.ui-row-sub { color: var(--hud-ink-2); }
+.ui-tile-label { color: var(--hud-ink); }
+.ui-tile-sub { color: var(--hud-ink-2); }
+.ui-row.is-well, .ui-tile.is-ghost { background: var(--hud-band); box-shadow: none; }
+
+/* sélection / mise en avant : aplat bleu ciel, texte blanc */
+.ui-row.is-on, .ui-tile.is-on, .ui-tab.is-on, .ui-chip.is-on { background: var(--ui-on-bg); box-shadow: var(--ui-on-shadow); color: #fff; }
+.ui-row.is-on .ui-row-title, .ui-row.is-on .ui-row-sub,
+.ui-tile.is-on .ui-tile-label, .ui-tile.is-on .ui-tile-sub,
+.ui-tab.is-on .ic, .ui-chip.is-on .ic { color: #fff; }
+
+/* vignette d'objet : pastille blanche ronde, ombre légère */
+.ui-thumb { border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--surface), var(--surface-2) 78%); box-shadow: 0 2px 6px rgba(30, 55, 100, 0.12), inset 0 1px 0 var(--glint); }
+.ui-thumb--accent { background: radial-gradient(circle at 50% 30%, var(--surface), var(--sky-soft) 80%); }
+.ui-thumb--accent .ic { color: var(--sky); }
+
+/* médaillon d'en-tête : rond blanc, pictogramme bleu (les variantes or / amour restent colorées) */
+.ui-medal, .ui-medal--sky { background: radial-gradient(circle at 40% 30%, var(--surface), var(--sky-soft) 80%); box-shadow: 0 3px 10px rgba(30, 70, 120, 0.16), inset 0 1px 0 #fff; }
+.ui-medal .ic, .ui-medal--sky .ic { color: var(--sky); }
+.ui-medal--gold .ic, .ui-medal--love .ic { color: #fff; }
+
+/* onglets, puces : non sélectionnés en blanc doux, sans contour */
+.ui-tabs { background: var(--hud-band); box-shadow: none; }
+.ui-tab { color: var(--hud-ink-2); }
+.ui-chip { color: var(--hud-ink); box-shadow: var(--ui-soft); }
+
+/* textes */
+.ui-overline { color: var(--hud-ink-2); }
+.ui-section-title { color: var(--hud-ink); }
+.ui-text { color: var(--hud-ink-2); }
+.ui-caption, .ui-foot-note { color: var(--hud-ink-2); }
+.ui-sheet-title p { color: var(--hud-ink-2); }
+
+/* zones vides : bande gris-bleu, sans contour */
+.ui-empty { background: var(--hud-band); box-shadow: none; color: var(--hud-ink-2); }
+
+/* boutons secondaires et ronds : blancs, ombre douce, texte / pictogramme bleu marine */
+.ui-btn--secondary { color: var(--hud-ink); background: var(--surface); box-shadow: 0 3px 0 var(--knob-side), 0 6px 14px rgba(30, 55, 100, 0.1); }
+.ui-btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 var(--knob-side); }
+.ui-btn--soft { color: var(--sky-lo); background: var(--surface); box-shadow: var(--ui-soft); }
+.ui-icon-btn { color: var(--hud-ink); background: var(--surface); box-shadow: 0 4px 12px rgba(30, 70, 120, 0.14); }
+
+/* ---------- volets tirables (composables/useSheetDrag.js) ---------- */
+/* zone de prise de la poignée : toute la largeur, assez haute pour le pouce */
+.grab-zone {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  margin: -8px -16px 4px;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.grab-zone:active { cursor: grabbing; }
+.grab-zone > * { margin: 0 !important; }
+/* demi-feuilles : la barre du bas passe par-dessus, on lui garde la place */
+.ui-half-sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 14px); transition: height 0.38s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* emoji en image (Noto Emoji) détouré d'un contour blanc façon autocollant, avec une petite ombre */
+.sticker {
+  filter:
+    drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff)
+    drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25));
 }

@@ -83,7 +83,7 @@ export const useInventoryStore = defineStore(
       coins.value += n;
       stats.value.coinsEarned = (stats.value.coinsEarned || 0) + n;
       coinFx(n, 0);
-      if (reason) safeToast(`+${n} pièces · ${reason}`, "solar:dollar-minimalistic-bold-duotone");
+      if (reason) safeToast(`+${n} pièces · ${reason}`, "mochi:coin");
       return n;
     }
     function spend(n) {

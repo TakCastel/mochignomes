@@ -1,8 +1,8 @@
 <template>
   <div class="world" :class="[`phase-${shownPhase}`, { dead }]" :style="paletteStyle">
     <!-- la scène 3D occupe tout l'écran, derrière l'interface -->
-    <div class="scene">
-      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" />
+    <div class="scene" :class="{ studio: studioHome && !playing }">
+      <Tamagotchi :phase="shownPhase" :dead="dead" :frame="frame" :sky="pal.sky" :theme="pal.world" @studio="(v) => (studioHome = v)" />
     </div>
 
     <!-- interface posée sur la scène ; les zones vides laissent passer les gestes vers la créature -->
@@ -12,9 +12,10 @@
       <div ref="middle" class="middle" />
       <div class="pad stack" :class="{ away: playing }">
         <StatsStrip class="hit" />
-        <ActionGrid class="hit" />
+        <!-- actions : uniquement pendant le tutoriel ; ensuite, tout passe par le menu sur la créature -->
+        <ActionGrid v-if="(store.onboardStep ?? 6) < 6" class="hit" />
       </div>
-      <BottomNav class="hit" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
+      <BottomNav class="hit nav-top" :class="{ away: playing }" :style="{ '--mood': moodColor }" />
     </main>
 
     <!-- « +N » volants des gains (aucun montant total sur l'écran principal) -->
@@ -31,35 +32,29 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
-import { PALETTES, DEFAULT_PALETTE, paletteVars, UI_THEMES } from "~/lib/palettes";
+import { PALETTES, DEFAULT_PALETTE, THEMES, themeKey } from "~/lib/palettes";
 import { MOOD_LABELS } from "~/lib/creatureLook";
 import { activeActivity } from "~/composables/useLiveCreature";
 
 const store = useTamagotchiStore();
 const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
+// vue studio à la maison (HOME_VIEW dans lib/world3d.js) : annoncée par la scène 3D une fois créée
+const studioHome = ref(false);
 const dead = computed(() => store.health <= 0);
 const { mood } = useCreatureMood();
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#52c234");
 const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
-// interface très blanche, un seul accent vert
-const paletteStyle = computed(() => ({
-  ...paletteVars(store.palette),
-  "--ink": "#2b3440",
-  "--accent": "#4fbf34",
-  "--accent-hi": "#7fdc5a",
-  "--accent-lo": "#3c9a22",
-  "--panel-top": "#ffffff",
-  "--panel-bottom": "#f4f7fb",
-  "--plate-hi": "#ffffff",
-  "--plate-lo": "#eef3f8",
-  "--plate-shade": "rgba(30, 50, 80, 0.18)",
-  "--knob-hi": "#ffffff",
-  "--knob-lo": "#eef3f8",
-  "--knob-side": "#cfd9e4",
-}));
+// la palette ne règle que le décor et sa lumière ; l'interface suit le thème (Réglages)
+const paletteStyle = computed(() => ({ "--glow": pal.value.glow, "--edge": pal.value.edge }));
+// thème d'interface posé sur <html> : les feuilles téléportées dans <body> le suivent aussi
+watchEffect(() => {
+  const key = themeKey(store.ui);
+  document.documentElement.dataset.theme = key;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEMES[key].dark ? "#1a1f2a" : "#8fd3ff");
+});
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
@@ -76,13 +71,30 @@ function measure() {
   const el = middle.value;
   if (!el) return;
   const r = el.getBoundingClientRect();
+  // vue studio : la créature seule, un peu plus grande que dans la prairie
+  const size = Math.round(studioHome.value ? Math.min(r.height * 0.64, window.innerWidth * 0.48) : Math.min(r.height * 0.60, window.innerWidth * 0.50));
+  // studio : créature centrée dans la zone libre (un peu plus bas pour laisser la place à sa bulle),
+  // avec de la marge sous les pieds pour les flèches au sol ; prairie : posée en bas comme avant
+  const groundLow = r.bottom - Math.min(26, r.height * 0.10);
+  let ground = studioHome.value ? Math.min(r.bottom - 48, r.top + (r.height + size) / 2 + 28) : groundLow;
+  let shown = size;
+  // essayage en boutique : la créature se cadre entière au-dessus de la barre d'essayage
+  const tryTop = gameBus.tryTop;
+  if (tryTop && tryTop > r.top + 80) {
+    const free = tryTop - 16 - r.top;
+    shown = Math.round(Math.min(size, free * 0.78));
+    ground = r.top + (free + shown) / 2 + 10;
+  }
   frame.value = {
-    ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
-    size: Math.round(Math.min(r.height * 0.54, window.innerWidth * 0.46)),
+    ground: Math.round(ground),
+    size: shown,
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
 }
+
+watch(studioHome, measure);
+watch(() => gameBus.tryTop, measure); // essayage en boutique : recadrage au-dessus de la barre
 
 onMounted(() => {
   // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)
@@ -91,9 +103,9 @@ onMounted(() => {
   // ?palette=lagon : essayer une palette
   const wanted = new URLSearchParams(window.location.search).get("palette");
   if (wanted && PALETTES[wanted]) store.palette = wanted;
-  // ?theme=verre : essayer un thème d'interface
+  // ?theme=sombre : essayer un thème d'interface
   const theme = new URLSearchParams(window.location.search).get("theme");
-  if (theme && UI_THEMES[theme]) store.ui = theme;
+  if (theme && THEMES[theme]) store.ui = theme;
   // ?heure=22 force l'heure affichée (pratique pour voir le décor de nuit)
   const params = new URLSearchParams(window.location.search);
   const forced = Number(params.get("heure"));
@@ -150,7 +162,7 @@ body {
   /* tailles qui suivent la hauteur de l'écran */
   --tile: clamp(52px, 8.4vh, 72px);
   --gap: clamp(8px, 1.4vh, 12px);
-  --nav-h: 78px;
+  --nav-h: 64px;
 }
 .scene {
   position: absolute;
@@ -165,14 +177,16 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, transparent 50%, rgba(248, 250, 252, 0.5) 64%, rgba(248, 250, 252, 0.9) 80%),
+    linear-gradient(180deg, transparent 62%, rgba(248, 250, 252, 0.55) 100%),
     radial-gradient(70% 40% at 75% 28%, var(--glow), transparent 70%),
     radial-gradient(130% 90% at 50% 45%, transparent 55%, var(--edge) 100%);
+  transition: opacity 0.25s ease;
 }
+/* vue studio : fond bleu uni et propre, plus de halo doré ni de bords sombres (le fond a déjà son halo et sa vignette) */
+.scene.studio::after { opacity: 0; }
 
 .ui {
   position: relative;
-  z-index: 2;
   height: 100%;
   max-width: 480px;
   margin: 0 auto;
@@ -183,6 +197,9 @@ body {
   pointer-events: none;
 }
 .pad { margin: 0 14px; }
+/* la barre du bas reste au-dessus des fenêtres et des pages (z 20), qui glissent derrière elle ;
+   les cartes plein écran (nouveauté, accueil, activité : z 30+) passent au-dessus */
+.nav-top { position: relative; z-index: 28; }
 .stack { display: flex; flex-direction: column; gap: var(--gap); }
 /* seuls les éléments d'interface captent le toucher, le reste va à la créature */
 .hit { pointer-events: auto; }

@@ -8,9 +8,11 @@
       :aria-current="active === t.key ? 'page' : undefined"
       @click="t.run"
     >
-      <Icon :name="t.icon" class="ic" />
+      <span class="icwrap">
+        <Icon :name="t.icon" class="ic" />
+        <span v-if="t.badge" class="badge" />
+      </span>
       <span class="label">{{ t.label }}</span>
-      <span v-if="t.badge" class="badge" />
     </button>
   </nav>
 </template>
@@ -65,50 +67,80 @@ const items = computed(() =>
 </script>
 
 <style scoped>
+/* barre blanche nette ; l'onglet actif : pastille bleu pâle derrière l'icône, point sous le libellé */
 .nav {
+  position: relative;
   display: flex;
   justify-content: space-around;
-  height: var(--nav-h, 78px);
+  align-items: stretch;
+  height: var(--nav-h, 64px);
   box-sizing: content-box;
-  padding: 0 10px env(safe-area-inset-bottom, 0px);
-  border-radius: 28px 28px 0 0;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 -6px 24px rgba(40, 55, 80, 0.12);
-  align-items: center;
+  padding: 0 8px env(safe-area-inset-bottom, 0px);
+  border-radius: 20px 20px 0 0;
+  background: var(--surface);
+  box-shadow: 0 -4px 14px rgba(30, 55, 100, 0.1), 0 -1px 0 #d6dfea;
 }
 .item {
   position: relative;
   flex: 1;
-  max-width: 110px;
+  max-width: 120px;
+  min-width: 64px;
+  min-height: 58px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 56px;
-  margin: 0 3px;
-  padding: 4px 0;
+  padding: 2px 0;
   border: 0;
-  border-radius: 18px;
   background: none;
-  color: #5b6472;
+  color: var(--hud-ink-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  animation: pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  animation: pop 0.45s var(--spring-strong) backwards;
+  transition: transform 0.4s var(--spring-strong), color 0.2s;
 }
-.ic { width: 30px; height: 30px; }
-.label { font: 800 11px/1 var(--font-text); }
-.on { background: var(--sel-bg); color: var(--sel-ink); }
+.item:nth-child(2) { animation-delay: 0.04s; }
+.item:nth-child(3) { animation-delay: 0.08s; }
+.item:nth-child(4) { animation-delay: 0.12s; }
+.item:nth-child(5) { animation-delay: 0.16s; }
+.item:active { transform: scale(0.9); transition-duration: 0.08s; }
+.icwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 40px;
+  border-radius: 999px;
+  transition: background 0.25s;
+}
+.ic { width: 30px; height: 30px; transition: transform 0.45s var(--spring-strong), color 0.2s; }
+.label { font: 800 12px/1 var(--font-text); }
+@media (hover: hover) { .item:not(.on):hover .ic { transform: translateY(-2px); } }
+.item.on { color: var(--hud-ink); }
+.item.on .icwrap { background: var(--sky-soft); }
+.item.on .ic { color: var(--sky); transform: translateY(-2px); }
+.item.on .label::after {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  margin: 2px auto -8px;
+  border-radius: 50%;
+  background: #2f95e8;
+}
 .badge {
   position: absolute;
-  top: 4px;
-  right: calc(50% - 24px);
+  top: 2px;
+  right: 6px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--dot);
-  box-shadow: 0 0 0 2px #fff;
+  background: #ff3b3b;
+  box-shadow: 0 0 0 2px var(--surface);
+  animation: badge 0.9s ease-in-out 3;
 }
+@keyframes badge { 50% { transform: scale(1.35); } }
 @keyframes pop { from { transform: scale(0.4); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .item { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .item, .badge { animation: none; } .item, .ic, .icwrap { transition: none; } }
 </style>

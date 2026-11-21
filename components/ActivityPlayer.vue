@@ -22,7 +22,7 @@
       </div>
       <div v-if="hud.text" class="hud-text">{{ hud.text }}</div>
       <div v-if="hud.combo > 1" :key="hud.combo" class="combo">×{{ hud.combo }}</div>
-      <div v-if="hud.timeLeft != null && timeMax" class="timebar"><i :style="{ width: `${Math.max(0, Math.min(100, (hud.timeLeft / timeMax) * 100))}%` }" /></div>
+      <div v-if="hud.timeLeft != null && timeMax" class="ui-bar ui-bar--live timebar"><i :style="{ width: `${Math.max(0, Math.min(100, (hud.timeLeft / timeMax) * 100))}%` }" /></div>
     </div>
 
     <!-- 3-2-1 -->
@@ -72,7 +72,7 @@
         <p v-if="result.line" class="ui-bubble line">« {{ result.line }} »</p>
 
         <div class="chips">
-          <span v-if="result.coins > 0" class="ui-tag chip coin"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />+{{ result.coins }}</span>
+          <span v-if="result.coins > 0" class="ui-tag chip coin"><Icon name="mochi:coin" class="ic" />+{{ result.coins }}</span>
           <span v-if="result.gems > 0" class="ui-tag chip gem"><Icon name="solar:star-bold-duotone" class="ic" />+{{ result.gems }} Étoile{{ result.gems > 1 ? "s" : "" }}</span>
           <span v-for="g in result.gains" :key="g.key" class="ui-tag chip" :style="{ '--c': g.color }">
             <Icon :name="g.icon" class="ic" />{{ g.n > 0 ? "+" : "" }}{{ g.n }}
@@ -401,8 +401,7 @@ onBeforeUnmount(() => {
   animation: combo 0.35s ease-out;
 }
 @keyframes combo { from { transform: scale(1.8); opacity: 0.2; } to { transform: scale(1); opacity: 1; } }
-.timebar { width: min(220px, 60%); height: 10px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.75); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); }
-.timebar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, var(--accent-hi), var(--accent)); transition: width 0.3s linear; }
+.timebar { width: min(220px, 60%); }
 
 .count {
   position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%);

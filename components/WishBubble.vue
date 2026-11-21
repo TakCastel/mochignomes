@@ -1,15 +1,17 @@
 <template>
   <Transition name="wb">
-    <button v-if="shown" :key="shown.key" class="wish" :class="{ real: shown.wish, urgent: shown.urgent }" type="button" @click="tap">
-      <Icon :name="shown.icon" class="wi" />
+    <button v-if="shown" :key="shown.key" class="wish" :class="{ real: shown.wish, urgent: shown.urgent, calm: calm }" type="button" @click="tap">
+      <img v-if="shownImg" :src="shownImg" alt="" class="wimg" draggable="false">
+      <Icon v-else :name="shown.icon" class="wi" />
       <span class="wt">{{ shown.text }}</span>
+      <span v-if="shown.wish" class="heart" aria-hidden="true">&#10084;</span>
       <span class="tail" aria-hidden="true" />
     </button>
   </Transition>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import * as dialogue from "~/lib/dialogue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 
@@ -27,6 +29,18 @@ const ACTION_ICON = {
   calin: "solar:hand-heart-bold-duotone", coucher: "solar:bed-bold-duotone", soigner: "solar:medical-kit-bold-duotone",
   danser: "solar:music-notes-bold-duotone", chatouiller: "solar:hand-heart-bold-duotone",
 };
+
+const IMG = {
+  nourrir: "manger", repas: "manger", laver: "laver", jouer: "jouer", activite: "jouer", calin: "tendresse",
+  coucher: "dodo", soigner: "soigner", danser: "danser",
+};
+const shownImg = computed(() => {
+  const f = IMG[shown.value?.action];
+  return f ? `/icons/actions/${f}.svg` : null;
+});
+// la bulle se calme (ne bouge plus) après 3 s
+const calm = ref(false);
+let calmTimer = null;
 
 const line = ref("");
 let lineTimer = null, hideTimer = null;
@@ -53,6 +67,13 @@ const shown = computed(() => {
   return null;
 });
 
+watch(() => shown.value?.key, () => {
+  calm.value = false;
+  clearTimeout(calmTimer);
+  calmTimer = setTimeout(() => (calm.value = true), 3000);
+}, { immediate: true });
+
+const emit = defineEmits(["pick"]);
 const inv = useInventoryStore();
 function tap() {
   const a = shown.value?.action;
@@ -67,16 +88,16 @@ function tap() {
     }
     if (a === "tenue" && store.features?.sac) return openPage("sac", { tab: "tenues", focus: w.target });
   }
-  if (a === "repas" || a === "nourrir") return highlightAction("nourrir");
-  if (a === "activite") return highlightAction("jouer");
-  highlightAction(a);
+  if (a === "repas" || a === "nourrir") { highlightAction("nourrir"); return emit("pick", "nourrir"); }
+  if (a === "activite" || a === "jouer") { highlightAction("jouer"); return emit("pick", "jouer"); }
+  emit("pick", a);
 }
 
 onMounted(() => {
   setTimeout(newLine, 4000);
   lineTimer = setInterval(newLine, 50000);
 });
-onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); });
+onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clearTimeout(calmTimer); });
 </script>
 
 <style scoped>
@@ -84,37 +105,54 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); });
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--s-2);
+  gap: 8px;
   max-width: min(260px, 78vw);
-  min-height: var(--tap);
+  min-height: 48px;
   padding: 8px 14px 8px 10px;
-  border: 0;
-  border-radius: var(--r-lg);
-  background: #fff;
-  color: var(--ink);
-  font: 700 var(--t-md)/1.25 var(--font-text);
+  border: 1px solid #d6dfea;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--hud-ink);
+  font: 800 15px/1.25 var(--font-text);
   text-align: left;
-  box-shadow: 0 6px 16px rgba(40, 55, 80, 0.2);
+  box-shadow: 0 2px 0 #c9d4e2, 0 6px 16px rgba(30, 55, 100, 0.14);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  animation: bob 3s ease-in-out infinite;
+  animation: bob 4s ease-in-out infinite;
 }
-/* vraie envie : anneau rose doux (même langage que la tuile « envie ») */
-.wish.real { box-shadow: 0 6px 16px rgba(255, 79, 134, 0.28), inset 0 0 0 2px #ffc2d4; }
+.wish.calm { animation: none; }
+.wish.real { border-color: #ffc2d4; }
 .wish.urgent .wi { color: var(--warn); }
-.wi { flex: none; width: 26px; height: 26px; color: var(--love); }
+.wi { flex: none; width: 28px; height: 28px; color: var(--love); }
+.wimg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+  pointer-events: none;
+}
 .wt { min-width: 0; }
+.heart { flex: none; margin-left: -2px; font-size: 14px; line-height: 1; color: #ff4f86; }
+/* queue : vrai triangle, filet compris */
 .tail {
   position: absolute;
-  left: 22px;
-  bottom: -7px;
-  width: 14px;
-  height: 14px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow: 8px 8px 0 -3px #fff;
+  left: 20px;
+  bottom: -9px;
+  width: 16px;
+  height: 10px;
+  background: #d6dfea;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
-@keyframes bob { 50% { transform: translateY(-4px); } }
+.tail::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 1px 0;
+  background: var(--surface);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  top: -1px;
+}
+@keyframes bob { 50% { transform: translateY(-2px); } }
 .wb-enter-active, .wb-leave-active { transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .wb-enter-from, .wb-leave-to { opacity: 0; transform: scale(0.7) translateY(8px); }
 @media (prefers-reduced-motion: reduce) { .wish { animation: none; } }
