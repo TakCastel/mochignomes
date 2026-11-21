@@ -26,7 +26,7 @@
         :compact="isCompact"
         :collection="has('collection')"
         @collection="tab = 'collection'"
-        @shop="(id) => emit('navigate', { to: 'boutique', tab: 'vetements', focus: id || '' })" />
+        @shop="(id, slot) => emit('navigate', { to: 'boutique', tab: 'vetements', focus: id || '', slot: slot || '' })" />
     </section>
 
     <!-- ============ COLLECTION ============ -->
@@ -139,7 +139,7 @@ const props = defineProps({
   // vêtement à mettre en avant (passé à la garde-robe, ou ouvert en collection)
   focus: { type: String, default: "" },
 });
-// navigate : { to: "boutique", tab?, focus? } (l'intégrateur ouvre l'écran demandé)
+// navigate : { to: "boutique", tab?, focus?, slot? } (l'intégrateur ouvre l'écran demandé)
 const emit = defineEmits(["navigate"]);
 
 const inv = useInventoryStore();

@@ -62,9 +62,9 @@
         <span class="r-badge r-soft"><Icon name="solar:close-circle-bold" class="r-ic" /></span>
         <span class="r-lbl">Retirer</span>
       </button>
-      <button v-if="hasShop" class="r-btn" aria-label="Voir la Boutique" @click="emit('shop', null)">
-        <span class="r-badge r-soft"><Icon name="solar:shop-bold-duotone" class="r-ic accent" /></span>
-        <span class="r-lbl">Boutique</span>
+      <button v-if="hasShop" class="r-btn" :aria-label="`Acheter : rayon ${SLOT_LABELS[slot]} de la Boutique`" @click="emit('shop', null, slot)">
+        <span class="r-badge r-shop"><Icon name="solar:cart-large-2-bold" class="r-ic white" /></span>
+        <span class="r-lbl r-lbl-shop">Acheter</span>
       </button>
     </template>
 
@@ -94,11 +94,11 @@
         <span class="r-lbl">Retirer</span>
       </button>
       <button v-if="hasShop && missingColors(selItem) > 0" class="r-btn" :aria-label="`${missingColors(selItem)} autres couleurs en Boutique`" @click="emit('shop', selItem.id)">
-        <span class="r-badge r-soft">
-          <Icon name="solar:palette-bold-duotone" class="r-ic accent" />
+        <span class="r-badge r-shop">
+          <Icon name="solar:palette-bold" class="r-ic white" />
           <span class="ui-badge r-count">+{{ missingColors(selItem) }}</span>
         </span>
-        <span class="r-lbl">Couleurs</span>
+        <span class="r-lbl r-lbl-shop">Couleurs</span>
       </button>
     </template>
     </div>
@@ -163,7 +163,7 @@
     <div v-else class="ui-empty">
       <Icon :name="SLOT_ICONS[slot]" class="ic" />
       <p>Rien à mettre ici pour l'instant.</p>
-      <button v-if="hasShop" class="ui-btn ui-btn--soft ui-btn--sm" @click="emit('shop', null)">
+      <button v-if="hasShop" class="ui-btn ui-btn--soft ui-btn--sm" @click="emit('shop', null, slot)">
         <Icon name="solar:shop-bold-duotone" class="ic" />Voir la Boutique
       </button>
     </div>
@@ -207,7 +207,7 @@ import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { gameCommand, gameSay } from "~/composables/useCreatureMood";
 import { COLORS, SLOTS, SLOT_LABELS, SLOT_ICONS, V1_ITEMS, itemById, itemColors } from "~/lib/catalog";
 
-// 'shop' : ouvrir la Boutique (itemId = l'objet dont on veut d'autres couleurs, ou null)
+// 'shop' : ouvrir la Boutique (itemId = l'objet dont on veut d'autres couleurs, ou null ; slot = rayon à ouvrir)
 // 'collection' : ouvrir la Collection (depuis la barre étroite)
 const emit = defineEmits(["shop", "collection"]);
 const props = defineProps({
@@ -356,11 +356,9 @@ function shuffle() {
     store.showReaction(best, { say: false });
     gameCommand("react", best.mood === "love" ? "adore" : "deteste");
     showSaid(best);
-    if (props.compact) gameSay(best.line);
   } else {
     const line = Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "On reste simple aujourd'hui !";
     showSaid({ mood: "like", line });
-    if (props.compact) gameSay(line);
   }
 }
 </script>
@@ -401,6 +399,16 @@ function shuffle() {
 }
 .r-btn.worn .r-badge, .r-btn.on .r-badge { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
 .r-soft { background: var(--surface-3); }
+/* Boutique : rouge et blanc, avec un petit store rayé en haut */
+.r-shop {
+  overflow: visible;
+  background:
+    repeating-linear-gradient(90deg, #fff 0 7px, #ff6b6b 7px 14px) top / 100% 12px no-repeat,
+    linear-gradient(180deg, #ff5a5f, #d9263a);
+  box-shadow: inset 0 -3px 0 rgba(120, 0, 20, 0.25), inset 0 12px 0 -10px rgba(0, 0, 0, 0.12), 0 3px 8px rgba(217, 38, 58, 0.35);
+}
+.r-shop .r-ic { margin-top: 8px; width: 24px; height: 24px; }
+.r-lbl-shop { color: #d9263a; }
 .r-ic { width: 28px; height: 28px; color: var(--ink-2); }
 .r-btn.worn .r-ic, .r-ic.white { color: rgba(255, 255, 255, 0.95); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
 .r-ic.violet { color: var(--violet); }

@@ -302,6 +302,8 @@ const props = defineProps({
   focus: { type: String, default: "" },
   // couleur à présélectionner dans la fiche du vêtement mis en avant
   focusColor: { type: String, default: "" },
+  // rayon ouvert d'emblée (depuis un sous-menu du Sac : Tête, Cou...)
+  slotKey: { type: String, default: "" },
 });
 // navigate : { to: "cuisine" | "sac", tab? } ; tryon : true pendant l'essayage (la fiche est masquée)
 const emit = defineEmits(["navigate", "tryon"]);
@@ -340,7 +342,8 @@ const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "vetements");
 const tab = ref(validTab(props.tab));
 
 // ---------- vêtements ----------
-const slotFilter = ref("all");
+const slotFilter = ref(SLOTS.includes(props.slotKey) ? props.slotKey : "all");
+watch(() => props.slotKey, (k) => { if (SLOTS.includes(k)) slotFilter.value = k; });
 const slotChips = [{ key: "all", label: "Tout" }, ...SLOTS.map((s) => ({ key: s, label: SLOT_LABELS[s], icon: SLOT_ICONS[s] }))];
 const daily = computed(() => inv.dailyColor);
 const dailyItem = computed(() => (daily.value ? itemById(daily.value.itemId) : null));

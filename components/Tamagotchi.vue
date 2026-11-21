@@ -13,7 +13,7 @@
 
     <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
     <!-- une seule bulle : celle-ci s'efface tant qu'elle parle (bulle 3D) -->
-    <div v-if="bubbleStyle && !activeActivity" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
+    <div v-if="bubbleStyle && !activeActivity && !inSac" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
       <WishBubble @pick="(k) => openRing(k)" />
       <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
     </div>
@@ -95,6 +95,10 @@ function openRing(focus = null) {
   ring.value = { focus };
 }
 function onPicked() { touched(); }
+// Sac ouvert (volet latéral) : elle essaie ses tenues. Pas de bulle, pas de menu ;
+// un toucher déclenche une petite pose d'essayage
+const inSac = computed(() => gameBus.page === "sac");
+watch(inSac, (v) => { if (v) closeRing(); });
 watch(ring, (r) => creature.value?.holdZoom?.(!!r));
 watch(() => [gameBus.activity, activeActivity.value], ([a, b]) => { if (a || b) closeRing(); });
 // vue studio (HOME_VIEW dans lib/world3d.js) : fond bleu à la maison, prairie pendant les activités
@@ -144,7 +148,7 @@ function onSpeech(ms) {
   speakTimer = setTimeout(() => (speaking.value = false), ms);
 }
 function say(text, ms, prio = 1) {
-  if (!text) return;
+  if (!text || inSac.value) return;
   if (creature.value) creature.value.say(text, ms, prio);
   else {
     if (fallbackMessage.value && prio === 0) return;
@@ -294,6 +298,7 @@ let touches = [];
 let burstPause = 0;
 function onPoke(p) {
   const { dead, asleep } = p;
+  if (inSac.value) { if (!dead && !asleep) tryOnEmote(); return; }
   try { if (!["0", "false", "off"].includes(localStorage.getItem("tamagotchi-haptics"))) navigator.vibrate?.(8); } catch { /* ignoré */ }
   store.countGesture("menu");
   emit("tap");
@@ -334,11 +339,44 @@ function onPoke(p) {
   ring.value = { focus: null };
 }
 
+// Poses d'essayage (Sac) : on les enchaîne dans l'ordre, chaque toucher passe à la suivante
+const TRY_ON_EMOTES = [
+  // pose mannequin, mains sur les hanches
+  { look: { eyes: "shiny", brows: "raised", mouth: "smile", arms: "hips", extras: ["blush"] }, hop: 0.15, ms: 1500 },
+  // tour sur elle-même pour montrer la tenue
+  { look: { eyes: "star", brows: "raised", mouth: "laugh", arms: "up", extras: [] }, spin: true, ms: 1300 },
+  // fière : elle montre ses muscles
+  { look: { eyes: "squint", brows: "raised", mouth: "grin", arms: "flex", extras: [] }, hop: 0.2, ms: 1400 },
+  // elle adore son reflet
+  { look: { eyes: "heart", brows: "raised", mouth: "kiss", arms: "hug", extras: ["blush", "hearts"] }, hop: 0.25, ms: 1700 },
+  // petite danse
+  { look: { eyes: "arc", brows: "none", mouth: "open", arms: "up", motion: "dance", extras: ["blush"] }, ms: 1800 },
+  // coquette, yeux fermés, elle se balance
+  { look: { eyes: "closed", brows: "raised", mouth: "smirk", arms: "hips", motion: "sway", extras: ["blush"] }, ms: 1600 },
+];
+let tryOnIdx = 0;
+let tryOnTurn = 0;
+function tryOnEmote() {
+  touched();
+  try { if (!["0", "false", "off"].includes(localStorage.getItem("tamagotchi-haptics"))) navigator.vibrate?.(10); } catch { /* ignoré */ }
+  const e = TRY_ON_EMOTES[tryOnIdx++ % TRY_ON_EMOTES.length];
+  clearTimeout(reactionTimer);
+  reaction.value = { look: e.look };
+  reactionTimer = setTimeout(() => (reaction.value = null), e.ms);
+  if (e.spin) {
+    // un tour complet, dans un sens puis dans l'autre
+    tryOnTurn = tryOnTurn > 0 ? -1 : 1;
+    creature.value?.rotateBy?.(tryOnTurn * Math.PI * 2);
+  }
+  if (e.hop) creature.value?.hop?.(e.hop);
+  else if (!e.spin) creature.value?.blop?.();
+}
+
 // Appel : quand elle a un besoin et qu'on l'oublie, elle se manifeste
 let callTimer = null;
 function maybeCall() {
   if (stageKey.value === "oeuf" || store.isSleeping || props.dead || store.health <= 0) return;
-  if (activeActivity.value || gameBus.activity || ring.value) return;
+  if (activeActivity.value || gameBus.activity || ring.value || inSac.value) return;
   if (Date.now() - lastTouch < 30000) return;
   if (!["hunger", "cleanliness", "fun", "energy"].some((k) => store[k] < 25)) return;
   lastTouch = Date.now() - 15000; // pas de nouvel appel avant 15 s
