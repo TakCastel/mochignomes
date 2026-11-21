@@ -41,6 +41,8 @@ import { MOOD_LABELS } from "~/lib/creatureLook";
 import { activeActivity } from "~/composables/useLiveCreature";
 
 const store = useTamagotchiStore();
+// taille par stade (même table que lib/creature3d.js) : sert au zoom du Sac
+const SIDE_STAGE_SCALE = { bebe: 0.62, enfant: 0.8, ado: 0.92, adulte: 1 };
 const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
 // vue studio à la maison (HOME_VIEW dans lib/world3d.js) : annoncée par la scène 3D une fois créée
 const studioHome = ref(false);
@@ -86,16 +88,23 @@ function measure() {
     shown = Math.round(Math.min(size, free * 0.78));
     ground = r.top + (free + shown) / 2 + 10;
   }
-  // volet latéral (Sac) : la créature se recentre dans la place libre à gauche et on zoome sur elle.
-  // Les jauges sont masquées : elle descend jusqu'au-dessus de la barre du bas (marge pour les flèches au sol)
+  // volet latéral (Sac) : zoom sur elle, centrée dans la place libre à gauche (jauges et flèches masquées).
+  // frame.size vaut sa hauteur à l'âge adulte : un bébé n'en fait que 62 %, d'où la correction par stade.
+  // À l'écran elle fait environ 1,07 × s × size de haut et 1,13 × s × size de large (bras compris).
   const sideW = gameBus.sideW;
   let centerX;
   if (sideW > 0) {
     const freeW = Math.max(80, window.innerWidth - sideW);
     centerX = Math.round(freeW / 2);
+    const s = SIDE_STAGE_SCALE[store.stage] ?? 1;
     const navTop = document.querySelector(".nav-top")?.getBoundingClientRect().top || r.bottom;
-    ground = Math.max(r.top + 120, navTop - 46);
-    shown = Math.round(Math.max(60, Math.min((ground - r.top - 50) * 0.92, freeW * 0.9)));
+    const top = r.top + 8;
+    const bottom = navTop - 24;
+    const availH = Math.max(120, bottom - top);
+    shown = Math.round(Math.max(60, Math.min((freeW * 0.84) / (1.13 * s), (availH * 0.78) / (1.07 * s))));
+    const h = 1.07 * s * shown;
+    // centrée verticalement (un peu plus bas que le milieu : sa bulle a de la place au-dessus)
+    ground = Math.min(bottom, top + (availH + h) / 2 + availH * 0.04);
   }
   frame.value = {
     ground: Math.round(ground),
