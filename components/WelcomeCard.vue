@@ -28,6 +28,16 @@
         </div>
         <div class="medal"><Icon name="solar:heart-bold-duotone" class="medal-icon" /></div>
         <h2 id="welcome-title">Elle est née !</h2>
+        <!-- son apparence, découverte à l'éclosion (lib/appearance.js) -->
+        <div v-if="look" class="reveal" :class="`r-${look.rarity}`">
+          <span class="reveal-swatch" :style="{ background: look.swatch }" aria-hidden="true" />
+          <span class="reveal-txt">
+            <span v-if="look.shout" class="ui-tag ui-tag--solid reveal-tag" :style="{ '--c': look.rarityColor }">
+              <Icon name="solar:stars-bold-duotone" class="ic" />{{ look.shout }}
+            </span>
+            <strong class="reveal-name">{{ look.intro }}</strong>
+          </span>
+        </div>
         <p class="lead">Comment veux-tu l'appeler ?</p>
         <input
           v-model="name"
@@ -67,6 +77,7 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { appearanceText } from "~/lib/appearance";
 
 const { store } = useCreatureMood();
 
@@ -104,6 +115,15 @@ function tap() {
     }, 1300);
   }
 }
+
+// --- son apparence : « Menthe, toute ronde », « Prune tachetée, en goutte » + petit mot si elle est rare ---
+const look = computed(() => {
+  const a = store.appearance;
+  if (!a || a.original) return null;
+  const t = appearanceText(a);
+  const intro = `${t.label}, ${t.shape.split(" · ")[0].toLowerCase()}`;
+  return { ...t, intro };
+});
 
 // --- nom ---
 const name = ref("");
@@ -236,6 +256,25 @@ const confetti = Array.from({ length: 14 }, (_, i) => ({
 .medal-icon { width: 44px; height: 44px; color: #fff; filter: drop-shadow(0 2px 0 #b06a00); }
 @keyframes bob { 50% { transform: translateX(-50%) translateY(-5px) rotate(-4deg); } }
 h2 { margin: 0; font: 700 30px "Fredoka", "Nunito", system-ui, sans-serif; }
+.reveal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px auto 2px;
+  padding: 6px 14px 6px 6px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  animation: pop 0.5s 0.2s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.reveal-swatch { flex: none; width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 3px #fff, var(--sh-1); }
+.reveal-txt { display: grid; justify-items: start; gap: 2px; text-align: left; min-width: 0; }
+.reveal-tag { font-size: 12px; }
+.reveal-name { font: 700 16px/1.2 var(--font-title); color: var(--ink); }
+.r-legendaire { box-shadow: 0 0 0 2px #ffd36a, 0 0 18px rgba(255, 200, 80, 0.55); }
+@keyframes pop { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
 .lead { margin: 6px 0 0; font-weight: 700; font-size: 15px; line-height: 1.4; opacity: 0.85; }
 .small { margin: 10px 0 0; font-weight: 600; font-size: 13px; line-height: 1.4; opacity: 0.65; }
 .field {
@@ -297,6 +336,6 @@ h2 { margin: 0; font: 700 30px "Fredoka", "Nunito", system-ui, sans-serif; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .hint-enter-from, .hint-leave-to { opacity: 0; transform: translate(-50%, -10px); }
 @media (prefers-reduced-motion: reduce) {
-  .medal, .confetti span, .egg.wob { animation: none; }
+  .medal, .confetti span, .egg.wob, .reveal { animation: none; }
 }
 </style>

@@ -67,7 +67,7 @@ const BASE = [
   { key: "nourrir", label: "Manger", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
   { key: "laver", label: "Laver", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
   { key: "jouer", label: "Jouer", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
-  { key: "calin", label: "Coucou", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
+  { key: "calin", label: "Tendresse", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
   { key: "coucher", label: "Dodo", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
   { key: "soigner", label: "Soigner", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
   { key: "danser", label: "Danser", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },

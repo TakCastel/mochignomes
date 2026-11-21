@@ -2,8 +2,8 @@
   <header class="bar">
     <!-- carte de profil : avatar (ouvre la page Elle), nom, niveau, stade, jours -->
     <div class="profile">
-      <button class="avatar" :aria-label="`Voir ${store.name}`" @click="openPage('elle')">
-        <img src="/images/avatar.webp" alt="" width="64" height="64">
+      <button class="avatar" :class="{ live: portrait.live.value }" :style="avatarStyle" :aria-label="`Voir ${store.name}`" @click="openPage('elle')">
+        <img :src="portrait.src.value" alt="" width="64" height="64">
       </button>
       <div class="info">
         <span class="name">{{ store.name || "..." }}</span>
@@ -29,6 +29,9 @@ import { ageInDays } from "~/lib/achievements";
 import { levelInfo } from "~/stores/useTamagotchiStore";
 
 const { store } = useCreatureMood();
+// avatar : portrait de la vraie créature (sa couleur, sa tenue), image fixe en secours
+const portrait = useCreaturePortrait();
+const avatarStyle = computed(() => (store.appearance?.color ? { "--av": store.appearance.color } : null));
 const lvl = computed(() => levelInfo(store.xp));
 const pct = computed(() => Math.max(6, Math.round((lvl.value.into / lvl.value.need) * 100)));
 const stageLabel = computed(() => store.stageInfo?.label || "");
@@ -75,6 +78,8 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
+.avatar.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.avatar.live img { transform: none; }
 .info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
   font: 700 18px/1.1 var(--font-title);

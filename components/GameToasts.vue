@@ -13,6 +13,7 @@
 import { computed, onMounted, watch } from "vue";
 import { ACHIEVEMENTS } from "~/lib/achievements";
 import { levelInfo } from "~/stores/useTamagotchiStore";
+import { pick, growUpLine, ILL_START, RECOVERY } from "~/lib/dialogue";
 
 // Surveille succès et niveau : une notification à chaque nouveauté
 const { store } = useCreatureMood();
@@ -23,6 +24,18 @@ watch(level, (lvl, old) => {
     gameToast(`Niveau ${lvl} !`, "solar:star-bold-duotone");
     gameCommand("react", "niveau");
   }
+});
+
+// Elle grandit, tombe malade, guérit : elle le dit (après la réaction en cours)
+watch(() => store.stage, (st, old) => {
+  if (!old || st === old) return;
+  const line = growUpLine(st, store.name);
+  if (line) setTimeout(() => gameSay(line), 2600);
+});
+watch(() => !!store.illness, (ill, was) => {
+  if (ill === was) return;
+  if (ill && !store.isSleeping) setTimeout(() => gameSay(pick(ILL_START)), 400);
+  if (!ill) setTimeout(() => gameSay(pick(RECOVERY)), 1700);
 });
 
 // Plusieurs succès d'un coup (ex. ancienne partie au démarrage) : un seul bandeau.

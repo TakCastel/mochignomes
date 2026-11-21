@@ -12,7 +12,8 @@
     <div class="flash" :class="{ on: flash }" />
 
     <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
-    <div v-if="bubbleStyle && !activeActivity" class="bubble-wrap" :style="bubbleStyle">
+    <!-- une seule bulle : celle-ci s'efface tant qu'elle parle (bulle 3D) -->
+    <div v-if="bubbleStyle && !activeActivity" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
       <WishBubble />
       <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
     </div>
@@ -34,6 +35,7 @@
 <script setup>
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { MOODS, MESSAGES, REACTIONS, MOOD_LABELS, pick } from "~/lib/creatureLook";
+import { idleLine, PHOTO } from "~/lib/dialogue";
 import { STATS, SKY } from "~/lib/gameUi";
 import { setLiveCreature, activeActivity } from "~/composables/useLiveCreature";
 import { bindOutfit } from "~/composables/useOutfit";
@@ -60,14 +62,25 @@ const fallback = ref(false);
 const fallbackMessage = ref("");
 const reaction = ref(null);
 
-function say(text, ms) {
-  if (creature.value) creature.value.say(text, ms);
+// prio : 0 bavardage, 1 réaction (défaut), 2 réplique précise (voir creature3d say)
+const speaking = ref(false);
+let speakTimer = null;
+function onSpeech(ms) {
+  speaking.value = true;
+  clearTimeout(speakTimer);
+  speakTimer = setTimeout(() => (speaking.value = false), ms);
+}
+function say(text, ms, prio = 1) {
+  if (!text) return;
+  if (creature.value) creature.value.say(text, ms, prio);
   else {
+    if (fallbackMessage.value && prio === 0) return;
     fallbackMessage.value = text;
+    onSpeech(3000);
     setTimeout(() => { if (fallbackMessage.value === text) fallbackMessage.value = ""; }, 3000);
   }
 }
-watch(() => gameBus.speech, (s) => s && say(s.text));
+watch(() => gameBus.speech, (s) => s && say(s.text, undefined, 2));
 
 // Commandes venues des boutons de la console
 const { addPhoto } = useGallery();
@@ -85,7 +98,7 @@ watch(() => gameBus.command, (cmd) => {
     store.countPhoto();
     flash.value = true;
     setTimeout(() => (flash.value = false), 350);
-    say(pick(["Cheese !", "Je suis photogénique ?", "Clic clac !"]));
+    say(pick(PHOTO));
   }
 });
 const flash = ref(false);
@@ -103,13 +116,15 @@ watch(look, (l) => creature.value?.setLook(l), { deep: true });
 watch(() => [props.phase, props.dead, props.sky, props.theme], ([phase, dead, sky, theme]) => creature.value?.setScene({ phase, dead, sky, theme }));
 watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
 
-watch(shownMood, (m, old) => { if (old && !reaction.value && MESSAGES[m]) say(pick(MESSAGES[m])); });
+watch(shownMood, (m, old) => { if (old && !reaction.value && MESSAGES[m]) say(pick(MESSAGES[m]), undefined, 0); });
 
 // Échelle selon le stade : bébé tout petit, adulte à taille pleine, œuf = invisible (WelcomeCard)
 const STAGE_SCALE = { oeuf: 0, bebe: 0.62, enfant: 0.8, ado: 0.92, adulte: 1 };
 const stageKey = computed(() => (store.hatched === false ? "oeuf" : store.stage || "adulte"));
 const stageScale = computed(() => STAGE_SCALE[stageKey.value] ?? 1);
 watch(stageKey, (k) => creature.value?.setStage?.(k));
+// son apparence (couleur, motif, forme, houppe, oreilles), tirée à l'éclosion : voir lib/appearance.js
+watch(() => store.appearance, (a) => creature.value?.setAppearance?.(a), { deep: true });
 
 const statusText = computed(() => {
   if (store.isSleeping) return "";
@@ -194,7 +209,7 @@ function onPoke({ dead, asleep }) {
 
 onMounted(async () => {
   listenToActions();
-  chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf") say(pick(MESSAGES[shownMood.value])); }, 40000);
+  chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf") say(idleLine(store, shownMood.value, MESSAGES[shownMood.value]), undefined, 0); }, 40000);
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");
@@ -202,8 +217,10 @@ onMounted(async () => {
       onPoke,
       onGround: (y) => emit("ground", y),
       onSpin: () => store.countGesture("tourner"),
+      onSpeech,
       world: true,
     });
+    creature.value.setAppearance(store.appearance);
     creature.value.setStage(stageKey.value);
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky, theme: props.theme });
@@ -219,7 +236,7 @@ onMounted(async () => {
     setTimeout(() => {
       if (stageKey.value === "oeuf") return;
       const firstTime = !(store.counters.menu > 0);
-      say(firstTime ? "Coucou ! Appuie sur moi, ça me fait rire !" : pick(MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
+      say(firstTime ? "Coucou ! Fais-moi un petit poke, ça me fait rire !" : idleLine(store, shownMood.value, MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
     }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);
@@ -230,6 +247,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   clearInterval(chatter);
   clearTimeout(reactionTimer);
+  clearTimeout(speakTimer);
   stopListening?.();
   meadow?.dispose();
   meadow = null;
