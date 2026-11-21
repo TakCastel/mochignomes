@@ -47,6 +47,14 @@
     <!-- Affichage -->
     <section class="ui-card block">
       <h3 class="ui-section-title"><Icon name="solar:palette-bold-duotone" class="ic" />Affichage</h3>
+      <p class="sub-title">Thème</p>
+      <div class="palettes">
+        <button v-for="(t, key) in THEMES" :key="key" class="ui-tile pal" :class="{ 'is-on': theme === key }" :aria-pressed="theme === key" @click="store.ui = key">
+          <span class="pal-chip theme-chip" :style="{ '--c0': t.chip[0], '--c1': t.chip[1], '--c2': t.chip[2] }" />
+          <span class="ui-tile-sub pal-label">{{ t.label }}</span>
+        </button>
+      </div>
+      <p class="sub-title">Décor</p>
       <div class="palettes">
         <button v-for="(p, key) in PALETTES" :key="key" class="ui-tile pal" :class="{ 'is-on': store.palette === key }" :aria-pressed="store.palette === key" @click="store.palette = key">
           <span class="pal-chip" :style="{ background: `linear-gradient(135deg, ${p.sky.top}, ${p.world.grass[0]})` }" />
@@ -75,9 +83,10 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { PALETTES } from "~/lib/palettes";
+import { PALETTES, THEMES, themeKey } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
+const theme = computed(() => themeKey(store.ui));
 const { supported, permission, enabled, hour, quietFrom, quietTo, installable, installed, isIos, enable, disable, setHour: setH, install, downloadIcs } = useNotifications();
 const hours = Array.from({ length: 24 }, (_, i) => i).filter((h) => h >= 8 && h < 21);
 const draft = ref("");
@@ -150,7 +159,7 @@ input.field { flex: 1; min-width: 0; }
 
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); min-height: 48px; font: 800 15px/1.3 var(--font-text); color: var(--ink); }
 .switch { appearance: none; flex: none; position: relative; width: 52px; height: 30px; margin: 0; border-radius: 15px; background: var(--surface-3); cursor: pointer; box-shadow: inset 0 1px 3px rgba(40, 55, 80, 0.18); transition: background 0.2s; }
-.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s; }
 .switch:checked { background: var(--accent); }
 .switch:checked::after { transform: translateX(22px); }
 .switch:disabled { opacity: 0.5; }
@@ -158,7 +167,16 @@ input.field { flex: 1; min-width: 0; }
 .palettes { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: var(--s-2); }
 .pal { padding: 8px 2px 6px; gap: 6px; }
 .pal-chip { width: 36px; height: 36px; border-radius: 50%; box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.15); }
-.pal-label { color: var(--ink-2); font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* le nom passe à la ligne plutôt que d'être coupé par « … » */
+.pal-label { color: var(--ink-2); font-weight: 800; max-width: 100%; text-align: center; overflow-wrap: anywhere; hyphens: auto; }
+.sub-title { margin: 4px 0 -2px; font: 800 var(--t-sm) / 1.2 var(--font-text); letter-spacing: 0.04em; text-transform: uppercase; color: var(--hud-ink-2); }
+/* aperçu d'un thème : fond, plaque et pastille d'accent */
+.theme-chip {
+  position: relative;
+  background: linear-gradient(135deg, var(--c0) 0 50%, var(--c1) 50% 100%);
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.theme-chip::after { content: ""; position: absolute; right: 2px; bottom: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--c2); box-shadow: 0 0 0 2px var(--c0); }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
 .wipe { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-2); }
 .wipe-input { font: inherit; font-weight: 700; color: var(--ink, #2b3440); padding: 12px 14px; border: 0; border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 2px 4px rgba(30, 50, 80, 0.08); outline: none; min-height: 44px; }

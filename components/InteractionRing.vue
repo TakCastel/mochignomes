@@ -542,7 +542,7 @@ onBeforeUnmount(() => {
 .pill-btn:active .body { transform: scale(0.94); transition-duration: 0.08s; }
 .pill-btn:active .obj { transform: scale(1.15) rotate(-8deg); transition-duration: 0.1s; }
 @media (hover: hover) {
-  .pill-btn:hover .body { background: linear-gradient(180deg, #fff, #eef5ff 60%, #dde9f7); }
+  .pill-btn:hover .body { background: var(--hud-pill-hover); }
   .pill-btn:hover .obj { transform: translateY(-2px) rotate(-5deg); }
 }
 
@@ -568,11 +568,11 @@ onBeforeUnmount(() => {
 .pill-btn.is-best .body { box-shadow: 0 0 0 2.5px var(--sky-hi), var(--hud-pill-shadow), inset 0 1px 0 #fff; }
 /* envie de la créature : fond rose, liseré rose, point */
 .pill-btn.is-wanted .body {
-  background: #fff5f8;
+  background: color-mix(in srgb, #fff5f8 var(--tint), var(--surface));
   box-shadow: 0 0 0 2.5px #ff9ab8, 0 4px 10px rgba(255, 79, 134, 0.22), inset 0 1px 0 #fff;
 }
 .is-wanted .lbl { color: var(--love-ink); }
-.dot { position: absolute; z-index: 3; top: 1px; right: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
+.dot { position: absolute; z-index: 3; top: 1px; right: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px var(--surface); }
 .is-right .dot { right: auto; left: 8px; }
 .pill-btn.is-glow .body { box-shadow: 0 0 0 2.5px #ffc21a, 0 0 12px rgba(255, 194, 26, 0.6), inset 0 1px 0 #fff; }
 /* tutoriel : la seule pilule pulse pour appeler le premier toucher */
@@ -580,7 +580,7 @@ onBeforeUnmount(() => {
 @keyframes ring-pulse { 50% { transform: scale(1.07); } }
 
 /* indisponible : fond gris-bleu, texte pâle, objet grisé */
-.pill-btn.is-off .body { background: #eef3f8; }
+.pill-btn.is-off .body { background: var(--surface-2); }
 .is-off .lbl { color: var(--hud-ink-2); }
 .is-off .obj { filter: grayscale(0.7) opacity(0.7); }
 
@@ -592,7 +592,7 @@ onBeforeUnmount(() => {
   z-index: 5;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   color: #2a9a3a;
   font: 800 13px var(--font-title);
   white-space: nowrap;

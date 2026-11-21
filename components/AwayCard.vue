@@ -56,7 +56,7 @@ function hello() {
 /* au-dessus de tout (bulles de la créature comprises) ; le flou calme la scène derrière */
 .away-scrim { z-index: 45; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .card { overflow: visible; margin-top: 40px; padding-top: 52px; }
-.medal { position: absolute; top: -36px; left: 50%; width: 76px; height: 76px; transform: translateX(-50%); box-shadow: 0 0 0 6px #fff, 0 4px 0 6px #e3e9f0, 0 12px 24px rgba(30, 40, 70, 0.3); animation: bob 2.4s ease-in-out infinite; }
+.medal { position: absolute; top: -36px; left: 50%; width: 76px; height: 76px; transform: translateX(-50%); box-shadow: 0 0 0 6px var(--surface), 0 4px 0 6px var(--surface-3), 0 12px 24px rgba(30, 40, 70, 0.3); animation: bob 2.4s ease-in-out infinite; }
 .medal .ic { width: 40px; height: 40px; }
 @keyframes bob { 50% { transform: translateX(-50%) translateY(-5px) rotate(-4deg); } }
 .lines { width: 100%; margin: var(--s-1) 0 0; padding: 0; list-style: none; display: grid; gap: var(--s-2); text-align: left; }
@@ -68,12 +68,12 @@ function hello() {
   gap: 10px;
   padding: var(--s-2) var(--s-3) var(--s-2) var(--s-2);
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #fff8e6, #ffefc8);
+  background: linear-gradient(180deg, color-mix(in srgb, #fff8e6 var(--tint), var(--surface)), color-mix(in srgb, #ffefc8 var(--tint), var(--surface)));
   text-align: left;
   font: 800 15px/1.3 var(--font-text);
   color: #6b4a00;
 }
-.s-thumb { width: 40px; height: 40px; background: #fff; }
+.s-thumb { width: 40px; height: 40px; background: var(--surface); }
 .s-thumb .ic { width: 26px; height: 26px; color: var(--warn); }
 .s-thumb .ic.ui-coin { color: var(--coin); }
 .cta { min-height: 52px; font-size: var(--t-xl); border-radius: var(--r-pill); }

@@ -64,7 +64,7 @@ onMounted(() => store.initName());
   max-width: 270px;
   padding: 6px 14px 6px 6px;
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
   animation: slide-in 0.55s var(--spring) both;
 }
@@ -74,7 +74,7 @@ onMounted(() => store.initName());
   width: 60px;
   height: 60px;
   padding: 0;
-  border: 3px solid #fff;
+  border: 3px solid var(--surface);
   border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
@@ -82,7 +82,7 @@ onMounted(() => store.initName());
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
-.avatar.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.avatar.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, var(--surface)), color-mix(in srgb, var(--av, #ffc98a) 42%, var(--surface))); }
 .avatar.live img { transform: none; }
 .info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
@@ -115,7 +115,7 @@ onMounted(() => store.initName());
   padding: 2px;
   box-sizing: border-box;
   border-radius: 999px;
-  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
+  background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
   overflow: hidden;
   box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
 }
@@ -164,14 +164,14 @@ onMounted(() => store.initName());
   height: 48px;
   border: 0;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
   cursor: pointer;
   transition: transform 0.4s var(--spring-strong);
   animation: pop-in 0.5s var(--spring-strong) 0.15s both;
 }
 @keyframes pop-in { from { opacity: 0; transform: scale(0.4); } }
-.round .ic { width: 26px; height: 26px; color: #2c4f9e; transition: transform 0.6s var(--spring); }
+.round .ic { width: 26px; height: 26px; color: var(--hud-ink); transition: transform 0.6s var(--spring); }
 .round:active .ic { transform: rotate(60deg); }
 .round:active, .avatar:active { transform: scale(0.9); transition-duration: 0.08s; }
 .avatar { transition: transform 0.4s var(--spring-strong); }

@@ -62,7 +62,7 @@ function later() {
   gap: 8px 12px;
   padding: 14px;
   border-radius: 22px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink, #5a3816);
   box-shadow: 0 4px 0 var(--plate-lo, #e6d3b0), 0 10px 26px rgba(0, 0, 0, 0.18);
 }
@@ -75,7 +75,7 @@ function later() {
   min-height: 48px;
   border: 0;
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   color: var(--ink, #5a3816);
   font: 800 15px "Nunito", system-ui, sans-serif;
   box-shadow: 0 3px 0 var(--knob-side, #d9ac6c), inset 0 0 0 2px var(--knob-side, #d9ac6c);

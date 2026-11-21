@@ -70,7 +70,7 @@ if (props.auto) {
   min-height: 36px;
   padding: 0 14px 0 8px;
   border-radius: var(--r-pill);
-  background: #fff;
+  background: var(--surface);
   color: var(--coin-ink);
   font: 700 var(--t-xl)/1 var(--font-title);
   font-variant-numeric: tabular-nums;

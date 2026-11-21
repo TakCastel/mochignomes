@@ -32,10 +32,10 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
 import { dayPhase } from "~/lib/gameUi";
-import { PALETTES, DEFAULT_PALETTE, paletteVars, UI_THEMES } from "~/lib/palettes";
+import { PALETTES, DEFAULT_PALETTE, THEMES, themeKey } from "~/lib/palettes";
 import { MOOD_LABELS } from "~/lib/creatureLook";
 import { activeActivity } from "~/composables/useLiveCreature";
 
@@ -47,22 +47,14 @@ const dead = computed(() => store.health <= 0);
 const { mood } = useCreatureMood();
 const moodColor = computed(() => MOOD_LABELS[mood.value]?.[1] || "#52c234");
 const pal = computed(() => PALETTES[store.palette] || PALETTES[DEFAULT_PALETTE]);
-// interface très blanche, un seul accent vert
-const paletteStyle = computed(() => ({
-  ...paletteVars(store.palette),
-  "--ink": "#2b3440",
-  "--accent": "#4fbf34",
-  "--accent-hi": "#7fdc5a",
-  "--accent-lo": "#3c9a22",
-  "--panel-top": "#ffffff",
-  "--panel-bottom": "#f4f7fb",
-  "--plate-hi": "#ffffff",
-  "--plate-lo": "#eef3f8",
-  "--plate-shade": "rgba(30, 50, 80, 0.18)",
-  "--knob-hi": "#ffffff",
-  "--knob-lo": "#eef3f8",
-  "--knob-side": "#cfd9e4",
-}));
+// la palette ne règle que le décor et sa lumière ; l'interface suit le thème (Réglages)
+const paletteStyle = computed(() => ({ "--glow": pal.value.glow, "--edge": pal.value.edge }));
+// thème d'interface posé sur <html> : les feuilles téléportées dans <body> le suivent aussi
+watchEffect(() => {
+  const key = themeKey(store.ui);
+  document.documentElement.dataset.theme = key;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEMES[key].dark ? "#1a1f2a" : "#8fd3ff");
+});
 
 // moment de la journée réel, mis à jour chaque minute
 const phase = ref("day");
@@ -110,9 +102,9 @@ onMounted(() => {
   // ?palette=lagon : essayer une palette
   const wanted = new URLSearchParams(window.location.search).get("palette");
   if (wanted && PALETTES[wanted]) store.palette = wanted;
-  // ?theme=verre : essayer un thème d'interface
+  // ?theme=sombre : essayer un thème d'interface
   const theme = new URLSearchParams(window.location.search).get("theme");
-  if (theme && UI_THEMES[theme]) store.ui = theme;
+  if (theme && THEMES[theme]) store.ui = theme;
   // ?heure=22 force l'heure affichée (pratique pour voir le décor de nuit)
   const params = new URLSearchParams(window.location.search);
   const forced = Number(params.get("heure"));

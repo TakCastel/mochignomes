@@ -61,7 +61,7 @@ const list = computed(() => {
   gap: 8px;
   padding: 12px 10px;
   border-radius: 18px;
-  background: linear-gradient(180deg, #fbfcfe, var(--hud-band));
+  background: linear-gradient(180deg, var(--surface), var(--hud-band));
   box-shadow: var(--hud-shadow), 0 0 0 1px var(--hud-line);
   animation: panel-in 0.5s var(--spring) 0.08s both;
 }
@@ -141,7 +141,7 @@ const list = computed(() => {
 .act:active .pill { transform: scale(0.93); transition-duration: 0.08s; }
 .act:active .obj { transform: scale(1.15) rotate(-8deg); transition-duration: 0.1s; }
 @media (hover: hover) {
-  .act:hover .pill { background: linear-gradient(180deg, #fff, #eef5ff 60%, #dde9f7); }
+  .act:hover .pill { background: var(--hud-pill-hover); }
   .act:hover .obj { transform: translateY(-2px) rotate(-5deg); }
 }
 
@@ -172,7 +172,7 @@ const list = computed(() => {
 }
 /* envie de la créature : pilule rose qui pulse */
 .wanted .pill {
-  background: linear-gradient(180deg, #fff7fa, #ffe6ee);
+  background: linear-gradient(180deg, color-mix(in srgb, #fff7fa var(--tint), var(--surface)), color-mix(in srgb, #ffe6ee var(--tint), var(--surface)));
   box-shadow: 0 0 0 2.5px #ff9ab8, 0 4px 10px rgba(255, 79, 134, 0.25);
 }
 .wanted { animation: act-in 0.45s var(--spring-strong) calc(0.15s + var(--i, 0) * 40ms) both, pulse 1.3s ease-in-out 0.8s infinite; }
@@ -180,12 +180,12 @@ const list = computed(() => {
 .glow .pill { box-shadow: 0 0 0 2.5px #ffc21a, 0 0 12px rgba(255, 194, 26, 0.6); }
 .glow { animation: pulse 0.9s ease-in-out 3; }
 @keyframes pulse { 50% { transform: scale(1.06); } }
-.dot { position: absolute; z-index: 3; top: 1px; left: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
+.dot { position: absolute; z-index: 3; top: 1px; left: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px var(--surface); }
 
 /* indisponible : texte bleu pâle, objet un peu éteint, mais toujours lisible */
 .off .lbl { color: var(--hud-ink-2); }
 .off .obj { filter: saturate(0.35); opacity: 0.75; }
-.off .pill { background: linear-gradient(180deg, #f8fafc, #e9eef4); }
+.off .pill { background: linear-gradient(180deg, var(--surface-2), var(--surface-3)); }
 
 /* petits « +N » qui sautent puis montent depuis l'action */
 .float {
@@ -195,7 +195,7 @@ const list = computed(() => {
   z-index: 5;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   color: #2a9a3a;
   font: 800 13px var(--font-title);
   white-space: nowrap;

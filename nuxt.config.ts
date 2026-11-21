@@ -94,5 +94,7 @@ export default defineNuxtConfig({
     "@fontsource/nunito/800.css",
     // couche de design partagée (jetons + primitives .ui-*)
     "~/assets/css/ui.css",
+    // thèmes d'interface (blanc, sombre, contrasté, crème)
+    "~/assets/css/themes.css",
   ],
 });

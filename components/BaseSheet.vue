@@ -92,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   height: 100%;
   border-radius: 0;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 24px);
-  background: linear-gradient(180deg, #e2f0ff 0%, #eef6ff 30%, var(--surface-2) 70%);
+  background: linear-gradient(180deg, color-mix(in srgb, #e2f0ff var(--tint), var(--surface-2)) 0%, color-mix(in srgb, #eef6ff var(--tint), var(--surface-2)) 30%, var(--surface-2) 70%);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   box-shadow: none;

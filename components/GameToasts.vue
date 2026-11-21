@@ -104,7 +104,7 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
   min-height: 52px;
   padding: 6px 20px 6px 6px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   color: var(--hud-ink);
   font: 600 16px/1.2 var(--font-title);
   box-shadow: 0 12px 28px rgba(30, 55, 100, 0.22), 0 0 0 1px #d6dfea;
@@ -118,7 +118,7 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.5), var(--c) 55%, var(--c-lo));
   background-color: var(--c);
-  box-shadow: 0 0 0 3px #fff, 0 2px 4px rgba(40, 60, 90, 0.3);
+  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
 }
 .medal .ic { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
 .txt {

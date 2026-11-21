@@ -176,7 +176,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 .off { opacity: 0.6; }
 .dish { background: radial-gradient(circle at 35% 30%, #fff, var(--d1) 65%); }
 .dish .ic { color: var(--d2); }
-.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: #fff; color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
+.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
 .ui-row-sub.love { color: var(--love-ink); }
 .pill { flex: none; font: 700 var(--t-md) var(--font-title); padding: 4px 10px; }
 .pill .ic { width: 15px; height: 15px; }

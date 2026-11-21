@@ -119,13 +119,13 @@ const dislikes = computed(() => ["colorDislike", "foodDislike", "itemDislike"].m
 .bar > i { background: linear-gradient(90deg, #ff9ec0, var(--love)); }
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .entry { min-height: 60px; padding: var(--s-2) 10px; }
-.entry.dis { background: #f5f1ff; box-shadow: inset 0 0 0 2px #e6dcff; }
+.entry.dis { background: color-mix(in srgb, #f5f1ff var(--tint), var(--surface)); box-shadow: inset 0 0 0 2px #e6dcff; }
 .entry.fresh { animation: reveal 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes reveal { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
-.ui-thumb { width: 42px; height: 42px; font-size: 26px; background: #fff; }
+.ui-thumb { width: 42px; height: 42px; font-size: 26px; background: var(--surface); }
 .ui-thumb .ic { width: 28px; height: 28px; }
 .q { color: var(--ink-4); }
-.swatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(40, 55, 80, 0.25); }
+.swatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 1px 4px rgba(40, 55, 80, 0.25); }
 .hint { font: 700 13px/1.3 var(--font-text); color: var(--ink-2); }
 .mood { flex: none; width: 22px; height: 22px; color: var(--love); }
 .sub { margin-top: var(--s-4); font-size: 15px; }

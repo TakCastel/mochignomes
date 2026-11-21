@@ -61,7 +61,7 @@ const { shown: shownGems, bump: bumpGems } = useCountUp(() => inv.gems);
   min-height: var(--tap);
   padding: 0 16px 0 8px;
   border-radius: var(--r-pill);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--sh-1), var(--hl);
   font: 700 var(--t-xl)/1 var(--font-title);
   color: var(--ink);

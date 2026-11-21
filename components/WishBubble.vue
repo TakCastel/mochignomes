@@ -111,8 +111,8 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clear
   padding: 8px 14px 8px 10px;
   border: 1px solid #d6dfea;
   border-radius: 18px;
-  background: #fff;
-  color: #2c4f9e;
+  background: var(--surface);
+  color: var(--hud-ink);
   font: 800 15px/1.25 var(--font-text);
   text-align: left;
   box-shadow: 0 2px 0 #c9d4e2, 0 6px 16px rgba(30, 55, 100, 0.14);
@@ -148,7 +148,7 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); clear
   content: "";
   position: absolute;
   inset: 0 0 1px 0;
-  background: #fff;
+  background: var(--surface);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   top: -1px;
 }

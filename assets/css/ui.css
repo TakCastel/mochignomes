@@ -29,6 +29,7 @@
   --surface: #ffffff;
   --surface-2: #f4f7fb; /* creux dans une carte, fond de page */
   --surface-3: #e6ebf1; /* pistes de jauges, éléments éteints */
+  --tint: 100%; /* force des fonds teintés (doré, rose…) posés sur la surface */
   --panel-top: #ffffff;
   --panel-bottom: #f4f7fb;
   --plate-hi: #ffffff;
@@ -63,7 +64,7 @@
   --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(238, 246, 255, 0.72));
   --glass-solid: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 248, 255, 0.92));
   --glass-blur: blur(18px) saturate(1.5);
-  --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), inset 0 2px 0 #fff;
+  --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), inset 0 2px 0 var(--glint);
   --glass-shadow: 0 10px 30px rgba(30, 70, 120, 0.18);
 
   /* HUD de l'écran principal, façon jeu de simulation de vie : panneaux blancs nets,
@@ -74,10 +75,13 @@
   --hud-line: #d6dfea; /* filet entre les cases */
   --hud-shadow: 0 6px 18px rgba(30, 55, 100, 0.18);
   --hud-pill: linear-gradient(180deg, #ffffff 0%, #f6f8fb 55%, #e6ecf3 100%);
+  --hud-pill-hover: linear-gradient(180deg, #ffffff, #eef5ff 60%, #dde9f7);
+  --track-lo: #cdd6e2; /* piste des jauges */
+  --track-hi: #e4eaf1;
   --hud-pill-shadow: 0 2px 0 #c9d4e2, 0 4px 10px rgba(30, 55, 100, 0.16);
 
   /* matière unique de l'interface : cartes blanches opaques, filet fin, ombres en échelle */
-  --ui-card: #fff;
+  --ui-card: #ffffff;
   --ui-card-2: #f4f7fb;
   --ui-cream: #fff8ea;
   --ui-line: #d6dfea;
@@ -111,7 +115,8 @@
   --s-6: 24px;
 
   /* ombres (aucun filet : relief par l'ombre et le reflet) */
-  --hl: inset 0 1px 0 #fff;
+  --glint: #ffffff; /* reflet clair sur le haut des plaques */
+  --hl: inset 0 1px 0 var(--glint);
   --sh-1: 0 2px 6px rgba(40, 55, 80, 0.08);
   --sh-2: 0 4px 14px rgba(40, 55, 80, 0.1);
   --sh-3: 0 10px 28px rgba(40, 55, 80, 0.18);
@@ -163,7 +168,7 @@
   padding: var(--s-3) var(--s-1) 10px;
   border: 0;
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #ffffff, #f3f5f8);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), var(--hl);
   color: var(--ink);
   font: inherit;
@@ -194,7 +199,7 @@ button.ui-tile:active { transform: scale(0.96); }
   padding: 10px var(--s-3);
   border: 0;
   border-radius: var(--r-md);
-  background: linear-gradient(180deg, #ffffff, #f4f6f9);
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
   box-shadow: 0 4px 10px rgba(40, 55, 80, 0.08), var(--hl);
   color: var(--ink);
   font: inherit;
@@ -204,7 +209,7 @@ button.ui-row { width: 100%; cursor: pointer; -webkit-tap-highlight-color: trans
 button.ui-row:active { transform: scale(0.98); }
 .ui-row.is-well { background: var(--surface-2); box-shadow: none; }
 .ui-row.is-on { background: var(--sel-bg); box-shadow: var(--sel-ring); }
-.ui-row.is-love { background: linear-gradient(180deg, #fff8fa, #ffecf2); box-shadow: inset 0 0 0 2px #ffc2d4, 0 4px 10px rgba(255, 79, 134, 0.12); }
+.ui-row.is-love { background: linear-gradient(180deg, color-mix(in srgb, #fff8fa var(--tint), var(--surface)), color-mix(in srgb, #ffecf2 var(--tint), var(--surface))); box-shadow: inset 0 0 0 2px #ffc2d4, 0 4px 10px rgba(255, 79, 134, 0.12); }
 .ui-row-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .ui-row-title {
   display: flex;
@@ -226,7 +231,7 @@ button.ui-row:active { transform: scale(0.98); }
   width: 48px;
   height: 48px;
   border-radius: var(--r-sm);
-  background: radial-gradient(circle at 38% 30%, #fff, var(--surface-2) 70%);
+  background: radial-gradient(circle at 38% 30%, var(--surface), var(--surface-2) 70%);
   box-shadow: 0 2px 6px rgba(40, 55, 80, 0.08), var(--hl);
   font-size: 28px;
   line-height: 1;
@@ -297,7 +302,7 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-btn--primary:active:not(:disabled) { box-shadow: 0 2px 0 var(--accent-lo); }
 .ui-btn--secondary {
   color: var(--ink);
-  background: linear-gradient(180deg, #ffffff, var(--plate-lo));
+  background: linear-gradient(180deg, var(--surface), var(--plate-lo));
   box-shadow: 0 4px 0 var(--knob-side), 0 6px 14px rgba(40, 55, 80, 0.08), var(--hl);
 }
 .ui-btn--secondary:active:not(:disabled) { box-shadow: 0 2px 0 var(--knob-side); }
@@ -354,7 +359,7 @@ button.ui-row:active { transform: scale(0.98); }
   padding: 0 14px;
   border: 0;
   border-radius: var(--r-pill);
-  background: #fff;
+  background: var(--surface);
   color: var(--ink-2);
   font: 800 var(--t-md) / 1 var(--font-text);
   white-space: nowrap;
@@ -374,12 +379,12 @@ button.ui-row:active { transform: scale(0.98); }
   padding: 0;
   border: 0;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 3px #fff, inset 0 -4px 0 3px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(40, 55, 80, 0.18);
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 -4px 0 3px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(40, 55, 80, 0.18);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.1s;
 }
-.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px #fff, 0 0 0 3px var(--sky), 0 4px 10px rgba(40, 55, 80, 0.2); }
+.ui-swatch.is-on { transform: scale(1.08); box-shadow: inset 0 0 0 3px var(--surface), 0 0 0 3px var(--sky), 0 4px 10px rgba(40, 55, 80, 0.2); }
 .ui-swatch.is-off { opacity: 0.4; }
 .ui-swatch-mark {
   position: absolute;
@@ -388,7 +393,7 @@ button.ui-row:active { transform: scale(0.98); }
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   color: var(--accent-lo);
   box-shadow: var(--sh-1);
 }
@@ -402,7 +407,7 @@ button.ui-row:active { transform: scale(0.98); }
   gap: var(--s-1);
   padding: var(--s-1);
   border-radius: var(--r-md);
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--sh-1), var(--hl);
 }
 .ui-tab {
@@ -437,7 +442,7 @@ button.ui-row:active { transform: scale(0.98); }
   height: 10px;
   border-radius: 50%;
   background: var(--dot);
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   pointer-events: none;
 }
 .ui-badge {
@@ -452,7 +457,7 @@ button.ui-row:active { transform: scale(0.98); }
   color: #fff;
   font: 800 var(--t-xs) / 18px var(--font-text);
   text-align: center;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   pointer-events: none;
 }
 /* petite étiquette ; couleur via --c */
@@ -463,7 +468,7 @@ button.ui-row:active { transform: scale(0.98); }
   gap: 3px;
   padding: 3px 8px;
   border-radius: var(--r-pill);
-  background: color-mix(in srgb, var(--c) 14%, #fff);
+  background: color-mix(in srgb, var(--c) 14%, var(--surface));
   color: color-mix(in srgb, var(--c) 82%, #000);
   font: 800 var(--t-xs) / 1.1 var(--font-text);
   white-space: nowrap;
@@ -520,7 +525,7 @@ button.ui-row:active { transform: scale(0.98); }
   margin: 0;
   padding: 10px var(--s-3);
   border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--c) 11%, #fff);
+  background: color-mix(in srgb, var(--c) 11%, var(--surface));
   color: color-mix(in srgb, var(--c) 85%, #000);
   font: 800 var(--t-md) / 1.35 var(--font-text);
 }
@@ -564,7 +569,7 @@ button.ui-row:active { transform: scale(0.98); }
   padding: var(--s-6) var(--s-5) var(--s-5);
   border-radius: var(--r-xl);
   background: linear-gradient(180deg, var(--panel-top) 60%, var(--panel-bottom));
-  box-shadow: var(--sh-pop), inset 0 2px 0 #fff;
+  box-shadow: var(--sh-pop), inset 0 2px 0 var(--glint);
   color: var(--ink);
   text-align: center;
 }
@@ -588,7 +593,7 @@ button.ui-row:active { transform: scale(0.98); }
 .ui-medal--sm .ic { width: 26px; height: 26px; }
 .ui-medal--gold { background: radial-gradient(circle at 38% 30%, #ffe58a, #ffb81a 70%); box-shadow: 0 4px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5); }
 .ui-medal--love { background: radial-gradient(circle at 36% 28%, #ffc0d2, #ff6d8a 60%, #e03a64); box-shadow: 0 4px 0 #c22d55, inset 0 2px 0 rgba(255, 255, 255, 0.45); }
-.ui-medal--sky { background: radial-gradient(circle at 38% 30%, var(--sky-hi), var(--sky) 70%); box-shadow: 0 4px 0 var(--sky-lo), inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 0 0 3px #fff; }
+.ui-medal--sky { background: radial-gradient(circle at 38% 30%, var(--sky-hi), var(--sky) 70%); box-shadow: 0 4px 0 var(--sky-lo), inset 0 2px 0 rgba(255, 255, 255, 0.45), 0 0 0 3px var(--surface); }
 .ui-medal--soft { background: var(--surface-2); box-shadow: inset 0 -3px 0 rgba(40, 55, 80, 0.06); }
 .ui-medal--soft .ic { color: var(--ink-3); }
 
@@ -598,11 +603,11 @@ button.ui-row:active { transform: scale(0.98); }
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  background: linear-gradient(180deg, #ffffff 60%, var(--plate-hi));
+  background: linear-gradient(180deg, var(--surface) 60%, var(--plate-hi));
   color: var(--ink);
   border-radius: 32px 32px 0 0;
   padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
-  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.28), inset 0 2px 0 #fff;
+  box-shadow: 0 -10px 40px rgba(30, 15, 50, 0.28), inset 0 2px 0 var(--glint);
 }
 .ui-grab { flex: none; width: 44px; height: 5px; margin: 0 auto 10px; border-radius: var(--r-pill); background: var(--knob-side); }
 .ui-sheet-head { flex: none; display: flex; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); min-width: 0; }
@@ -724,8 +729,8 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 }
 
 /* cartes, lignes, tuiles : blanc, ombre douce */
-.ui-card { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--ui-soft); }
-.ui-row, .ui-tile { background: #fff; box-shadow: var(--ui-soft); }
+.ui-card { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--ui-soft); }
+.ui-row, .ui-tile { background: var(--surface); box-shadow: var(--ui-soft); }
 .ui-row-title { font: 800 15.5px / 1.2 var(--font-text); color: var(--hud-ink); }
 .ui-row-sub { color: var(--hud-ink-2); }
 .ui-tile-label { color: var(--hud-ink); }
@@ -739,12 +744,12 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .ui-tab.is-on .ic, .ui-chip.is-on .ic { color: #fff; }
 
 /* vignette d'objet : pastille blanche ronde, ombre légère */
-.ui-thumb { border-radius: 50%; background: radial-gradient(circle at 50% 30%, #ffffff, #eef3f9 78%); box-shadow: 0 2px 6px rgba(30, 55, 100, 0.12), inset 0 1px 0 #fff; }
-.ui-thumb--accent { background: radial-gradient(circle at 50% 30%, #ffffff, #e2f0ff 80%); }
+.ui-thumb { border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--surface), var(--surface-2) 78%); box-shadow: 0 2px 6px rgba(30, 55, 100, 0.12), inset 0 1px 0 var(--glint); }
+.ui-thumb--accent { background: radial-gradient(circle at 50% 30%, var(--surface), var(--sky-soft) 80%); }
 .ui-thumb--accent .ic { color: var(--sky); }
 
 /* médaillon d'en-tête : rond blanc, pictogramme bleu (les variantes or / amour restent colorées) */
-.ui-medal, .ui-medal--sky { background: radial-gradient(circle at 40% 30%, #ffffff, #e9f3fd 80%); box-shadow: 0 3px 10px rgba(30, 70, 120, 0.16), inset 0 1px 0 #fff; }
+.ui-medal, .ui-medal--sky { background: radial-gradient(circle at 40% 30%, var(--surface), var(--sky-soft) 80%); box-shadow: 0 3px 10px rgba(30, 70, 120, 0.16), inset 0 1px 0 #fff; }
 .ui-medal .ic, .ui-medal--sky .ic { color: var(--sky); }
 .ui-medal--gold .ic, .ui-medal--love .ic { color: #fff; }
 
@@ -764,10 +769,10 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .ui-empty { background: var(--hud-band); box-shadow: none; color: var(--hud-ink-2); }
 
 /* boutons secondaires et ronds : blancs, ombre douce, texte / pictogramme bleu marine */
-.ui-btn--secondary { color: var(--hud-ink); background: #fff; box-shadow: 0 3px 0 #d5dde8, 0 6px 14px rgba(30, 55, 100, 0.1); }
-.ui-btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 #d5dde8; }
-.ui-btn--soft { color: var(--sky-lo); background: #fff; box-shadow: var(--ui-soft); }
-.ui-icon-btn { color: var(--hud-ink); background: #fff; box-shadow: 0 4px 12px rgba(30, 70, 120, 0.14); }
+.ui-btn--secondary { color: var(--hud-ink); background: var(--surface); box-shadow: 0 3px 0 var(--knob-side), 0 6px 14px rgba(30, 55, 100, 0.1); }
+.ui-btn--secondary:active:not(:disabled) { box-shadow: 0 1px 0 var(--knob-side); }
+.ui-btn--soft { color: var(--sky-lo); background: var(--surface); box-shadow: var(--ui-soft); }
+.ui-icon-btn { color: var(--hud-ink); background: var(--surface); box-shadow: 0 4px 12px rgba(30, 70, 120, 0.14); }
 
 /* ---------- volets tirables (composables/useSheetDrag.js) ---------- */
 /* zone de prise de la poignée : toute la largeur, assez haute pour le pouce */

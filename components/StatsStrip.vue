@@ -85,7 +85,7 @@ function tap(n) {
   gap: 2px 0;
   padding: 4px;
   border-radius: 16px;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
   animation: rise 0.5s var(--spring) both;
 }
@@ -132,7 +132,7 @@ function tap(n) {
   height: 34px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, var(--c-hi), var(--c) 62%, var(--c-lo));
-  box-shadow: 0 0 0 3px #fff, 0 2px 4px rgba(40, 60, 90, 0.3);
+  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
   transition: background 0.4s, transform 0.4s var(--spring-strong);
 }
 .glyph { width: 20px; height: 20px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
@@ -146,7 +146,7 @@ function tap(n) {
   padding: 2px;
   overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
+  background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
   box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
 }
 /* remplissage en relief : dégradé de tube arrondi, liseré lumineux fin en haut, ombre douce en bas */
@@ -158,7 +158,7 @@ function tap(n) {
   overflow: hidden;
   border-radius: 999px;
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--c-hi) 70%, #fff) 0%,
+    color-mix(in srgb, var(--c-hi) 70%, var(--surface)) 0%,
     var(--c-hi) 22%,
     var(--c) 58%,
     var(--c-lo) 100%);
@@ -193,7 +193,7 @@ function tap(n) {
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.55), var(--d) 60%);
   background-color: var(--d);
-  box-shadow: 0 0 0 3px #fff, 0 2px 4px rgba(40, 60, 90, 0.3);
+  box-shadow: 0 0 0 3px var(--surface), 0 2px 4px rgba(40, 60, 90, 0.3);
 }
 .mood-v {
   display: block;

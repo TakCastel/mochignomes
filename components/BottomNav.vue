@@ -77,7 +77,7 @@ const items = computed(() =>
   box-sizing: content-box;
   padding: 0 8px env(safe-area-inset-bottom, 0px);
   border-radius: 20px 20px 0 0;
-  background: #fff;
+  background: var(--surface);
   box-shadow: 0 -4px 14px rgba(30, 55, 100, 0.1), 0 -1px 0 #d6dfea;
 }
 .item {
@@ -118,8 +118,8 @@ const items = computed(() =>
 .label { font: 800 12px/1 var(--font-text); }
 @media (hover: hover) { .item:not(.on):hover .ic { transform: translateY(-2px); } }
 .item.on { color: var(--hud-ink); }
-.item.on .icwrap { background: #e8f4ff; }
-.item.on .ic { color: #2f95e8; transform: translateY(-2px); }
+.item.on .icwrap { background: var(--sky-soft); }
+.item.on .ic { color: var(--sky); transform: translateY(-2px); }
 .item.on .label::after {
   content: "";
   display: block;
@@ -137,7 +137,7 @@ const items = computed(() =>
   height: 10px;
   border-radius: 50%;
   background: #ff3b3b;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px var(--surface);
   animation: badge 0.9s ease-in-out 3;
 }
 @keyframes badge { 50% { transform: scale(1.35); } }

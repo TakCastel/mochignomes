@@ -99,9 +99,9 @@ function adopt() { adoptEgg(); }
 .house .ui-section-head { margin-bottom: 0; }
 .intro { margin: 0; }
 .slots { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
-.pic { overflow: hidden; background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.pic { overflow: hidden; background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, var(--surface)), color-mix(in srgb, var(--av, #ffc98a) 42%, var(--surface))); }
 .pic img { width: 100%; height: 100%; object-fit: cover; }
-.dot { width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 3px #fff, var(--sh-1); }
+.dot { width: 34px; height: 34px; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface), var(--sh-1); }
 .ic.egg { color: #f0b46a; }
 .ic.lock { color: var(--ink-4); }
 .tags { display: flex; gap: 4px; margin-top: 2px; }

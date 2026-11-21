@@ -579,7 +579,7 @@ onBeforeUnmount(() => {
 .k-sheet.is-tall { height: 92vh; height: 92dvh; }
 .coins {
   flex: none; min-height: 36px; padding: 0 12px 0 8px; border-radius: var(--r-pill);
-  background: #fff; color: var(--hud-ink); font-size: 15px; box-shadow: var(--ui-soft);
+  background: var(--surface); color: var(--hud-ink); font-size: 15px; box-shadow: var(--ui-soft);
 }
 .body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
@@ -610,7 +610,7 @@ onBeforeUnmount(() => {
   filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 3px 3px rgba(30, 55, 100, 0.22));
 }
 .dish-ic { width: 34px; height: 34px; color: var(--sky); }
-.dish-lock { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: #fff; color: var(--hud-ink-2); }
+.dish-lock { position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; padding: 3px; border-radius: 50%; background: var(--surface); color: var(--hud-ink-2); }
 .dish.big { width: 96px; height: 96px; background: radial-gradient(circle at 35% 30%, #fff, var(--d1) 70%); }
 .dish.big .dish-img { width: 70px; height: 70px; }
 .dish.big .dish-ic { width: 58px; height: 58px; color: var(--d2); }
@@ -628,7 +628,7 @@ onBeforeUnmount(() => {
 .miss { margin: -2px 0 0; font: 800 var(--t-md) var(--font-text); color: var(--hud-ink-2); }
 .card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 10px; }
 .ings { display: flex; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.ing { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(30, 55, 100, 0.12); }
+.ing { position: relative; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 4px rgba(30, 55, 100, 0.12); }
 .ing-img { width: 28px; height: 28px; object-fit: contain; pointer-events: none; user-select: none; transition: filter 0.25s, opacity 0.25s; }
 .ing-ic { width: 22px; height: 22px; color: var(--sky); }
 .ing-n { position: absolute; right: -3px; bottom: -3px; min-width: 18px; padding: 0 4px; border-radius: 999px; background: var(--hud-ink); color: #fff; font: 800 11px/18px var(--font-text); text-align: center; }
@@ -650,7 +650,7 @@ onBeforeUnmount(() => {
 .fx-main { font: 700 13px var(--font-title); padding: 3px 9px 3px 6px; }
 .fx-main .ic { width: 16px; height: 16px; }
 .fx-small { display: inline-flex; align-items: center; gap: 2px; font: 700 var(--t-sm) var(--font-title); }
-.fx-small.big { font-size: var(--t-lg); padding: 3px 10px; border-radius: var(--r-pill); background: #fff; box-shadow: var(--sh-1); animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.fx-small.big { font-size: var(--t-lg); padding: 3px 10px; border-radius: var(--r-pill); background: var(--surface); box-shadow: var(--sh-1); animation: pop 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
 .fx-small.xp { color: var(--accent-ink); }
 .fx-sic { width: 15px; height: 15px; }
 .stop {

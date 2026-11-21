@@ -165,13 +165,13 @@ function saveName() {
   border-radius: var(--r-lg);
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
-  box-shadow: 0 0 0 4px #fff, 0 6px 14px rgba(40, 55, 80, 0.2);
+  box-shadow: 0 0 0 4px var(--surface), 0 6px 14px rgba(40, 55, 80, 0.2);
 }
 .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateY(4%); }
-.photo.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.photo.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, var(--surface)), color-mix(in srgb, var(--av, #ffc98a) 42%, var(--surface))); }
 .photo.live img { transform: none; }
 .look-row { display: flex; align-items: center; gap: var(--s-3); }
-.swatch { flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 3px #fff, var(--sh-1); }
+.swatch { flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface), var(--sh-1); }
 .look-main { display: grid; gap: 2px; min-width: 0; flex: 1; }
 .look-name { font: 700 var(--t-lg) / 1.15 var(--font-title); color: var(--ink); }
 .look-sub { font: 700 var(--t-sm) / 1.3 var(--font-text); color: var(--ink-3); }

@@ -53,7 +53,7 @@ onBeforeUnmount(() => clearTimeout(timer));
   padding: 0;
   border: 1px solid var(--hud-line, #d6dfea);
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   color: var(--hud-ink, #2c4f9e);
   box-shadow: 0 4px 10px rgba(30, 55, 100, 0.16);
   cursor: pointer;
@@ -67,7 +67,7 @@ onBeforeUnmount(() => clearTimeout(timer));
 .zlabel {
   padding: 2px 9px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--hud-line, #d6dfea);
   color: var(--hud-ink, #2c4f9e);
   font: 800 12px var(--font-text, system-ui, sans-serif);
