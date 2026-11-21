@@ -1,22 +1,36 @@
 <template>
-  <!-- tuto de la nouveauté en cours (lib/guides.js) : une étape à la fois, au-dessus de la barre du bas.
-       Pendant l'essayage en boutique, elle remonte en haut (la barre d'essayage occupe le bas). -->
+  <!-- tuto de la nouveauté en cours (lib/guides.js) : une étape à la fois.
+       Écran principal : en haut, sous la carte de profil (le menu sur la créature se cale dessous,
+       elle s'efface le temps qu'elle parle : sa bulle 3D est sous l'interface).
+       Dans une page : en bas, au-dessus de la barre ; la page réserve sa hauteur (--guide-h).
+       Pendant l'essayage en boutique : en haut (la barre d'essayage occupe le bas). -->
   <Transition name="guide">
-    <div v-if="shown" :key="shown.id" class="guide" :class="{ top: gameBus.trying }" role="status" aria-live="polite">
-      <span class="num">{{ shown.label }} · {{ shown.n }}/{{ shown.total }}</span>
-      <span class="txt">{{ shown.text }}</span>
+    <div
+      v-if="shown"
+      ref="el"
+      :key="shown.id"
+      class="menu-guide"
+      :class="{ top: atTop, hush: atTop && gameBus.speaking }"
+      role="status"
+      aria-live="polite"
+    >
+      <div class="body">
+        <span class="kicker">{{ shown.label }} · {{ shown.n }}/{{ shown.total }}</span>
+        <span class="txt">{{ shown.text }}</span>
+      </div>
       <button class="skip" type="button" @click="store.advanceGuide()">Passer</button>
     </div>
   </Transition>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { GUIDES, guideText } from "~/lib/guides";
 import { gameBus, useCreatureMood } from "~/composables/useCreatureMood";
 import { FEATURES } from "~/lib/growth";
 
 const { store } = useCreatureMood();
+const el = ref(null);
 
 const shown = computed(() => {
   const g = store.guide;
@@ -35,14 +49,30 @@ const shown = computed(() => {
     text: guideText(step, store.name),
   };
 });
+const onPage = computed(() => !!(gameBus.page || gameBus.sheet));
+const atTop = computed(() => !onPage.value || !!gameBus.trying);
+
+// en bas d'une page : la page garde la place de la bannière sous son contenu (BaseSheet, Cuisine)
+function setSpace(px) {
+  if (typeof document !== "undefined") document.documentElement.style.setProperty("--guide-h", px ? `${px}px` : "0px");
+}
+watch(
+  () => [shown.value?.id, atTop.value],
+  async () => {
+    await nextTick();
+    setSpace(shown.value && !atTop.value && el.value ? Math.ceil(el.value.offsetHeight + 12) : 0);
+  },
+  { immediate: true }
+);
+onBeforeUnmount(() => setSpace(0));
 </script>
 
 <style scoped>
-.guide {
+.menu-guide {
   position: fixed;
   left: 50%;
   /* au-dessus de la barre du bas (64 px + onglet de 28 px) */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 104px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 100px);
   z-index: 29; /* par-dessus les pages (20) et la barre (28) */
   display: flex;
   align-items: center;
@@ -50,23 +80,19 @@ const shown = computed(() => {
   width: min(92vw, 400px);
   box-sizing: border-box;
   transform: translateX(-50%);
-  padding: 10px 10px 10px 12px;
+  padding: 9px 9px 9px 14px;
   border-radius: 20px;
   background: var(--surface);
   box-shadow: var(--ui-sh-3), 0 0 0 2px color-mix(in srgb, var(--accent) 45%, var(--surface));
   pointer-events: none;
+  transition: opacity 0.25s;
 }
-.guide.top { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 12px); }
-.num {
-  flex: none;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font: 800 12px "Nunito", system-ui, sans-serif;
-  white-space: nowrap;
-}
-.txt { flex: 1; min-width: 0; font: 700 14px/1.3 "Nunito", system-ui, sans-serif; color: var(--ink); }
+/* écran principal : même place que la carte du tutoriel, sous la carte de profil */
+.menu-guide.top { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 92px); }
+.menu-guide.hush { opacity: 0; }
+.body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.kicker { font: 800 11px/1.2 "Nunito", system-ui, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent-ink, var(--accent)); }
+.txt { font: 700 14px/1.3 "Nunito", system-ui, sans-serif; color: var(--ink); }
 .skip {
   flex: none;
   pointer-events: auto;

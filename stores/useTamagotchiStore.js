@@ -1165,7 +1165,8 @@ export const useTamagotchiStore = defineStore(
         scheduleWish(now);
         return;
       }
-      if (wish.value || isSleeping.value || exhausted.value) return;
+      // pas de nouvelle envie pendant le tuto d'une nouveauté : une seule chose à faire à la fois
+      if (wish.value || isSleeping.value || exhausted.value || guide.value) return;
       if (!nextWishAt.value) { scheduleWish(now); return; }
       if (now >= nextWishAt.value) {
         let bag = {};

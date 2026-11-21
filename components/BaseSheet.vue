@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
   color: var(--ink);
   border-radius: 32px 32px 0 0;
   /* en bas : la place de la barre du bas, qui passe par-dessus */
-  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 20px);
+  padding: 10px 20px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + var(--guide-h, 0px) + 20px);
   box-shadow: 0 -10px 40px rgba(30, 60, 110, 0.3), var(--glass-edge);
   will-change: transform;
 }
@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
   max-height: none;
   height: 100%;
   border-radius: 0;
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 24px);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + var(--guide-h, 0px) + 24px);
   background: linear-gradient(180deg, color-mix(in srgb, #e2f0ff var(--tint), var(--surface-2)) 0%, color-mix(in srgb, #eef6ff var(--tint), var(--surface-2)) 30%, var(--surface-2) 70%);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

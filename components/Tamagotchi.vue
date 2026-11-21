@@ -89,9 +89,15 @@ function closeRing() {
   if (ring.value) { ring.value = null; ringClosedAt = Date.now(); }
 }
 // tutoriel : la carte du guide est en haut de l'écran, le menu reste dessous
+// (cartes de tuto posées dans la moitié haute seulement : celle du bas, au-dessus de la barre, ne compte pas)
 function guideBottom() {
-  const g = typeof document !== "undefined" && document.querySelector(".guide");
-  return g ? Math.round(g.getBoundingClientRect().bottom + 8) : 0;
+  if (typeof document === "undefined") return 0;
+  let b = 0;
+  for (const g of document.querySelectorAll(".onboard-guide, .menu-guide")) {
+    const r = g.getBoundingClientRect();
+    if (r.top < window.innerHeight / 2) b = Math.max(b, Math.round(r.bottom + 8));
+  }
+  return b;
 }
 function openRing(focus = null) {
   const si = creature.value?.getScreenInfo?.();
@@ -426,11 +432,13 @@ function tryOnEmote() {
   else if (!e.spin) creature.value?.blop?.();
 }
 
+// tutoriel ou tuto d'une nouveauté en cours : pas de bavardage ni d'appels (une seule consigne à la fois)
+const inTuto = () => (store.onboardStep ?? 6) < 6 || !!store.guide;
 // Appel : quand elle a un besoin et qu'on l'oublie, elle se manifeste
 let callTimer = null;
 function maybeCall() {
   if (stageKey.value === "oeuf" || store.isSleeping || props.dead || store.health <= 0) return;
-  if (activeActivity.value || gameBus.activity || ring.value || quiet.value) return;
+  if (activeActivity.value || gameBus.activity || ring.value || quiet.value || inTuto()) return;
   if (Date.now() - lastTouch < 30000) return;
   if (!["hunger", "cleanliness", "fun", "energy"].some((k) => store[k] < 25)) return;
   lastTouch = Date.now() - 15000; // pas de nouvel appel avant 15 s
@@ -441,7 +449,7 @@ function maybeCall() {
 onMounted(async () => {
   listenToActions();
   callTimer = setInterval(maybeCall, 8000);
-  chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf") say(idleLine(store, shownMood.value, MESSAGES[shownMood.value]), undefined, 0); }, 40000);
+  chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf" && !inTuto()) say(idleLine(store, shownMood.value, MESSAGES[shownMood.value]), undefined, 0); }, 40000);
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");

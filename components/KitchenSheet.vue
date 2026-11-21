@@ -493,8 +493,10 @@ function feed() {
   fedGains.value = GAIN_META.map((g) => ({ ...g, v: Math.round(res.gains?.[g.key] || 0) })).filter((g) => g.v > 0);
   fedXp.value = res.xp || 0;
   phase.value = "fed";
+  store.countEvent?.("plat"); // tuto de la Cuisine (lib/guides.js)
 }
 function keep() {
+  store.countEvent?.("plat"); // tuto de la Cuisine (lib/guides.js)
   gameToast(`${current.value?.label || "Le plat"} est au frigo.`, "solar:fridge-bold-duotone");
   beep("tap");
   backToList();
@@ -649,7 +651,7 @@ onBeforeUnmount(() => {
   max-width: 480px;
   height: 100%;
   color: var(--ink);
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 12px);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + var(--guide-h, 0px) + 12px);
   background: linear-gradient(180deg, color-mix(in srgb, #e2f0ff var(--tint), var(--surface-2)) 0%, color-mix(in srgb, #eef6ff var(--tint), var(--surface-2)) 30%, var(--surface-2) 70%);
 }
 .coins {
