@@ -6,6 +6,11 @@ export default defineNuxtConfig({
   // Jeu 100 % navigateur : pas de rendu serveur (Three.js, localStorage, requestAnimationFrame…)
   ssr: false,
 
+  // Les worktrees des sessions parallèles vivent dans .claude/ : ne pas les surveiller,
+  // sinon `nuxt dev` lancé depuis le dossier principal plante en boucle (EMFILE: too many open files, watch)
+  ignore: ["**/.claude/**"],
+  vite: { server: { watch: { ignored: ["**/.claude/**"] } } },
+
   // Sauvegarde dans localStorage (les cookies sont limités à 4 Ko et partaient avec le navigateur)
   piniaPluginPersistedstate: { storage: "localStorage" },
 
