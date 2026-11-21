@@ -22,7 +22,7 @@ const NEEDS = [
 const PHRASES = {
   hunger: ["a très faim", "a un peu faim", "n'a pas faim", "est bien rassasiée"],
   cleanliness: ["est toute sale", "aurait besoin d'un bain", "est propre", "est impeccable"],
-  fun: ["s'ennuie beaucoup", "aimerait jouer", "s'amuse bien", "est tout excitée"],
+  fun: ["s'ennuie beaucoup", "aimerait jouer", "s'amuse bien", "pétille de joie"],
   energy: ["est épuisée", "est un peu fatiguée", "a de l'énergie", "déborde d'énergie"],
   health: ["ne va pas bien", "est un peu patraque", "est en forme", "respire la santé"],
 };

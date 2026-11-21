@@ -219,7 +219,7 @@ onMounted(async () => {
     setTimeout(() => {
       if (stageKey.value === "oeuf") return;
       const firstTime = !(store.counters.menu > 0);
-      say(firstTime ? "Touche-moi pour t'occuper de moi !" : pick(MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
+      say(firstTime ? "Coucou ! Appuie sur moi, ça me fait rire !" : pick(MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
     }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);

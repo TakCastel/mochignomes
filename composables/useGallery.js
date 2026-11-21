@@ -39,5 +39,10 @@ export function useGallery() {
     photos.value = photos.value.filter((p) => p.id !== id);
     try { localStorage.setItem(KEY, JSON.stringify(photos.value)); } catch { /* rien à faire */ }
   }
-  return { photos, addPhoto, removePhoto, max: MAX };
+  // nouvelle créature : l'album de l'ancienne est vidé
+  function clearPhotos() {
+    photos.value = [];
+    try { localStorage.removeItem(KEY); } catch { /* rien à faire */ }
+  }
+  return { photos, addPhoto, removePhoto, clearPhotos, max: MAX };
 }

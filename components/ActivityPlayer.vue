@@ -37,7 +37,7 @@
       <div class="ui-dialog card">
         <span class="ui-medal"><Icon name="solar:pause-circle-bold-duotone" class="ic" /></span>
         <h3 class="ui-dialog-title">En pause</h3>
-        <p class="ui-text">Elle t'attend.</p>
+        <p class="ui-text">On reprend quand tu veux.</p>
         <div class="ui-actions">
           <button class="ui-btn ui-btn--secondary" @click="stopNow">Arrêter</button>
           <button class="ui-btn ui-btn--primary" @click="resume">Reprendre</button>

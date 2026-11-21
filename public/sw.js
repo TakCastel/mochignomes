@@ -60,7 +60,7 @@ self.addEventListener("periodicsync", (e) => {
   e.waitUntil(
     self.clients.matchAll({ type: "window" }).then((list) => {
       if (list.length) return; // appli ouverte : pas de rappel
-      return show({ title: "Ta créature pense à toi", body: "Elle aimerait un petit coucou quand tu as une minute.", tag: "tamagotchi-bonjour" });
+      return show({ title: "Des nouvelles du pré", body: "Elle aimerait un petit coucou quand tu as une minute.", tag: "tamagotchi-bonjour" });
     }),
   );
 });

@@ -121,7 +121,7 @@ const TARGET = { 2: "nourrir", 3: "jouer" };
 const GUIDE = {
   2: () => `${store.name} a faim ! Touche « Manger » pour la nourrir.`,
   3: () => `${store.name} s'ennuie. Touche « Jouer » pour jouer avec elle.`,
-  4: () => `Touche ${store.name} directement pour la chatouiller !`,
+  4: () => `Appuie sur ${store.name} pour la faire rire !`,
 };
 const guideText = computed(() => GUIDE[step.value]?.() || "");
 let pulse = null;

@@ -3,7 +3,7 @@
     <div v-if="away" class="ui-scrim away-scrim">
       <section class="ui-dialog card" role="dialog" aria-modal="true" aria-labelledby="away-title">
         <div class="ui-medal ui-medal--love medal"><Icon name="solar:heart-bold-duotone" class="ic" /></div>
-        <h2 id="away-title" class="ui-dialog-title">Pendant ton absence</h2>
+        <h2 id="away-title" class="ui-dialog-title">Te revoilà !</h2>
         <p class="ui-text">{{ since }}</p>
         <ul v-if="lines.length" class="lines">
           <li v-for="(l, i) in lines" :key="i" class="ui-well">{{ l }}</li>
@@ -40,9 +40,9 @@ const lines = computed(() => (away.value?.lines || []).slice(0, 3));
 const since = computed(() => {
   const s = away.value?.seconds || 0;
   const h = Math.floor(s / 3600);
-  if (h >= 48) return `${store.name} t'a attendu ${Math.floor(h / 24)} jours.`;
-  if (h >= 1) return `${store.name} t'a attendu ${h} h.`;
-  return `${store.name} t'a attendu ${Math.max(1, Math.floor(s / 60))} min.`;
+  if (h >= 48) return `Petite pause de ${Math.floor(h / 24)} jours : ${store.name} est toute contente de te revoir !`;
+  if (h >= 1) return `Petite pause de ${h} h : ${store.name} est toute contente de te revoir !`;
+  return `Petite pause de ${Math.max(1, Math.floor(s / 60))} min : ${store.name} est toute contente de te revoir !`;
 });
 
 function hello() {
