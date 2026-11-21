@@ -20,7 +20,7 @@ const level = computed(() => levelInfo(store.xp).level);
 
 watch(level, (lvl, old) => {
   if (old && lvl > old) {
-    gameToast(`Niveau ${lvl} !`, "ph:star-fill");
+    gameToast(`Niveau ${lvl} !`, "solar:star-bold-duotone");
     gameCommand("react", "niveau");
   }
 });

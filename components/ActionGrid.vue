@@ -4,18 +4,32 @@
       v-for="a in actions"
       :key="a.key"
       class="tile"
-      :class="{ best: a.key === best, locked: !!a.reason, wiggle: wiggling === a.key }"
-      :aria-label="a.label + (a.reason ? ` (${a.reason})` : a.key === best ? ' (conseillé)' : '')"
+      :class="{
+        best: a.key === best && !a.wanted,
+        wanted: a.wanted,
+        glow: a.glow,
+        off: !!a.reason,
+        cooling: a.ring > 0,
+        wiggle: wiggling === a.key,
+      }"
+      :aria-label="a.label + (a.reason ? ` (${a.reason})` : a.wanted ? ' (elle en a envie)' : a.key === best ? ' (conseillé)' : '')"
       @click="press(a)"
     >
+      <span v-if="a.ring > 0" class="ring" :style="{ '--p': a.ring }" aria-hidden="true" />
       <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
-      <Icon v-if="a.reason" name="solar:lock-keyhole-bold" class="lock" />
+      <span class="lbl">{{ a.label }}</span>
+      <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
+      <span v-if="a.wanted" class="dot" aria-hidden="true" />
+      <span v-for="f in floats.filter((x) => x.key === a.key)" :key="f.id" class="float" :style="{ '--fx': f.dx + 'px' }">{{ f.text }}</span>
     </button>
   </section>
 </template>
 
 <script setup>
 import { computed, ref } from "vue";
+import * as growth from "~/lib/growth";
+
+const ACTION_UNLOCK_LEVEL = growth.ACTION_UNLOCK_LEVEL || { danser: 3 };
 
 const { store } = useCreatureMood();
 
@@ -30,34 +44,53 @@ const BASE = [
   { key: "photo", label: "Photo", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
 ];
 
-// Pourquoi une action n'est pas possible : la créature le dit elle-même
-function reasonFor(key) {
-  if (key === "photo") return null;
-  if (store.health <= 0) return key === "soigner" ? null : "...";
-  if (store.isSleeping) return key === "coucher" ? null : "Chut... je dors";
-  if (key === "coucher" && store.energy >= 30) return "Je suis pas fatiguée !";
-  if ((key === "jouer" || key === "danser") && store.energy < 10) return "Trop crevée...";
-  return null;
+// Motifs de vibration par action (respecte le réglage « tamagotchi-haptics »)
+const BUZZ = { calin: 10, nourrir: [12, 30, 12], laver: [10, 20, 10], jouer: [10, 20, 10], soigner: 40, danser: [10, 20, 10], succes: [20, 40, 20] };
+function buzz(pattern) {
+  try {
+    const v = localStorage.getItem("tamagotchi-haptics");
+    if (v === "0" || v === "false" || v === "off") return;
+  } catch { /* stockage indisponible */ }
+  try { navigator.vibrate?.(pattern); } catch { /* non supporté */ }
+}
+
+const now = computed(() => store.tick || Date.now());
+
+function stateOf(key) {
+  if (key === "photo") return { reason: null, ring: 0, locked: false };
+  const needLevel = ACTION_UNLOCK_LEVEL?.[key];
+  if (needLevel && store.level < needLevel) {
+    return { reason: `Je saurai danser au niveau ${needLevel} !`, ring: 0, locked: true };
+  }
+  if (key === "coucher" && store.isSleeping) return { reason: null, ring: 0, locked: false };
+  void now.value; // dépendance : l'anneau se met à jour chaque seconde
+  const c = store.canAct?.(key);
+  if (!c || c.ok) return { reason: null, ring: 0, locked: false };
+  let ring = 0;
+  if (c.cooldownMs > 0 && c.remaining > 0) ring = Math.min(0.999, Math.max(0.02, 1 - c.remaining / c.cooldownMs));
+  return { reason: c.reason || "Encore un instant...", ring, locked: false };
 }
 
 const actions = computed(() =>
   BASE.map((a) => {
     const wake = a.key === "coucher" && store.isSleeping;
+    const st = stateOf(a.key);
     return {
       ...a,
       label: wake ? "Réveil" : a.label,
       icon: wake ? "solar:sun-bold-duotone" : a.icon,
       color: wake ? ["#ffe58a", "#f29400"] : a.color,
-      reason: reasonFor(a.key),
+      ...st,
+      wanted: !st.reason && store.wish?.action === a.key,
+      glow: gameBus.highlight?.action === a.key,
     };
   })
 );
 
-// Action conseillée : celle du besoin le plus bas, toujours mise en avant en vert
+// Action conseillée : celle du besoin le plus bas (sans compter Soigner si elle va bien)
 const best = computed(() => {
-  if (store.health <= 0) return "soigner";
   if (store.isSleeping) return null;
-  let pick = null, low = Infinity;
+  let pick = null, low = 60;
   for (const a of actions.value) {
     if (!a.need || a.reason) continue;
     if (store[a.need] < low) { low = store[a.need]; pick = a.key; }
@@ -66,18 +99,52 @@ const best = computed(() => {
 });
 
 const wiggling = ref(null);
+function wiggle(key) {
+  wiggling.value = null;
+  requestAnimationFrame(() => (wiggling.value = key));
+  setTimeout(() => { if (wiggling.value === key) wiggling.value = null; }, 450);
+}
+
+// petits « +N » qui montent depuis la tuile
+const floats = ref([]);
+let floatId = 0;
+function addFloat(key, text, dx = 0) {
+  const id = ++floatId;
+  floats.value.push({ id, key, text, dx });
+  setTimeout(() => (floats.value = floats.value.filter((f) => f.id !== id)), 1100);
+}
+function showGains(key, res) {
+  const parts = [];
+  const g = res.gains || {};
+  const top = Object.entries(g).filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1])[0];
+  if (top) parts.push("+" + Math.round(top[1]));
+  if (res.xp > 0) parts.push(`+${res.xp} xp`);
+  parts.forEach((t, i) => setTimeout(() => addFloat(key, t, (i - 0.5) * 14), i * 140));
+}
+
 function press(a) {
   if (a.reason) {
     gameSay(a.reason);
-    wiggling.value = null;
-    requestAnimationFrame(() => (wiggling.value = a.key));
-    setTimeout(() => { if (wiggling.value === a.key) wiggling.value = null; }, 450);
+    wiggle(a.key);
     return;
   }
-  navigator.vibrate?.(12);
-  if (a.key === "photo") return gameCommand("photo");
-  if (a.key === "coucher") return store.isSleeping ? store.wakeUp() : store.startSleeping();
-  store.applyAction(a.key);
+  if (a.key === "photo") { buzz(12); return gameCommand("photo"); }
+  if (a.key === "coucher") {
+    buzz(12);
+    if (store.isSleeping) return store.wakeUp();
+    const r = store.canAct?.("coucher");
+    if (r && !r.ok) { gameSay(r.reason || "Je ne suis pas fatiguée !"); return wiggle(a.key); }
+    return store.startSleeping();
+  }
+  const res = store.applyAction(a.key);
+  if (!res || res.ok === false) {
+    gameSay(res?.reason || "Pas maintenant...");
+    wiggle(a.key);
+    return;
+  }
+  buzz(BUZZ[a.key] || 12);
+  showGains(a.key, res);
+  if (res.levelUp || res.stageUp || res.wishDone) setTimeout(() => buzz(BUZZ.succes), 250);
 }
 </script>
 
@@ -99,8 +166,9 @@ function press(a) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: var(--tile, 84px);
-  padding: 0;
+  min-height: var(--tile, 84px);
+  gap: 2px;
+  padding-top: 4px;
   border: 2px solid transparent;
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff, #f3f5f8);
@@ -112,10 +180,8 @@ function press(a) {
 .tile:active { transform: scale(0.95); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
 /* icône Solar bicolore : ton clair pour le fond de l'objet, ton soutenu pour le dessin */
 .ic {
-  width: 62%;
-  height: 62%;
-  max-width: 50px;
-  max-height: 50px;
+  width: 46px;
+  height: 46px;
   color: var(--c2);
   filter: drop-shadow(0 3px 3px rgba(40, 55, 80, 0.16));
 }
@@ -126,7 +192,56 @@ function press(a) {
   background: linear-gradient(180deg, #f3fdec, #e2f7d4);
   box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), inset 0 1px 0 #fff;
 }
-.locked .ic { opacity: 0.5; }
+.off .ic { opacity: 0.45; filter: grayscale(0.5); }
+.off .lbl { opacity: 0.6; }
+.lbl { font: 800 11px/1 "Nunito", system-ui, sans-serif; color: #4a5565; padding-bottom: 6px; }
+/* anneau de recharge */
+.ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  padding: 3px;
+  background: conic-gradient(#4fbf34 calc(var(--p) * 360deg), rgba(150, 160, 175, 0.28) 0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+/* envie de la créature : la tuile pulse en rose */
+.wanted {
+  border-color: #ff8fb0;
+  background: linear-gradient(180deg, #fff6f9, #ffe3ec);
+  animation: pulse 1.3s ease-in-out infinite;
+}
+.glow { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
+.dot { position: absolute; top: 6px; left: 6px; width: 9px; height: 9px; border-radius: 50%; background: #ff4f86; }
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
+  50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }
+}
+.float {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  z-index: 5;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #2a9a3a;
+  font: 800 13px "Fredoka", "Nunito", system-ui, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(40, 55, 80, 0.2);
+  animation: up 1.05s ease-out forwards;
+}
+@keyframes up {
+  0% { transform: translate(calc(-50% + var(--fx)), 6px) scale(0.7); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--fx)), -52px) scale(1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wanted, .glow, .wiggle { animation: none; }
+}
 .lock {
   position: absolute;
   top: 7px;

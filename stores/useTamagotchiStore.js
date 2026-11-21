@@ -1,114 +1,272 @@
 // stores/useTamagotchiStore.js
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { gameToast } from "~/composables/useCreatureMood";
+import { dayPhase } from "~/lib/gameUi";
+import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, stageFor, nextStage, stageDef } from "~/lib/growth";
+import { pickWish } from "~/lib/wishes";
+import { questsForDay } from "~/lib/quests";
+import { migrateSnapshot, SCHEMA } from "~/lib/migrate";
 
 // Vitesse de vie, en points par heure réelle.
 // La créature vit même quand l'appli est fermée : à l'ouverture,
 // on rattrape le temps écoulé depuis la dernière visite.
 const RATES = {
-  hunger: 6, // 75 → 0 en un peu plus de 12 h
+  hunger: 6,
   cleanliness: 4,
   fun: 5,
   energyAwake: 5,
-  energySleeping: 20, // une bonne nuit recharge l'énergie en quelques heures
+  energySleeping: 20,
   healthStarving: 5, // perte de santé quand la faim est à 0
+  illness: 3, // perte de santé quand elle est malade
+  regen: 2, // regain de santé quand tout va bien
 };
 const SLEEP_FACTOR = 0.5; // pendant le sommeil, tout s'use moitié moins vite
 const CATCH_UP_STEP = 60; // secondes simulées par pas de rattrapage
 const MAX_CATCH_UP = 7 * 24 * 3600; // au-delà d'une semaine, on arrête de compter
+const AWAY_MIN = 300; // à partir de 5 minutes d'absence, on raconte ce qui s'est passé
+const OFFLINE_HEALTH_FLOOR = 5; // hors ligne, la santé ne descend jamais sous 5
+const EARLY_MS = 15 * 60000; // première session : tout va plus vite
+const EARLY_COOLDOWN = 0.3;
+const DAY_MS = 86400000;
+
+// Recharges de base (ms)
+const COOLDOWNS = { nourrir: 20000, laver: 20000, jouer: 15000, danser: 15000, calin: 8000, soigner: 30000, coucher: 0, chatouiller: 0 };
+export const ACTIONS = Object.keys(COOLDOWNS);
 
 // Personnalité : chaque trait va de 0 à 1 et se forme selon les soins.
-// Les habitudes s'estompent doucement si on arrête (4 % par jour).
 export const TRAITS = ["joueuse", "gourmande", "caline", "rancuniere", "coquette"];
 const TRAIT_FADE_PER_DAY = 0.04;
 
-// Expérience gagnée par action : elle fait monter le niveau
-const XP = { nourrir: 4, laver: 4, jouer: 6, danser: 3, calin: 2, chatouiller: 1, soigner: 3 };
+// Expérience gagnée par action utile
+const XP = { nourrir: 4, laver: 4, jouer: 6, danser: 3, calin: 2, chatouiller: 1, soigner: 3, coucher: 2 };
 
-// Niveau atteint pour un total d'expérience, et progression vers le suivant
 export function levelInfo(xp) {
   let level = 1, rest = xp, need = 40;
   while (rest >= need) { rest -= need; level++; need = 40 + 15 * (level - 1); }
   return { level, into: rest, need };
 }
 
-const freshState = () => ({
-  hunger: 75, cleanliness: 75, fun: 80, energy: 100, health: 100, isSleeping: false,
-});
+const SURPRISES = [
+  { icon: "solar:gift-bold-duotone", text: "Elle t'a gardé un petit galet brillant." },
+  { icon: "solar:star-bold-duotone", text: "Elle a trouvé une étoile pendant ton absence." },
+  { icon: "solar:leaf-bold-duotone", text: "Elle a cueilli une feuille pour toi." },
+  { icon: "solar:sparkles-bold-duotone", text: "Elle a fait un joli dessin avec ton prénom." },
+];
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const safeToast = (text, icon) => { try { gameToast(text, icon); } catch { /* hors navigateur */ } };
 
 let decayTimer = null;
+let visibilityBound = false;
 let neglectedDuringDecay = false;
 
 export const useTamagotchiStore = defineStore(
   "tamagotchi",
   () => {
+    const schema = ref(0);
     const name = ref("");
-
-    function initName() {
-      if (!name.value) {
-        name.value = generateRandomName();
-      }
-    }
-
     const hunger = ref(75);
     const cleanliness = ref(75);
     const fun = ref(80);
     const energy = ref(100);
     const health = ref(100);
     const isSleeping = ref(false);
-    const lastUpdate = ref(0); // horodatage (ms) du dernier calcul
+    const lastUpdate = ref(0);
     const traits = ref(Object.fromEntries(TRAITS.map((t) => [t, 0])));
-    const neglectedAt = ref(0); // dernière fois qu'il a manqué de quelque chose
+    const neglectedAt = ref(0);
     const xp = ref(0);
     const bornAt = ref(0);
-    const counters = ref({}); // nombre de fois que chaque chose a été faite
-    const unlocked = ref([]); // succès débloqués
-    const shell = ref("lavande"); // (ancienne couleur de coque, inutilisée)
-    const palette = ref("printemps"); // ambiance du décor
-    const ui = ref("pastel"); // thème d'interface (boutons, panneaux)
-    // Visites : série de jours d'affilée et bonus du jour
+    const counters = ref({});
+    const unlocked = ref([]);
+    const palette = ref("printemps");
+    const ui = ref("pastel");
     const lastVisitDay = ref("");
     const streak = ref(0);
     const pendingBonus = ref(0);
-    const awaySeconds = ref(0); // durée de l'absence avant cette visite (non sauvegardée)
+    // nouveautés du schéma 2
+    const hatched = ref(false);
+    const eggHeat = ref(0);
+    const onboardStep = ref(0);
+    const hatchedAt = ref(0);
+    const stage = ref("oeuf");
+    const cooldowns = ref({});
+    const wish = ref(null);
+    const wishesDone = ref(0);
+    const illness = ref(null);
+    const exhausted = ref(false);
+    const quests = ref({ day: "", list: [] });
+    const journal = ref([]);
+    const bestStreak = ref(0);
+    const totalDays = ref(0);
+    const jokers = ref(0);
+    const nextWishAt = ref(0);
+    const lastWishId = ref("");
+    const surpriseLog = ref({ day: "", n: 0 });
+    // non persistant
+    const away = ref(null);
+    const awaySeconds = ref(0);
+    const tick = ref(Date.now());
+    const speed = ref(1);
+    let lastTickleXp = 0;
+
+    const level = computed(() => levelInfo(xp.value).level);
+    const unlockedPages = computed(() => {
+      const pages = ["maison", "elle"];
+      if (level.value >= PAGE_UNLOCK_LEVEL.jours) pages.push("jours");
+      if (level.value >= PAGE_UNLOCK_LEVEL.album) pages.push("album");
+      return pages;
+    });
+
+    const ageDays = (now = Date.now()) =>
+      hatched.value && hatchedAt.value ? Math.max(0, ((now - hatchedAt.value) * speed.value) / DAY_MS) : 0;
+
+    const stageInfo = computed(() => {
+      const key = hatched.value ? stage.value : "oeuf";
+      const def = stageDef(key);
+      const next = nextStage(key);
+      if (key === "oeuf") {
+        return { key, label: "Œuf", next: "bebe", nextLabel: "Bébé", progress: Math.min(1, eggHeat.value / 12), hint: "en tapant doucement sur l'œuf" };
+      }
+      if (!next) return { key, label: def.label, next: null, nextLabel: "", progress: 1, hint: "Elle a fini de grandir, mais continue de s'attacher à toi." };
+      const days = ageDays(tick.value);
+      const pl = Math.min(1, level.value / next.level);
+      const pd = next.days ? Math.min(1, days / next.days) : 1;
+      const need = `au niveau ${next.level} et ${next.days} jour${next.days > 1 ? "s" : ""}`;
+      return { key, label: def.label, next: next.key, nextLabel: next.label, progress: Math.min(pl, pd), hint: need };
+    });
 
     const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-    function checkDailyVisit() {
-      const today = new Date();
-      const key = dayKey(today);
-      if (lastVisitDay.value === key) return;
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      streak.value = lastVisitDay.value === dayKey(yesterday) ? streak.value + 1 : 1;
-      lastVisitDay.value = key;
-      // le bonus grandit avec la série, jusqu'à 7 jours
-      pendingBonus.value = 10 + 5 * (Math.min(streak.value, 7) - 1);
+    const dayNumber = (key) => {
+      const [y, m, d] = String(key).split("-").map(Number);
+      return Math.round(Date.UTC(y, m - 1, d) / DAY_MS);
+    };
+
+    // ---------- journal ----------
+    function addJournal(type, text, icon = "solar:book-bookmark-bold-duotone") {
+      const t = Date.now();
+      journal.value.unshift({ id: `${t}-${Math.floor(Math.random() * 1e4)}`, t, type, text, icon });
+      if (journal.value.length > 100) journal.value.length = 100;
     }
+
+    // ---------- expérience, niveaux, stades ----------
+    function evalStage() {
+      if (!hatched.value) return null;
+      const target = stageFor(level.value, ageDays());
+      if (STAGE_ORDER.indexOf(target) > STAGE_ORDER.indexOf(stage.value)) {
+        stage.value = target;
+        const def = stageDef(target);
+        addJournal("stade", `Elle est devenue ${def.label.toLowerCase()} !`, "solar:stars-bold-duotone");
+        safeToast(`${name.value || "Elle"} grandit : ${def.label} !`, "solar:stars-bold-duotone");
+        return target;
+      }
+      return null;
+    }
+
+    function addXp(n) {
+      if (!n) return { levelUp: false, stageUp: null };
+      const before = level.value;
+      xp.value += n;
+      const levelUp = level.value > before;
+      if (levelUp) {
+        addJournal("niveau", `Niveau ${level.value} atteint.`, "solar:star-bold-duotone");
+        safeToast(`Niveau ${level.value} !`, "solar:star-bold-duotone");
+      }
+      return { levelUp, stageUp: evalStage() };
+    }
+
+    // ---------- visites, série, défis ----------
+    function ensureQuests(key) {
+      if (quests.value.day !== key) quests.value = { day: key, list: questsForDay(key) };
+    }
+
+    function checkDailyVisit() {
+      const key = dayKey(new Date());
+      ensureQuests(key);
+      if (lastVisitDay.value === key) return;
+      if (!lastVisitDay.value) {
+        streak.value = 1;
+      } else {
+        const diff = dayNumber(key) - dayNumber(lastVisitDay.value);
+        if (diff === 1) {
+          streak.value += 1;
+        } else if (diff > 1) {
+          const missed = diff - 1;
+          if (jokers.value >= missed) {
+            jokers.value -= missed; // les jokers couvrent les jours manqués
+            streak.value += 1;
+            addJournal("serie", `Un joker a protégé votre série (${missed} jour${missed > 1 ? "s" : ""}).`, "solar:shield-check-bold-duotone");
+          } else {
+            streak.value = Math.max(1, Math.floor(streak.value / 2));
+          }
+        }
+      }
+      lastVisitDay.value = key;
+      totalDays.value += 1;
+      bestStreak.value = Math.max(bestStreak.value, streak.value);
+      if (streak.value > 0 && streak.value % 7 === 0 && jokers.value < 2) {
+        jokers.value += 1;
+        safeToast("Un joker gagné pour ta série !", "solar:gift-bold-duotone");
+      }
+      if (hatched.value && onboardStep.value >= 6) pendingBonus.value = 10 + 5 * (Math.min(streak.value, 7) - 1);
+    }
+
     function claimBonus() {
       const gained = pendingBonus.value;
-      xp.value += gained;
       pendingBonus.value = 0;
+      if (gained) addXp(gained);
       return gained;
     }
-    const count = (key, n = 1) => { counters.value[key] = (counters.value[key] || 0) + n; };
+
+    function claimQuest(id) {
+      const q = quests.value.list.find((x) => x.id === id);
+      if (!q || q.claimed || q.progress < q.target) return { ok: false, xp: 0, levelUp: false };
+      q.claimed = true;
+      const r = addXp(10);
+      return { ok: true, xp: 10, levelUp: r.levelUp };
+    }
+
+    const count = (key, n = 1) => {
+      counters.value[key] = (counters.value[key] || 0) + n;
+      const q = quests.value.list.find((x) => x.action === key && x.progress < x.target);
+      if (q) {
+        q.progress = Math.min(q.target, q.progress + n);
+        if (q.progress >= q.target) safeToast(`Défi réussi : ${q.label}`, "solar:cup-star-bold-duotone");
+      }
+    };
 
     function rename(newName) {
       const clean = String(newName || "").trim().slice(0, 16);
       if (clean) name.value = clean;
     }
 
-    // Nouvelle partie : nouvelle créature, tout repart de zéro
+    function generateRandomName() {
+      const prefixes = ["Mo", "Chi", "Ba", "Lu", "Ki", "Zo", "Po", "Ni"];
+      const suffixes = ["mi", "chan", "bo", "ri", "nette", "ki", "zou", "pouf"];
+      return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
+    }
+    function initName() {
+      if (!name.value) name.value = generateRandomName();
+    }
+
+    // Nouvelle partie : un nouvel œuf, tout repart de zéro
     function resetGame() {
-      const f = freshState();
-      hunger.value = f.hunger; cleanliness.value = f.cleanliness; fun.value = f.fun;
-      energy.value = f.energy; health.value = f.health; isSleeping.value = f.isSleeping;
+      hunger.value = 75; cleanliness.value = 75; fun.value = 80; energy.value = 100; health.value = 100;
+      isSleeping.value = false;
       traits.value = Object.fromEntries(TRAITS.map((t) => [t, 0]));
       neglectedAt.value = 0; xp.value = 0; counters.value = {}; unlocked.value = [];
       bornAt.value = Date.now(); lastUpdate.value = Date.now();
       name.value = generateRandomName();
+      hatched.value = false; eggHeat.value = 0; onboardStep.value = 0; hatchedAt.value = 0; stage.value = "oeuf";
+      cooldowns.value = {}; wish.value = null; wishesDone.value = 0; illness.value = null; exhausted.value = false;
+      quests.value = { day: "", list: [] }; journal.value = [];
+      bestStreak.value = 0; totalDays.value = 0; jokers.value = 0; streak.value = 0;
+      lastVisitDay.value = ""; pendingBonus.value = 0; nextWishAt.value = 0; lastWishId.value = "";
+      surpriseLog.value = { day: "", n: 0 }; away.value = null;
+      schema.value = SCHEMA;
+      checkDailyVisit();
     }
 
-    // rapproche un trait de 1 (nudge) ou de 0 (soothe), sans jamais dépasser
     function nudge(trait, amount) {
       const v = traits.value[trait] || 0;
       traits.value[trait] = Math.min(1, v + amount * (1 - v));
@@ -116,181 +274,329 @@ export const useTamagotchiStore = defineStore(
     function soothe(trait, amount) {
       traits.value[trait] = Math.max(0, (traits.value[trait] || 0) * (1 - amount));
     }
+    const tr = (t) => traits.value[t] || 0;
 
     // Boude-t-il ? Une créature rancunière boude un moment après avoir été négligée.
     function isSulking(now = Date.now()) {
       const r = traits.value.rancuniere || 0;
       if (r < 0.3 || !neglectedAt.value) return false;
-      const duration = (r * 4 * 3600 * 1000) / speed.value; // jusqu'à 4 h
+      const duration = (r * 4 * 3600 * 1000) / speed.value;
       return now - neglectedAt.value < duration;
     }
 
-    // Accélérateur pour tester : ?vitesse=60 fait passer une heure par minute
-    const speed = ref(1);
-
-    function generateRandomName() {
-      const prefixes = ["Mo", "Chi", "Ba", "Lu", "Ki", "Zo", "Po", "Ni"];
-      const suffixes = ["mi", "chan", "bo", "ri", "nette", "ki", "zou", "pouf"];
-
-      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-      const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-
-      return prefix + suffix;
+    // ---------- migration ----------
+    function migrate() {
+      const patch = migrateSnapshot({
+        schema: schema.value, hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
+        energy: energy.value, health: health.value, lastUpdate: lastUpdate.value, bornAt: bornAt.value,
+        streak: streak.value, totalDays: totalDays.value, bestStreak: bestStreak.value,
+      });
+      if (!patch) return;
+      const refs = { schema, hunger, cleanliness, fun, energy, health, hatched, onboardStep, hatchedAt, stage, exhausted, totalDays, bestStreak };
+      for (const [k, v] of Object.entries(patch)) if (refs[k]) refs[k].value = v;
+      if (patch.hatched) stage.value = stageFor(level.value, ageDays());
     }
 
-    function applyAction(action) {
-      // Si mort, seul "soigner" est autorisé pour réanimer
-      if (health.value <= 0 && action !== "soigner") return;
+    // ---------- éclosion, tutoriel ----------
+    function hatch(newName) {
+      if (hatched.value) return;
+      const now = Date.now();
+      if (newName) rename(newName);
+      initName();
+      hatched.value = true;
+      eggHeat.value = 12;
+      hatchedAt.value = now;
+      bornAt.value = now;
+      lastUpdate.value = now;
+      stage.value = "bebe";
+      if (onboardStep.value < 1) onboardStep.value = 1;
+      // petit creux et petit ennui pour le tutoriel
+      hunger.value = 55; fun.value = 50; cleanliness.value = 80; energy.value = 100; health.value = 100;
+      addJournal("naissance", `${name.value} vient d'éclore. Bienvenue au monde !`, "solar:stars-bold-duotone");
+    }
+    function tapEgg() {
+      if (hatched.value) return eggHeat.value;
+      eggHeat.value = Math.min(12, eggHeat.value + 1);
+      if (eggHeat.value >= 12) hatch();
+      return eggHeat.value;
+    }
+    function setOnboardStep(n) {
+      onboardStep.value = Math.max(0, Math.min(6, Number(n) || 0));
+      if (onboardStep.value >= 6) finishOnboarding();
+    }
+    function finishOnboarding() {
+      const now = Date.now();
+      onboardStep.value = 6;
+      lastUpdate.value = now;
+      nextWishAt.value = now + (rand(25, 45) * 1000);
+      checkDailyVisit();
+      if (!pendingBonus.value && streak.value <= 1) pendingBonus.value = 10;
+    }
 
-      // Si en train de dormir, tout est bloqué sauf "coucher" (pour réveiller) et "soigner"
-      if (isSleeping.value && !["coucher", "soigner"].includes(action)) return;
+    // ---------- actions ----------
+    const isEarly = (now) => hatched.value && hatchedAt.value > 0 && now - hatchedAt.value < EARLY_MS;
+    const cooldownFor = (key, now) => Math.round((COOLDOWNS[key] || 0) * (isEarly(now) ? EARLY_COOLDOWN : 1));
+    const evening = () => { const h = new Date().getHours(); return h >= 19 || h < 6; };
 
-      const increase = 10;
-      const decrease = 2;
-      const playCost = health.value > 100 ? 2 : 5;
+    function uselessReason(key) {
+      const tuto = onboardStep.value < 6;
+      switch (key) {
+        case "nourrir": return !tuto && hunger.value > 90 ? "Elle n'a pas faim." : null;
+        case "laver": return !tuto && cleanliness.value > 90 ? "Elle est déjà toute propre." : null;
+        case "jouer":
+        case "danser":
+          if (energy.value < 10) return "Elle est trop fatiguée pour jouer.";
+          return !tuto && fun.value > 92 ? "Elle s'est assez amusée pour l'instant." : null;
+        case "soigner":
+          return !illness.value && !exhausted.value && health.value >= 70 ? "Elle va très bien !" : null;
+        case "coucher":
+          return !isSleeping.value && energy.value >= 60 && !evening() ? "Elle n'est pas fatiguée." : null;
+        default: return null;
+      }
+    }
 
-      // Danser comme jouer : il faut un minimum d'énergie
-      if (["jouer", "danser"].includes(action) && energy.value < 10) return;
-      if (health.value <= 0 && action === "soigner") count("revive");
-      count(action);
-      xp.value += XP[action] || 0;
+    function canAct(key) {
+      const now = tick.value;
+      if (key === "photo") return { ok: true, reason: "", readyAt: 0, cooldownMs: 0, remaining: 0 };
+      if (!(key in COOLDOWNS)) return { ok: false, reason: "Action inconnue.", readyAt: 0, cooldownMs: 0, remaining: 0 };
+      const readyAt = cooldowns.value[key] || 0;
+      const cooldownMs = cooldownFor(key, now);
+      const remaining = Math.max(0, readyAt - now);
+      const res = (ok, reason = "") => ({ ok, reason, readyAt, cooldownMs, remaining });
+      if (isSleeping.value && !["coucher", "soigner"].includes(key)) return res(false, "Elle dort, chut...");
+      if (exhausted.value && ["jouer", "danser", "chatouiller"].includes(key)) return res(false, "Elle est trop épuisée, laisse-la se reposer.");
+      const lvl = ACTION_UNLOCK_LEVEL[key];
+      if (lvl && level.value < lvl) return res(false, `Elle saura le faire au niveau ${lvl}.`);
+      if (remaining > 0) return res(false, "Un petit instant...");
+      const why = uselessReason(key);
+      return why ? res(false, why) : res(true);
+    }
+
+    function scheduleWish(now = Date.now()) {
+      let secs;
+      if (hatchedAt.value && now - hatchedAt.value < EARLY_MS) secs = rand(25, 45);
+      else if (hatchedAt.value && now - hatchedAt.value < DAY_MS) secs = rand(180, 480);
+      else secs = rand(1200, 3600);
+      nextWishAt.value = now + (secs * 1000) / (speed.value > 1 ? speed.value : 1);
+    }
+
+    function applyAction(key) {
+      const now = Date.now();
+      tick.value = now;
+      const fail = (reason) => ({ ok: false, reason, gains: {}, xp: 0, wishDone: false, levelUp: false, stageUp: null });
+      if (key === "photo") return { ok: true, gains: {}, xp: 0, wishDone: false, levelUp: false, stageUp: null };
+      const c = canAct(key);
+      if (!c.ok) return fail(c.reason);
+
+      const before = { hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, health: health.value };
+      const wasSleeping = isSleeping.value;
+      let xpGain = XP[key] || 0;
+
+      count(key);
 
       // Ce que l'on fait façonne son caractère
-      switch (action) {
-        case "nourrir":
-          nudge("gourmande", hunger.value > 85 ? 0.05 : 0.012); // trop nourrie → gourmande
-          soothe("rancuniere", 0.01);
-          break;
-        case "laver":
-          nudge("coquette", cleanliness.value > 70 ? 0.05 : 0.015); // lavée déjà propre → coquette
-          soothe("rancuniere", 0.01);
-          break;
-        case "jouer":
-          nudge("joueuse", 0.035);
-          soothe("rancuniere", 0.03);
-          break;
-        case "chatouiller":
-          nudge("caline", 0.015);
-          soothe("rancuniere", 0.01);
-          break;
-        case "calin":
-          nudge("caline", 0.025);
-          soothe("rancuniere", 0.02);
-          break;
-        case "danser":
-          nudge("joueuse", 0.015);
-          soothe("rancuniere", 0.01);
-          break;
-        case "soigner":
-          soothe("rancuniere", 0.01);
-          break;
+      switch (key) {
+        case "nourrir": nudge("gourmande", hunger.value > 70 ? 0.05 : 0.012); soothe("rancuniere", 0.01); break;
+        case "laver": nudge("coquette", cleanliness.value > 70 ? 0.05 : 0.015); soothe("rancuniere", 0.01); break;
+        case "jouer": nudge("joueuse", 0.035); soothe("rancuniere", 0.03); break;
+        case "chatouiller": nudge("caline", 0.015); soothe("rancuniere", 0.01); break;
+        case "calin": nudge("caline", 0.025); soothe("rancuniere", 0.02); break;
+        case "danser": nudge("joueuse", 0.015); soothe("rancuniere", 0.01); break;
+        case "soigner": soothe("rancuniere", 0.01); break;
       }
 
-      switch (action) {
+      const up = (ref_, n, max = 100) => { ref_.value = Math.min(max, Math.max(0, ref_.value + n)); };
+      switch (key) {
         case "nourrir":
-          hunger.value = Math.min(hunger.value + increase, 200);
-          cleanliness.value = Math.max(cleanliness.value - decrease, 0);
-          energy.value = Math.max(energy.value - decrease + 1, 0);
+          up(hunger, Math.round(18 * (1 + 0.3 * tr("gourmande"))));
+          up(cleanliness, -2); up(energy, -1);
           break;
-
-        case "laver":
-          cleanliness.value = Math.min(cleanliness.value + increase, 100);
-          break;
-
+        case "laver": up(cleanliness, 18); break;
         case "jouer":
-          fun.value = Math.min(fun.value + increase, 100);
-          energy.value = Math.max(energy.value - playCost, 0);
+          up(fun, 14);
+          up(energy, -Math.round(5 * (1 - 0.4 * tr("joueuse"))));
           break;
-
+        case "danser": up(fun, 10); up(energy, -4); break;
+        case "calin":
+          if (fun.value > 96) xpGain = 0;
+          up(fun, Math.round(4 * (1 + 0.3 * tr("caline"))));
+          break;
+        case "chatouiller":
+          up(fun, 2);
+          if (now - lastTickleXp < 10000) xpGain = 0; else lastTickleXp = now;
+          break;
         case "coucher":
-          if (isSleeping.value) {
-            isSleeping.value = false; // Réveil manuel
-          } else if (energy.value < 10) {
-            startSleeping();
-          }
+          if (isSleeping.value) { isSleeping.value = false; xpGain = 0; }
+          else isSleeping.value = true;
           break;
-
         case "soigner":
-          if (health.value <= 0) {
-            // Réanimation : santé et énergie de base
-            health.value = 50;
-            energy.value = 50;
-            isSleeping.value = false;
-          } else {
-            health.value = Math.min(health.value + increase, 200);
-          }
-          break;
-
-        case "chatouiller":
-          fun.value = Math.min(fun.value + 2, 100);
-          break;
-
-        case "calin":
-          fun.value = Math.min(fun.value + 4, 100);
-          break;
-
-        case "danser":
-          fun.value = Math.min(fun.value + 6, 100);
-          energy.value = Math.max(energy.value - 3, 0);
+          if (illness.value) { illness.value = null; count("guerison"); addJournal("sante", "Elle est guérie de son rhume.", "solar:pill-bold-duotone"); }
+          up(health, exhausted.value ? 30 : 15);
           break;
       }
+      if (exhausted.value && health.value >= 25) {
+        exhausted.value = false;
+        count("revive");
+        addJournal("sante", "Elle a repris des forces, la voilà sur pied.", "solar:heart-bold-duotone");
+        safeToast("Elle a repris des forces !", "solar:heart-bold-duotone");
+      }
+
+      const cd = cooldownFor(key, now);
+      if (cd > 0) cooldowns.value = { ...cooldowns.value, [key]: now + cd };
+
+      // envie exaucée
+      let wishDone = false;
+      if (wish.value && wish.value.action === key && !(key === "coucher" && wasSleeping)) {
+        wishDone = true;
+        xpGain += 5;
+        wishesDone.value += 1;
+        lastWishId.value = wish.value.id;
+        if (wishesDone.value === 1 || wishesDone.value % 5 === 0) {
+          addJournal("envie", `Envie exaucée (${wishesDone.value} au total). Elle est ravie !`, "solar:chat-round-dots-bold-duotone");
+        }
+        wish.value = null;
+        scheduleWish(now);
+      }
+
+      // tutoriel : l'étape avance dès que l'action attendue est faite
+      if (onboardStep.value === 2 && key === "nourrir") onboardStep.value = 3;
+      else if (onboardStep.value === 3 && key === "jouer") onboardStep.value = 4;
+      else if (onboardStep.value === 4 && key === "chatouiller") onboardStep.value = 5;
+
+      const r = addXp(xpGain);
+      const after = { hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, health: health.value };
+      const gains = {};
+      for (const k of Object.keys(after)) if (after[k] > before[k]) gains[k] = Math.round(after[k] - before[k]);
+      return { ok: true, gains, xp: xpGain, wishDone, levelUp: r.levelUp, stageUp: r.stageUp };
     }
 
-    function countPhoto() {
-      count("photo");
-    }
-    // gestes découverts (pour n'afficher les astuces qu'au début)
-    function countGesture(name) {
-      count(name);
-    }
+    function countPhoto() { count("photo"); }
+    function countGesture(g) { count(g); }
+    function startSleeping() { isSleeping.value = true; }
+    function wakeUp() { isSleeping.value = false; }
 
-    // Fait vivre la créature pendant `seconds` secondes.
-    function decay(seconds) {
-      if (health.value <= 0) return;
+    // ---------- vie ----------
+    // Fait vivre la créature pendant `seconds` secondes, à l'instant simulé `simT`.
+    function decay(seconds, simT, offline) {
+      if (exhausted.value) return;
       const hours = seconds / 3600;
-      const boosted = health.value > 100; // en pleine forme, tout s'use moins vite
-      const wear = hours * (boosted ? 0.5 : 1) * (isSleeping.value ? SLEEP_FACTOR : 1);
+      const night = dayPhase(new Date(simT)) === "night";
+      const awakeNight = night && !isSleeping.value ? 1.3 : 1;
+      const wear = hours * (isSleeping.value ? SLEEP_FACTOR : 1);
 
-      hunger.value = Math.max(hunger.value - RATES.hunger * wear, 0);
-      cleanliness.value = Math.max(cleanliness.value - RATES.cleanliness * wear, 0);
-      fun.value = Math.max(fun.value - RATES.fun * wear, 0);
+      hunger.value = Math.max(hunger.value - RATES.hunger * wear * (1 + 0.4 * tr("gourmande")), 0);
+      cleanliness.value = Math.max(cleanliness.value - RATES.cleanliness * wear * (1 + 0.5 * tr("coquette")), 0);
+      fun.value = Math.max(fun.value - RATES.fun * wear * awakeNight, 0);
 
       if (isSleeping.value) {
-        energy.value = Math.min(energy.value + RATES.energySleeping * hours * (boosted ? 2 : 1), 100);
-        if (energy.value >= 100) isSleeping.value = false; // Réveil automatique
+        energy.value = Math.min(energy.value + RATES.energySleeping * hours * (night ? 1.5 : 1), 100);
+        if (energy.value >= 100) isSleeping.value = false;
       } else {
-        energy.value = Math.max(energy.value - RATES.energyAwake * wear, 0);
-        if (energy.value === 0) isSleeping.value = true; // Sommeil forcé
+        energy.value = Math.max(energy.value - RATES.energyAwake * wear * awakeNight, 0);
+        if (energy.value === 0) isSleeping.value = true;
       }
 
-      if (hunger.value === 0) {
-        health.value = Math.max(health.value - RATES.healthStarving * hours, 0);
-        if (health.value === 0) nudge("rancuniere", 0.25); // on l'a laissée mourir
+      // santé
+      const prev = health.value;
+      let drain = 0;
+      if (hunger.value === 0) drain += RATES.healthStarving * hours;
+      if (illness.value) drain += RATES.illness * hours;
+      if (drain > 0) {
+        const floor = offline ? Math.min(prev, OFFLINE_HEALTH_FLOOR) : 0;
+        health.value = Math.max(prev - drain, floor);
+        if (hunger.value === 0) nudge("rancuniere", 0.03 * hours);
+      } else if (!illness.value && hunger.value > 30 && cleanliness.value > 30 && fun.value > 20) {
+        health.value = Math.min(100, prev + RATES.regen * hours);
+      }
+      if (health.value <= 0 && !offline) {
+        health.value = 0;
+        exhausted.value = true;
+        isSleeping.value = false;
+        addJournal("sante", "Elle est épuisée. Un peu de soin la remettra sur pied.", "solar:hourglass-bold-duotone");
+        return;
       }
 
-      // Négligence : manquer de quelque chose la rend rancunière
-      if (hunger.value === 0 || fun.value === 0 || cleanliness.value === 0) {
-        nudge("rancuniere", 0.03 * hours);
+      // maladie : jamais dans les 24 h après l'éclosion
+      if (!illness.value) {
+        const safe = !hatchedAt.value || simT - hatchedAt.value < DAY_MS;
+        if (!safe && onboardStep.value >= 6 && (cleanliness.value < 25 || hunger.value < 10)) {
+          if (Math.random() < 1 - Math.pow(0.85, hours)) {
+            illness.value = { kind: "rhume", since: simT };
+            addJournal("sante", "Elle a attrapé un petit rhume.", "solar:thermometer-bold-duotone");
+          }
+        }
+      } else if (simT - illness.value.since > DAY_MS) {
+        illness.value = null; // guérison naturelle après une journée
+        addJournal("sante", "Son rhume est passé tout seul.", "solar:pill-bold-duotone");
       }
+
+      if (hunger.value === 0 || fun.value === 0 || cleanliness.value === 0) nudge("rancuniere", 0.03 * hours);
       if (hunger.value < 15 || fun.value < 15 || cleanliness.value < 15) neglectedDuringDecay = true;
 
-      // Les habitudes s'estompent
       const fade = 1 - (TRAIT_FADE_PER_DAY * hours) / 24;
       for (const t of TRAITS) traits.value[t] = (traits.value[t] || 0) * fade;
+    }
+
+    function buildAway(before, secs, illBefore) {
+      const lines = [];
+      if (!illBefore && illness.value) lines.push("Elle a attrapé un petit rhume pendant ton absence.");
+      if (energy.value - before.energy > 20) lines.push("Elle a fait un gros dodo.");
+      if (before.hunger - hunger.value > 25) lines.push(hunger.value < 20 ? "Son ventre gargouille, elle t'attendait." : "Elle a eu un petit creux.");
+      if (before.cleanliness - cleanliness.value > 25) lines.push("Elle s'est un peu salie en t'attendant.");
+      if (before.fun - fun.value > 25) lines.push("Elle s'est un peu ennuyée sans toi.");
+      if (!lines.length) lines.push("Elle t'a attendu bien sagement.");
+      let surprise = null;
+      const today = dayKey(new Date());
+      if (surpriseLog.value.day !== today) surpriseLog.value = { day: today, n: 0 };
+      if (secs > 2 * 3600 && surpriseLog.value.n < 3 && Math.random() < 0.2) {
+        surprise = SURPRISES[Math.floor(Math.random() * SURPRISES.length)];
+        surpriseLog.value.n += 1;
+        addXp(5);
+      }
+      const h = Math.floor(secs / 3600);
+      const m = Math.floor((secs % 3600) / 60);
+      const dur = h >= 1 ? `${h} h${m ? ` ${m}` : ""}` : `${m} min`;
+      addJournal("retour", `Retrouvailles après ${dur}. ${lines[0]}`, "solar:hourglass-bold-duotone");
+      away.value = { seconds: Math.round(secs), lines: lines.slice(0, 3), surprise };
+    }
+
+    function tickWishes(now) {
+      if (!hatched.value || onboardStep.value < 6) return;
+      if (wish.value && now >= wish.value.expiresAt) {
+        lastWishId.value = wish.value.id;
+        wish.value = null; // expire sans pénalité
+        scheduleWish(now);
+        return;
+      }
+      if (wish.value || isSleeping.value || exhausted.value) return;
+      if (!nextWishAt.value) { scheduleWish(now); return; }
+      if (now >= nextWishAt.value) wish.value = pickWish({ hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, level: level.value, hatchedAt: hatchedAt.value, wish: null, lastWishId: lastWishId.value }, now);
     }
 
     // Rattrape le temps passé depuis la dernière visite, puis continue en direct.
     function catchUp() {
       const now = Date.now();
+      tick.value = now;
       if (!lastUpdate.value || lastUpdate.value > now) {
         lastUpdate.value = now;
         return 0;
       }
-      let elapsed = Math.min(((now - lastUpdate.value) / 1000) * speed.value, MAX_CATCH_UP);
+      checkDailyVisit();
+      if (!hatched.value || onboardStep.value < 6) {
+        lastUpdate.value = now; // aucune usure pendant l'œuf et le tutoriel
+        return 0;
+      }
+      const realSec = (now - lastUpdate.value) / 1000;
+      const offline = realSec > AWAY_MIN;
+      let elapsed = Math.min(realSec * speed.value, MAX_CATCH_UP);
       const total = elapsed;
+      const before = { hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value };
+      const illBefore = !!illness.value;
+      let simT = lastUpdate.value;
       while (elapsed > 0) {
         const step = Math.min(CATCH_UP_STEP, elapsed);
-        decay(step);
+        simT += step * 1000;
+        decay(step, simT, offline);
         elapsed -= step;
       }
       lastUpdate.value = now;
@@ -298,75 +604,85 @@ export const useTamagotchiStore = defineStore(
         neglectedAt.value = now;
         neglectedDuringDecay = false;
       }
+      if (offline) {
+        buildAway(before, total, illBefore);
+        if (wish.value && wish.value.expiresAt < now) wish.value = null;
+      }
+      tickWishes(now);
+      evalStage();
       return total;
     }
 
     function startDecay() {
+      migrate();
       if (!bornAt.value) bornAt.value = Date.now();
       if (decayTimer) return;
       awaySeconds.value = lastUpdate.value ? Math.max(0, (Date.now() - lastUpdate.value) / 1000) : 0;
-      checkDailyVisit();
       if (typeof window !== "undefined") {
         const s = Number(new URLSearchParams(window.location.search).get("vitesse"));
         speed.value = s > 0 ? Math.min(s, 3600) : 1;
       }
+      checkDailyVisit();
+      if (hatched.value && !nextWishAt.value && onboardStep.value >= 6) scheduleWish(Date.now());
       catchUp();
       decayTimer = setInterval(catchUp, 1000);
-      if (typeof document !== "undefined") {
-        // au retour sur l'onglet, on rattrape tout de suite
+      if (typeof document !== "undefined" && !visibilityBound) {
+        visibilityBound = true;
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "visible") catchUp();
         });
       }
     }
 
-    function startSleeping() {
-      isSleeping.value = true;
-    }
+    function dismissAway() { away.value = null; }
 
-    function wakeUp() {
-      isSleeping.value = false;
+    // ---------- prévisions pour les rappels ----------
+    function predictNext(now = Date.now()) {
+      if (!hatched.value || onboardStep.value < 6) return [];
+      const who = name.value || "Elle";
+      const limit = now + 36 * 3600000;
+      const out = [];
+      const push = (type, at, title, body) => { if (at > now && at <= limit) out.push({ type, at, title, body }); };
+
+      if (isSleeping.value && energy.value < 100) {
+        const night = dayPhase(new Date(now)) === "night";
+        const h = (100 - energy.value) / (RATES.energySleeping * (night ? 1.5 : 1));
+        push("reveil", now + h * 3600000, `${who} se réveille`, `${who} a bien dormi et aimerait te dire bonjour.`);
+      }
+      if (hunger.value > 25) {
+        const rate = RATES.hunger * (1 + 0.4 * tr("gourmande")) * (isSleeping.value ? SLEEP_FACTOR : 1);
+        push("faim", now + ((hunger.value - 25) / rate) * 3600000, `${who} a un petit creux`, `Son ventre commence à gargouiller. Un petit repas ?`);
+      }
+      if (!wish.value && nextWishAt.value) {
+        push("envie", Math.max(nextWishAt.value, now + 20 * 60000), `${who} a une envie`, `${who} pense à toi et voudrait faire quelque chose avec toi.`);
+      }
+      const at = (h, min, plusDays = 0) => { const d = new Date(now); d.setDate(d.getDate() + plusDays); d.setHours(h, min, 0, 0); return d.getTime(); };
+      push("bonjour", at(9, 0) > now ? at(9, 0) : at(9, 0, 1), `Bonjour de la part de ${who}`, `Un nouveau jour commence : ${who} t'attend pour la journée.`);
+      push("soir", at(19, 0) > now ? at(19, 0) : at(19, 0, 1), `Le câlin du soir`, `${who} aimerait un petit câlin avant de dormir.`);
+      return out.sort((a, b) => a.at - b.at);
     }
 
     return {
-      name,
-      initName,
-      hunger,
-      cleanliness,
-      fun,
-      energy,
-      health,
-      lastUpdate,
-      speed,
-      traits,
-      neglectedAt,
-      isSulking,
-      xp,
-      bornAt,
-      counters,
-      unlocked,
-      rename,
-      resetGame,
-      countPhoto,
-      countGesture,
-      shell,
-      palette,
-      ui,
-      lastVisitDay,
-      streak,
-      pendingBonus,
-      awaySeconds,
-      claimBonus,
-      applyAction,
-      wakeUp,
-      startSleeping,
-      startDecay,
-      isSleeping,
+      schema, name, initName, hunger, cleanliness, fun, energy, health, isSleeping, lastUpdate, speed,
+      traits, neglectedAt, isSulking, xp, bornAt, counters, unlocked, palette, ui,
+      lastVisitDay, streak, pendingBonus, awaySeconds,
+      hatched, eggHeat, onboardStep, hatchedAt, stage, cooldowns, wish, wishesDone, illness, exhausted,
+      quests, journal, bestStreak, totalDays, jokers, nextWishAt, lastWishId, surpriseLog,
+      away, tick, level, stageInfo, unlockedPages,
+      rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, addJournal,
+      canAct, applyAction, hatch, tapEgg, setOnboardStep, finishOnboarding, dismissAway,
+      wakeUp, startSleeping, startDecay, predictNext, migrate,
     };
   },
   {
     persist: {
-      pick: ["name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits", "neglectedAt", "xp", "bornAt", "counters", "unlocked", "shell", "palette", "ui", "lastVisitDay", "streak", "pendingBonus"],
+      pick: [
+        "schema", "name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits",
+        "neglectedAt", "xp", "bornAt", "counters", "unlocked", "palette", "ui", "lastVisitDay", "streak", "pendingBonus",
+        "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
+        "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
+      ],
+      afterHydrate: (ctx) => { ctx.store.migrate?.(); },
     },
   }
 );

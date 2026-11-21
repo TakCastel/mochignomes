@@ -2,13 +2,20 @@
   <div ref="stage" class="stage">
     <img
       v-if="fallback"
-      :src="`/images/${MOODS[mood].image}.png`"
+      :src="`/images/${MOODS[shownMood].image}.png`"
       alt="Tamagotchi"
       class="fallback-img"
+      :style="{ '--sc': stageScale || 0 }"
     >
     <div v-if="fallback && fallbackMessage" class="fallback-bubble">{{ fallbackMessage }}</div>
 
     <div class="flash" :class="{ on: flash }" />
+
+    <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
+    <div v-if="bubbleStyle" class="bubble-wrap" :style="bubbleStyle">
+      <WishBubble />
+      <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
+    </div>
 
     <!-- gains et pertes qui s'envolent après une action -->
     <div class="deltas">
@@ -28,7 +35,6 @@
 import { computed, onMounted, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { MOODS, MESSAGES, REACTIONS, MOOD_LABELS, pick } from "~/lib/creatureLook";
 import { STATS, SKY } from "~/lib/gameUi";
-import { THOUGHT_ICONS } from "~/lib/thoughtIcons";
 
 const props = defineProps({
   phase: { type: String, default: "day" },
@@ -79,22 +85,40 @@ watch(() => gameBus.command, (cmd) => {
 });
 const flash = ref(false);
 
-// Apparence finale = humeur de fond + réaction en cours + morphing des jauges
-// Nuage de pensée : le besoin le plus pressant, sinon un cœur
-const thought = computed(() => {
-  if (props.dead || store.isSleeping) return null;
-  let key = "heart", low = 40;
-  for (const k of ["hunger", "cleanliness", "fun", "energy", "health"]) {
-    if (store[k] < low) { low = store[k]; key = k; }
-  }
-  return THOUGHT_ICONS[key];
+// Apparence finale = humeur de fond + réaction en cours + morphing des jauges.
+// Le nuage de pensée 3D est remplacé par la bulle HTML (WishBubble).
+const shownMood = computed(() => {
+  if (store.isSleeping) return "endormie";
+  if (store.exhausted) return "fatiguee";
+  if (store.illness) return "malade";
+  return mood.value;
 });
-const look = computed(() => ({ ...MOODS[mood.value], ...(reaction.value?.look || {}), morph: morph.value, mark: MOOD_LABELS[mood.value]?.[1], thought: thought.value }));
+const look = computed(() => ({ ...MOODS[shownMood.value], ...(reaction.value?.look || {}), morph: morph.value, mark: MOOD_LABELS[shownMood.value]?.[1], thought: null }));
 watch(look, (l) => creature.value?.setLook(l), { deep: true });
 watch(() => [props.phase, props.dead, props.sky, props.theme], ([phase, dead, sky, theme]) => creature.value?.setScene({ phase, dead, sky, theme }));
 watch(() => props.frame, (f) => f && creature.value?.setFrame(f), { deep: true });
 
-watch(mood, (m, old) => { if (old && !reaction.value) say(pick(MESSAGES[m])); });
+watch(shownMood, (m, old) => { if (old && !reaction.value && MESSAGES[m]) say(pick(MESSAGES[m])); });
+
+// Échelle selon le stade : bébé tout petit, adulte à taille pleine, œuf = invisible (WelcomeCard)
+const STAGE_SCALE = { oeuf: 0, bebe: 0.62, enfant: 0.8, ado: 0.92, adulte: 1 };
+const stageKey = computed(() => (store.hatched === false ? "oeuf" : store.stage || "adulte"));
+const stageScale = computed(() => STAGE_SCALE[stageKey.value] ?? 1);
+watch(stageKey, (k) => creature.value?.setStage?.(k));
+
+const statusText = computed(() => {
+  if (store.isSleeping) return "";
+  if (store.exhausted) return "Épuisée : repos et petits soins";
+  if (store.illness) return "Enrhumée : un soin l'aiderait";
+  return "";
+});
+// position de la bulle : au-dessus de la tête, selon le cadrage et l'échelle
+const bubbleStyle = computed(() => {
+  const f = props.frame;
+  if (!f || stageScale.value === 0) return null;
+  const head = f.ground - f.size * 1.12 * stageScale.value;
+  return { top: `${Math.max((f.minTop || 40) - 30, head - 14)}px` };
+});
 let chatter = null;
 
 let reactionTimer = null;
@@ -137,7 +161,8 @@ function listenToActions() {
     const wasDead = store.health <= 0;
     const wasSleeping = store.isSleeping;
     const before = Object.fromEntries(STATS.map((s) => [s.key, store[s.key]]));
-    after(() => {
+    after((result) => {
+      if (name === "applyAction" && result && result.ok === false) return;
       if (name === "applyAction") {
         showDeltas(before);
         const action = args[0];
@@ -153,17 +178,18 @@ function listenToActions() {
 
 // Toucher la créature la chatouille
 function onPoke({ dead, asleep }) {
-  navigator.vibrate?.(8);
+  try { if (!["0", "false", "off"].includes(localStorage.getItem("tamagotchi-haptics"))) navigator.vibrate?.(8); } catch { /* ignoré */ }
   if (dead) return;
   if (asleep) return say("Mmh... laisse-moi dormir");
-  store.applyAction("chatouiller");
+  const res = store.applyAction("chatouiller");
+  if (res && res.ok === false) react("chatouiller");
   store.countGesture("menu");
   emit("tap");
 }
 
 onMounted(async () => {
   listenToActions();
-  chatter = setInterval(() => { if (!reaction.value) say(pick(MESSAGES[mood.value])); }, 40000);
+  chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf") say(pick(MESSAGES[shownMood.value])); }, 40000);
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
     if (!webglAvailable()) throw new Error("WebGL indisponible");
@@ -173,13 +199,15 @@ onMounted(async () => {
       onSpin: () => store.countGesture("tourner"),
       world: true,
     });
+    creature.value.setStage(stageKey.value);
     creature.value.setLook(look.value);
     creature.value.setScene({ phase: props.phase, dead: props.dead, sky: props.sky, theme: props.theme });
     if (props.frame) creature.value.setFrame(props.frame);
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {
+      if (stageKey.value === "oeuf") return;
       const firstTime = !(store.counters.menu > 0);
-      say(firstTime ? "Touche-moi pour t'occuper de moi !" : pick(MESSAGES[mood.value]), firstTime ? 6000 : undefined);
+      say(firstTime ? "Touche-moi pour t'occuper de moi !" : pick(MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
     }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);
@@ -210,7 +238,31 @@ onBeforeUnmount(() => {
   width: 12rem;
   height: 12rem;
   object-fit: contain;
+  transform: translateX(-50%) scale(var(--sc, 1));
+  transform-origin: 50% 100%;
 }
+.bubble-wrap {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  transform: translate(-30%, -100%);
+  pointer-events: none;
+}
+.bubble-wrap > * { pointer-events: auto; }
+.status {
+  margin-left: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #7a5c20;
+  font: 800 11px "Nunito", system-ui, sans-serif;
+  box-shadow: 0 2px 6px rgba(40, 55, 80, 0.15);
+}
+.status.ill { color: #3b7a30; }
 .fallback-bubble {
   position: absolute;
   top: 12%;
