@@ -11,8 +11,8 @@ export const navOrb = reactive({ on: false, x: 0, top: 0, bh: 0, l: 0, r: 0, s: 
 function edge(d, s, bh) {
   if (d <= 0) return 0;
   const k = Math.min(1, bh / s);
-  const f = s * 0.4 * k;
-  const R = s * 0.6 * k;
+  const f = s * (6 / 28) * k;
+  const R = s * (22 / 28) * k;
   if (d < f) return f - Math.sqrt(f * f - d * d);
   if (d >= s) return bh;
   if (d <= s - R) return d < f + 0.5 ? f : bh - R; // bord droit
