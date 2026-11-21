@@ -89,10 +89,10 @@ function goHome() {
 
 const ALL = [
   { key: "maison", label: "Maison", icon: "solar:home-2-bold-duotone", run: goHome },
-  { key: "sac", label: "Sac", icon: "solar:bag-4-bold-duotone", feature: "sac", run: () => openPage("sac") },
   { key: "boutique", label: "Boutique", icon: "solar:shop-bold-duotone", feature: "boutique", run: () => openPage("boutique") },
   { key: "cuisine", label: "Cuisine", icon: "solar:chef-hat-bold-duotone", feature: "cuisine", run: () => openKitchen() },
   { key: "elle", label: "Elle", icon: "solar:heart-bold-duotone", run: () => openPage("elle") },
+  { key: "sac", label: "Sac", icon: "solar:bag-4-bold-duotone", feature: "sac", run: () => openPage("sac") },
 ];
 // les entrées pas encore débloquées n'apparaissent pas
 const items = computed(() =>

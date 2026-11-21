@@ -246,7 +246,7 @@ function shuffle() {
 .shuffle { flex: none; }
 .shuffle .ic { color: var(--violet); }
 
-.slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-2); }
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: var(--s-2); }
 .slot { padding: 8px 2px 7px; }
 .slot-badge {
   display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px;
@@ -262,7 +262,7 @@ function shuffle() {
 .pop-enter-from { transform: scale(0.85); opacity: 0; }
 .pop-leave-to { opacity: 0; }
 
-.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .card.sel { box-shadow: inset 0 0 0 2px var(--knob-side), 0 4px 10px rgba(40, 55, 80, 0.1); }
 .swatch {
   display: grid; place-items: center; width: 52px; height: 52px; border-radius: var(--r-md);

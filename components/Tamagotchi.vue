@@ -217,11 +217,13 @@ const bubbleStyle = computed(() => {
   const f = props.frame;
   if (!f || stageScale.value === 0) return null;
   const floor = (f.minTop || 40) - 30;
+  // volet latéral ouvert : la bulle suit la créature recentrée à gauche
+  const left = Number.isFinite(f.centerX) ? `${f.centerX}px` : undefined;
   if (info.value && info.value.visible !== false && Number.isFinite(info.value.top)) {
-    return { top: `${Math.max(floor, info.value.top - 14)}px` };
+    return { top: `${Math.max(floor, info.value.top - 14)}px`, left };
   }
   const head = f.ground - f.size * 1.12 * stageScale.value * Math.min(zoom.value, 1.6);
-  return { top: `${Math.max(floor, head - 14)}px` };
+  return { top: `${Math.max(floor, head - 14)}px`, left };
 });
 let chatter = null;
 
