@@ -829,10 +829,11 @@ export const useTamagotchiStore = defineStore(
         case "ballon": return mins >= 1.5 || reach;
         // d'abord par la 1re partie de foot ; sinon, deux visites plus tard
         case "coins": return f.ballon && ((counters.value["activite:foot"] || 0) > 0 || (reach && sessions.value - revealAt.value.session >= 2));
-        case "sac": return f.coins && (mins >= 3 || reach);
-        case "cuisine": return f.sac && (mins >= 5 || reach);
-        case "boutique": return f.cuisine && (mins >= 7 || reach);
-        case "tele": return f.boutique && (mins >= 10 || reach);
+        // les pièces servent tout de suite : Sac, puis Boutique juste après
+        case "sac": return f.coins && (mins >= 2 || reach);
+        case "boutique": return f.sac && (mins >= 3 || reach);
+        case "cuisine": return f.boutique && (mins >= 5 || reach);
+        case "tele": return f.cuisine && (mins >= 9 || reach);
         case "defis": return f.tele && (mins >= 13 || reach);
         case "collection": return f.tele && f.defis && (totalDays.value >= 2 || reach);
         case "course": case "etoiles": return f.collection && (totalDays.value >= 3 || reach);
