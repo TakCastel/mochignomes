@@ -645,7 +645,8 @@ onBeforeUnmount(() => {
 .discover { margin: 6px 0 0; padding: 5px 12px; font-size: 13px; }
 .note { margin: 2px 0 6px; }
 .line { margin: 8px 0 2px; font: 700 20px/1.25 var(--font-title); color: var(--ink); }
-.result-actions { display: flex; gap: 10px; justify-content: center; margin-top: auto; padding-top: 10px; width: 100%; }
+/* padding : laisse respirer l'ombre 3D des boutons, sinon .body (overflow) la rogne */
+.result-actions { display: flex; gap: 10px; justify-content: center; margin-top: auto; padding: 10px 6px 20px; width: 100%; box-sizing: border-box; }
 .result-actions .ui-btn { flex: 1; min-width: 0; max-width: 220px; font-size: 15px; padding: 0 12px; }
 
 .ksheet-enter-active, .ksheet-leave-active { transition: opacity 0.25s; }
