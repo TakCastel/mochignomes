@@ -1214,6 +1214,8 @@ export const useTamagotchiStore = defineStore(
     // places ouvertes (voir SLOT_RULES) : on joue, on grandit, la maison s'agrandit
     const slotsOpen = computed(() => {
       let n = 1;
+      // la maison vient après les premières découvertes (Sac, Boutique, Cuisine)
+      if (!features.value.cuisine) return n;
       for (let i = 1; i < MAX_SLOTS; i++) {
         const r = SLOT_RULES[i];
         if (topLevel.value >= r.level || totalDays.value >= r.days) n = i + 1;
