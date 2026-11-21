@@ -9,17 +9,19 @@
         wanted: primary?.kind === 'wanted' && primary.key === a.key,
         glow: a.glow,
         off: !!a.reason,
-        cooling: a.ring > 0,
+        cooling: !!a.cool,
         wiggle: wiggling === a.key,
       }"
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
-      <span v-if="a.ring > 0" class="cool-ring" :style="{ '--p': a.ring }" aria-hidden="true" />
-      <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
+      <span class="disc">
+        <span v-if="a.cool" :key="a.cool.readyAt" class="cool-ring" :style="a.cool.style" aria-hidden="true" />
+        <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
+        <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
+        <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
+      </span>
       <span class="lbl">{{ a.label }}</span>
-      <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
-      <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
       <span v-for="f in floats.filter((x) => x.key === a.key)" :key="f.id" class="float" :style="{ '--fx': f.dx + 'px' }">{{ f.text }}</span>
     </button>
   </section>
@@ -86,21 +88,34 @@ function buzz(pattern) {
 
 const now = computed(() => store.tick || Date.now());
 
+// Anneau de recharge fluide : on fige UNE fois par recharge (clé readyAt) la durée totale
+// et le temps déjà écoulé, puis une animation CSS linéaire le remplit en continu
+// (le tick d'une seconde ne fait que décider s'il est encore affiché).
+const coolCache = new Map();
+function coolOf(key, c) {
+  const hit = coolCache.get(key);
+  if (hit && hit.readyAt === c.readyAt) return hit;
+  const total = Math.max(c.cooldownMs, c.remaining);
+  const elapsed = Math.max(0, total - Math.max(0, c.readyAt - Date.now()));
+  const cool = { readyAt: c.readyAt, style: { "--dur": total + "ms", "--delay": -elapsed + "ms" } };
+  coolCache.set(key, cool);
+  return cool;
+}
+
 function stateOf(key) {
-  if (key === "photo") return { reason: null, ring: 0, locked: false };
+  if (key === "photo") return { reason: null, cool: null, locked: false };
   const needLevel = ACTION_UNLOCK_LEVEL?.[key];
   if (needLevel && store.level < needLevel) {
-    return { reason: `Je saurai danser au niveau ${needLevel} !`, ring: 0, locked: true };
+    return { reason: `Je saurai danser au niveau ${needLevel} !`, cool: null, locked: true };
   }
-  if (key === "coucher" && store.isSleeping) return { reason: null, ring: 0, locked: false };
-  void now.value; // dépendance : l'anneau se met à jour chaque seconde
+  if (key === "coucher" && store.isSleeping) return { reason: null, cool: null, locked: false };
+  void now.value; // dépendance : l'anneau disparaît à la fin de la recharge
   const c = store.canAct?.(key);
-  if (!c || c.ok) return { reason: null, ring: 0, locked: false };
-  let ring = 0;
-  if (c.cooldownMs > 0 && c.remaining > 0) ring = Math.min(0.999, Math.max(0.02, 1 - c.remaining / c.cooldownMs));
+  if (!c || c.ok) return { reason: null, cool: null, locked: false };
+  const cool = c.cooldownMs > 0 && c.remaining > 0 ? coolOf(key, c) : null;
   // goûter en recharge : les plats du frigo restent accessibles par Manger
-  if (key === "nourrir" && mealPath.value && c.remaining > 0 && !store.isSleeping) return { reason: null, ring, locked: false };
-  return { reason: c.reason || "Encore un instant...", ring, locked: false };
+  if (key === "nourrir" && mealPath.value && c.remaining > 0 && !store.isSleeping) return { reason: null, cool, locked: false };
+  return { reason: c.reason || "Encore un instant...", cool, locked: false };
 }
 
 const actions = computed(() =>
@@ -109,7 +124,7 @@ const actions = computed(() =>
       const act = activityById(suggestedActivity.value);
       const w = store.wish;
       return {
-        ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, ring: 0, locked: false,
+        ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, cool: null, locked: false,
         activity: act.id, wanted: w?.action === "activite" && w.target === act.id, suggest: true,
         glow: gameBus.highlight?.action === a.key,
       };
@@ -117,7 +132,7 @@ const actions = computed(() =>
     if (a.key === "nourrir" && suggestCooking.value) {
       const wish = store.wish?.action === "repas" ? store.wish.target : "";
       return {
-        ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", reason: null, ring: 0, locked: false,
+        ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", reason: null, cool: null, locked: false,
         cook: wish || "", wanted: !!wish, glow: gameBus.highlight?.action === a.key,
       };
     }
@@ -214,18 +229,18 @@ function press(a) {
 </script>
 
 <style scoped>
-/* 4 tuiles par rangée ; une rangée incomplète (Danser pas encore appris) se centre */
+/* 4 boutons par rangée ; une rangée incomplète (Danser pas encore appris) se centre */
 .panel {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--gap, 12px);
-  padding: 14px;
+  padding: 14px 10px;
   border-radius: 26px;
   background: rgba(244, 246, 249, 0.94);
   box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), var(--hl);
 }
-/* tuile blanche douce */
+/* bouton = disque rond + libellé dessous */
 .tile {
   position: relative;
   flex: 0 0 calc((100% - 3 * var(--gap, 12px)) / 4);
@@ -233,56 +248,75 @@ function press(a) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: var(--tile, 84px);
-  gap: 2px;
-  padding-top: 4px;
-  border: 2px solid transparent;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #ffffff, #f3f5f8);
-  box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 1px 0 #fff;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+.disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--tile, 68px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffffff, #f3f5f8);
+  box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 1px 0 #fff;
   transition: transform 0.08s, box-shadow 0.08s;
 }
-.tile:active { transform: scale(0.95); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
+.tile:active .disc { transform: scale(0.93); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); }
 /* icône Solar bicolore : ton clair pour le fond de l'objet, ton soutenu pour le dessin */
 .ic {
-  width: 46px;
-  height: 46px;
+  width: 58%;
+  height: 58%;
   color: var(--c2);
   filter: drop-shadow(0 3px 3px rgba(40, 55, 80, 0.16));
 }
 .ic :deep([opacity]) { opacity: 1; color: var(--c1); }
 /* action conseillée : fond vert tendre et liseré vert */
-.best {
+.best .disc {
   border-color: #8fdc6a;
   background: var(--sel-bg);
   box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), var(--hl);
 }
 .off .ic { opacity: 0.45; filter: grayscale(0.5); }
 .off .lbl { opacity: 0.6; }
-.lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); padding-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* anneau de recharge */
+.lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* anneau de recharge : rempli en continu par une animation linéaire
+   (durée = recharge totale, délai négatif = temps déjà écoulé) */
+@property --p {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
 .cool-ring {
   position: absolute;
-  inset: -2px;
-  border-radius: 20px;
+  inset: -5px;
+  border-radius: 50%;
   padding: 3px;
   background: conic-gradient(#4fbf34 calc(var(--p) * 360deg), rgba(150, 160, 175, 0.28) 0);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   pointer-events: none;
+  animation: cool var(--dur, 1s) linear var(--delay, 0s) forwards;
 }
-/* envie de la créature : la tuile pulse en rose */
-.wanted {
+@keyframes cool {
+  from { --p: 0; }
+  to { --p: 1; }
+}
+/* envie de la créature : le bouton pulse en rose */
+.wanted .disc {
   border-color: #ff8fb0;
   background: linear-gradient(180deg, #fff6f9, #ffe3ec);
   animation: pulse 1.3s ease-in-out infinite;
 }
-.glow { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
-.dot { position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
+.glow .disc { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
+.dot { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
   50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }
@@ -307,22 +341,22 @@ function press(a) {
   20% { opacity: 1; }
   100% { transform: translate(calc(-50% + var(--fx)), -52px) scale(1); opacity: 0; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .wanted, .glow, .wiggle { animation: none; }
-}
 .lock {
   position: absolute;
-  top: 7px;
-  right: 7px;
+  top: 2px;
+  right: 2px;
   width: 14px;
   height: 14px;
   color: #9aa4b2;
 }
-.wiggle { animation: wiggle 0.4s ease-in-out; }
+.wiggle .disc { animation: wiggle 0.4s ease-in-out; }
 @keyframes wiggle {
   20% { transform: rotate(-6deg); }
   40% { transform: rotate(5deg); }
   60% { transform: rotate(-3deg); }
   80% { transform: rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wanted .disc, .glow .disc, .wiggle .disc { animation: none; }
 }
 </style>
