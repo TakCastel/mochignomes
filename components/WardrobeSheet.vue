@@ -1,6 +1,107 @@
 <template>
+  <!-- Barre étroite (volet latéral du Sac) : on descend emplacement > vêtement > couleur,
+       une flèche remonte d'un cran. Elle se voit en grand à gauche. -->
+  <div v-if="compact" class="rail">
+    <!-- 1. les emplacements -->
+    <template v-if="level === 'slots'">
+      <button
+        v-for="s in SLOTS"
+        :key="s"
+        class="r-btn"
+        :class="{ worn: !!inv.outfit[s] }"
+        :aria-label="SLOT_LABELS[s]"
+        @click="openSlot(s)"
+      >
+        <span class="r-badge" :style="slotSwatch(s)">
+          <Icon :name="SLOT_ICONS[s]" class="r-ic" />
+          <span v-if="slotHasNew(s)" class="ui-dot r-dot" />
+        </span>
+        <span class="r-lbl">{{ SLOT_LABELS[s] }}</span>
+      </button>
+      <span v-if="ownedCount >= 3 || collection" class="r-sep" />
+      <button v-if="ownedCount >= 3" class="r-btn" aria-label="Tenue au hasard" @click="shuffle">
+        <span class="r-badge r-soft"><Icon name="solar:magic-stick-3-bold-duotone" class="r-ic violet" /></span>
+        <span class="r-lbl">Hasard</span>
+      </button>
+      <button v-if="collection" class="r-btn" aria-label="Collection" @click="emit('collection')">
+        <span class="r-badge r-soft">
+          <Icon name="solar:album-bold-duotone" class="r-ic accent" />
+          <span v-if="inv.setsReady.length" class="ui-badge r-count">{{ inv.setsReady.length }}</span>
+        </span>
+        <span class="r-lbl">Collection</span>
+      </button>
+    </template>
+
+    <!-- 2. les vêtements de l'emplacement -->
+    <template v-else-if="level === 'items'">
+      <button class="r-back" :aria-label="`Retour aux emplacements (${SLOT_LABELS[slot]})`" @click="level = 'slots'">
+        <Icon name="solar:alt-arrow-left-bold" class="r-back-ic" />
+        <Icon :name="SLOT_ICONS[slot]" class="r-back-slot" />
+      </button>
+      <button
+        v-for="it in items"
+        :key="it.id"
+        class="r-btn"
+        :class="{ on: wornId === it.id }"
+        :aria-label="it.label"
+        @click="openItem(it)"
+      >
+        <span class="r-badge" :style="swatchStyle(cardColor(it))">
+          <Icon :name="SLOT_ICONS[it.slot]" class="r-ic white" />
+          <span v-if="inv.isNew(it.id)" class="ui-dot r-dot" />
+          <span v-if="wornId === it.id" class="r-check"><Icon name="ph:check-bold" class="r-check-ic" /></span>
+        </span>
+        <span class="r-lbl">{{ it.label }}</span>
+      </button>
+      <p v-if="!items.length" class="r-empty">Rien ici</p>
+      <span v-if="wornId || hasShop" class="r-sep" />
+      <button v-if="wornId" class="r-btn" aria-label="Retirer" @click="takeOff">
+        <span class="r-badge r-soft"><Icon name="solar:close-circle-bold" class="r-ic" /></span>
+        <span class="r-lbl">Retirer</span>
+      </button>
+      <button v-if="hasShop" class="r-btn" aria-label="Voir la Boutique" @click="emit('shop', null)">
+        <span class="r-badge r-soft"><Icon name="solar:shop-bold-duotone" class="r-ic accent" /></span>
+        <span class="r-lbl">Boutique</span>
+      </button>
+    </template>
+
+    <!-- 3. les couleurs du vêtement -->
+    <template v-else-if="selItem">
+      <button class="r-back" :aria-label="`Retour aux vêtements (${selItem.label})`" @click="level = 'items'">
+        <Icon name="solar:alt-arrow-left-bold" class="r-back-ic" />
+        <Icon :name="SLOT_ICONS[selItem.slot]" class="r-back-slot" />
+      </button>
+      <span class="r-title">{{ selItem.label }}</span>
+      <button
+        v-for="c in ownedOf(selItem.id)"
+        :key="c"
+        class="ui-swatch r-sw"
+        :class="{ 'is-on': wornId === selItem.id && wornColor === c }"
+        :aria-label="COLORS[c]?.label"
+        :title="COLORS[c]?.label"
+        :style="swatchStyle(c)"
+        @click="wear(selItem, c)"
+      >
+        <span v-if="inv.isNew(selItem.id, c)" class="ui-dot new-dot" />
+        <Icon v-else-if="lovedColor(c)" name="solar:heart-bold-duotone" class="ui-swatch-mark is-tl" />
+      </button>
+      <span v-if="wornId === selItem.id || (hasShop && missingColors(selItem) > 0)" class="r-sep" />
+      <button v-if="wornId === selItem.id" class="r-btn" aria-label="Retirer" @click="takeOff">
+        <span class="r-badge r-soft"><Icon name="solar:close-circle-bold" class="r-ic" /></span>
+        <span class="r-lbl">Retirer</span>
+      </button>
+      <button v-if="hasShop && missingColors(selItem) > 0" class="r-btn" :aria-label="`${missingColors(selItem)} autres couleurs en Boutique`" @click="emit('shop', selItem.id)">
+        <span class="r-badge r-soft">
+          <Icon name="solar:palette-bold-duotone" class="r-ic accent" />
+          <span class="ui-badge r-count">+{{ missingColors(selItem) }}</span>
+        </span>
+        <span class="r-lbl">Couleurs</span>
+      </button>
+    </template>
+  </div>
+
   <!-- Garde-robe : onglet « Tenues » du Sac. Tout se porte tout de suite, c'est gratuit. -->
-  <div class="ui-stack wardrobe">
+  <div v-else class="ui-stack wardrobe">
     <div v-if="store.features?.collection || ownedCount >= 3" class="top">
       <!-- le compte de la collection n'apparaît qu'avec la Collection -->
       <div v-if="store.features?.collection" class="count">
@@ -102,12 +203,17 @@ import { gameCommand, gameSay } from "~/composables/useCreatureMood";
 import { COLORS, SLOTS, SLOT_LABELS, SLOT_ICONS, V1_ITEMS, itemById, itemColors } from "~/lib/catalog";
 
 // 'shop' : ouvrir la Boutique (itemId = l'objet dont on veut d'autres couleurs, ou null)
-const emit = defineEmits(["shop"]);
+// 'collection' : ouvrir la Collection (depuis la barre étroite)
+const emit = defineEmits(["shop", "collection"]);
 const props = defineProps({
   // emplacement ouvert au départ (ex. depuis une envie de tenue)
   initialSlot: { type: String, default: "" },
   // vêtement à mettre en avant (id) : ouvre son emplacement et le sélectionne
   focus: { type: String, default: "" },
+  // barre verticale étroite (volet latéral) au lieu de la grille
+  compact: { type: Boolean, default: false },
+  // la Collection est débloquée : bouton dans la barre étroite
+  collection: { type: Boolean, default: false },
 });
 
 const inv = useInventoryStore();
@@ -136,6 +242,8 @@ const slot = ref(firstSlot());
 const selId = ref(focusSlot() ? props.focus : inv.outfit[slot.value]?.id || null);
 const said = ref(null);
 let saidTimer = null;
+// barre étroite : niveau de sous-menu (un vêtement mis en avant ouvre directement ses couleurs)
+const level = ref(focusSlot() ? "colors" : "slots");
 
 const hasShop = computed(() => !!store.features?.boutique);
 const ownedCount = computed(() => V1_ITEMS.filter((i) => inv.ownsItem(i.id)).length);
@@ -147,7 +255,7 @@ const selItem = computed(() => (selId.value ? items.value.find((i) => i.id === s
 watch(() => props.initialSlot, (s) => { if (SLOTS.includes(s)) pickSlot(s); });
 watch(() => props.focus, () => {
   const s = focusSlot();
-  if (s) { slot.value = s; selId.value = props.focus; }
+  if (s) { slot.value = s; selId.value = props.focus; level.value = "colors"; }
 });
 
 const ownedOf = (id) => {
@@ -181,6 +289,16 @@ function slotSwatch(s) {
 function pickSlot(s) {
   slot.value = s;
   selId.value = inv.outfit[s]?.id || null;
+}
+// barre étroite : on descend d'un cran
+function openSlot(s) {
+  pickSlot(s);
+  level.value = "items";
+}
+function openItem(it) {
+  pickItem(it);
+  // une seule couleur : rien à choisir de plus, on reste sur la liste
+  if (ownedOf(it.id).length > 1 || wornId.value === it.id) level.value = "colors";
 }
 function pickItem(it) {
   selId.value = it.id;
@@ -229,13 +347,59 @@ function shuffle() {
     store.showReaction(best, { say: false });
     gameCommand("react", best.mood === "love" ? "adore" : "deteste");
     showSaid(best);
+    if (props.compact) gameSay(best.line);
   } else {
-    showSaid({ mood: "like", line: Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "On reste simple aujourd'hui !" });
+    const line = Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "On reste simple aujourd'hui !";
+    showSaid({ mood: "like", line });
+    if (props.compact) gameSay(line);
   }
 }
 </script>
 
 <style scoped>
+/* ---------- barre étroite ---------- */
+.rail { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.r-btn {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 100%; padding: 4px 0; border: 0; border-radius: 16px;
+  background: transparent; color: var(--ink-2); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.r-btn:active .r-badge { transform: scale(0.94); }
+.r-badge {
+  position: relative;
+  display: grid; place-items: center; width: 50px; height: 50px; border-radius: 16px;
+  background: var(--surface); transition: transform 0.12s;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.08), 0 2px 6px rgba(40, 55, 80, 0.14);
+}
+.r-btn.worn .r-badge, .r-btn.on .r-badge { box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14), 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.r-soft { background: var(--surface-3); }
+.r-ic { width: 28px; height: 28px; color: var(--ink-2); }
+.r-btn.worn .r-ic, .r-ic.white { color: rgba(255, 255, 255, 0.95); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
+.r-ic.violet { color: var(--violet); }
+.r-ic.accent { color: var(--accent); }
+.r-lbl {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 800 10px/1.1 var(--font-text); color: var(--ink-2);
+}
+.r-dot { position: absolute; top: -3px; right: -3px; }
+.r-count { position: absolute; top: -6px; right: -8px; }
+.r-check { position: absolute; right: -5px; bottom: -5px; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; box-shadow: 0 0 0 2px var(--surface); }
+.r-check-ic { width: 12px; height: 12px; }
+.r-sep { align-self: center; width: 32px; height: 2px; margin: 2px 0; border-radius: 2px; background: var(--knob-side); }
+.r-back {
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  height: 40px; margin-bottom: 2px; padding: 0; border: 0; border-radius: 999px;
+  background: var(--surface); color: var(--sky-ink, var(--ink)); cursor: pointer;
+  box-shadow: 0 3px 0 var(--knob-side), 0 4px 10px rgba(30, 55, 100, 0.1);
+}
+.r-back-ic { width: 20px; height: 20px; }
+.r-back-slot { width: 20px; height: 20px; color: var(--ink-3); }
+.r-title { text-align: center; font: 800 11px/1.15 var(--font-text); color: var(--ink); overflow-wrap: anywhere; }
+.r-sw { align-self: center; width: 44px; height: 44px; }
+.r-empty { margin: 4px 0; text-align: center; font: 700 11px/1.2 var(--font-text); color: var(--ink-3); }
+
 /* en-tête : compteur à gauche (s'il existe), « Au hasard » toujours à droite */
 .top { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
 .count { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s-2); color: var(--ink-2); }

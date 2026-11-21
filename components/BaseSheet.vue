@@ -1,13 +1,13 @@
 <template>
   <Transition :name="side ? 'slide' : fullscreen ? 'page' : 'sheet'">
     <div v-if="open" class="overlay" :class="{ full: fullscreen, side }" @click.self="!fullscreen && close()">
-      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, side, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, side, narrow: side && narrow, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
         <div v-if="!fullscreen" class="grab-zone" v-on="grabOn"><div class="grab" /></div>
         <header class="head">
           <button v-if="fullscreen && !side" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
             <Icon name="solar:arrow-left-bold" class="ic" />
           </button>
-          <div class="title">
+          <div v-if="!(side && narrow)" class="title">
             <span v-if="icon" class="ui-medal ui-medal--sm ui-medal--sky"><Icon :name="icon" class="ic" /></span>
             <div class="title-txt">
               <h2>{{ title }}</h2>
@@ -37,6 +37,8 @@ const props = defineProps({
   fullscreen: { type: Boolean, default: false },
   // avec fullscreen : volet ancré à droite, la scène reste visible et touchable à gauche
   side: { type: Boolean, default: false },
+  // avec side : simple barre verticale (le contenu gère ses sous-menus), l'en-tête se réduit à la croix
+  narrow: { type: Boolean, default: false },
 });
 
 function close() {
@@ -128,6 +130,16 @@ onBeforeUnmount(() => {
   box-shadow: -10px 0 34px rgba(30, 60, 110, 0.22), var(--glass-edge);
 }
 .sheet.side h2 { font-size: 22px; }
+/* la largeur glisse : la créature suit (gameBus.sideW est mesuré en continu) */
+.sheet.full.side { transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+.sheet.full.side.narrow {
+  width: 88px;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 26px 0 0 26px;
+}
+.sheet.narrow .head { justify-content: center; margin-bottom: var(--s-3); }
+.sheet.narrow .head .ui-icon-btn { width: 44px; height: 44px; }
 /* volet étroit (téléphone) : les onglets gardent leur texte, sans icône */
 @media (max-width: 640px) {
   .sheet.side :deep(.ui-tab .ic) { display: none; }

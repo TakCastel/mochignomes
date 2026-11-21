@@ -9,7 +9,7 @@ export const gameBus = reactive({
   speech: null, // { text, id }
   command: null, // { type: "rotate" | "photo" | "react", value, id }
   page: null, // page plein écran : null (Maison) | "elle" | "jours" | "album" | "sac" | "boutique"
-  pageTab: "", // onglet demandé à l'ouverture (Sac : tenues | frigo | collection ; Boutique : vetements | epicerie | objets)
+  pageTab: "", // onglet demandé à l'ouverture (Sac : tenues | collection ; Boutique : vetements | epicerie | objets)
   pageFocus: "", // élément mis en avant (vêtement, ingrédient, objet)
   pageFocusColor: "", // couleur présélectionnée (Boutique)
   albumTab: "photos", // "photos" | "succes"

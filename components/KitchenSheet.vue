@@ -14,6 +14,10 @@
             <h2>{{ headTitle }}</h2>
             <p>{{ headSub }}</p>
           </div>
+          <button v-if="phase === 'list'" class="ui-icon-btn fridge-btn" aria-label="Ouvrir le frigo" @click="phase = 'frigo'">
+            <Icon name="solar:fridge-bold-duotone" class="ic" />
+            <span v-if="inv.mealsCount" class="ui-badge fridge-n">{{ inv.mealsCount }}</span>
+          </button>
           <span class="ui-price coins" :aria-label="`${inv.coins} pièces`">
             <Icon name="mochi:coin" class="ic" />{{ inv.coins }}
           </span>
@@ -100,6 +104,46 @@
           </template>
           <div v-if="!shownCards.length" class="ui-empty"><p>Aucune recette pour l'instant.</p></div>
           <p v-if="hiddenCount" class="ui-foot-note">Encore {{ hiddenCount }} recette{{ hiddenCount > 1 ? "s" : "" }} à découvrir en grandissant.</p>
+        </div>
+
+        <!-- Frigo : les plats prêts et les ingrédients (on ne l'ouvre que d'ici) -->
+        <div v-else-if="phase === 'frigo'" class="body list">
+          <h3 class="ui-overline sec">Plats prêts</h3>
+          <div v-if="mealRows.length" class="ui-stack ui-stack--sm">
+            <div v-for="m in mealRows" :key="m.recipe.id" class="ui-row is-well" :class="{ 'is-love': m.fav }">
+              <span class="ui-thumb"><FoodImg :id="m.recipe.id" :emoji="m.recipe.emoji" /><small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
+              <span class="ui-row-main">
+                <span class="ui-row-title">{{ m.recipe.label }}</span>
+                <span class="ui-row-sub">
+                  <span class="ui-stars" :aria-label="`${m.stars} étoile${m.stars > 1 ? 's' : ''}`">
+                    <Icon v-for="i in 3" :key="i" name="solar:star-bold" class="ic" :class="{ on: i <= m.stars }" />
+                  </span>
+                  <span v-if="m.fav" class="ui-tag ui-tag--love"><Icon name="solar:heart-bold-duotone" class="ic" />Son plat préféré</span>
+                </span>
+              </span>
+              <button class="ui-btn ui-btn--primary ui-btn--sm" :class="{ 'is-poor': !m.can.ok }" @click="serve(m)">
+                <Icon name="solar:donut-bitten-bold-duotone" class="ic" />Servir
+              </button>
+            </div>
+          </div>
+          <div v-else class="ui-empty">
+            <Icon name="solar:fridge-bold-duotone" class="ic" />
+            <p>Aucun plat au frigo. Cuisine-lui quelque chose de bon !</p>
+          </div>
+          <p v-if="serveMsg" class="ui-bubble">{{ serveMsg }}</p>
+
+          <h3 class="ui-overline sec">Ingrédients</h3>
+          <div v-if="pantryRows.length" class="pantry">
+            <div v-for="pr in pantryRows" :key="pr.ing.id" class="ui-tile is-ghost">
+              <span class="ing-emoji"><FoodImg :id="pr.ing.id" :emoji="pr.ing.emoji" /></span>
+              <span class="ui-tile-sub">{{ pr.ing.label }}</span>
+              <span class="ui-num ing-qty">×{{ pr.qty }}</span>
+            </div>
+          </div>
+          <div v-else class="ui-empty"><p>Le frigo est vide.</p></div>
+          <button v-if="store.hasFeature?.('boutique')" class="ui-btn ui-btn--soft" @click="goShopping">
+            <Icon name="solar:cart-large-2-bold-duotone" class="ic" />Faire les courses
+          </button>
         </div>
 
         <!-- 2. Cuire au bon moment -->
@@ -203,7 +247,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { V1_RECIPES, ingredientById, missingIngredients, groceryIngredients, starMult } from "~/lib/catalog";
-import { useCreatureMood, gameCommand, gameSay, gameToast } from "~/composables/useCreatureMood";
+import { useCreatureMood, gameCommand, gameSay, gameToast, openPage } from "~/composables/useCreatureMood";
 import { beep, haptic } from "~/composables/useBeep";
 import * as live from "~/composables/useLiveCreature";
 
@@ -217,7 +261,7 @@ const emit = defineEmits(["close"]);
 const { store } = useCreatureMood();
 const inv = useInventoryStore();
 
-const phase = ref("list"); // list | cook | result | fed
+const phase = ref("list"); // list | frigo | cook | result | fed
 const current = ref(null); // recette en cours
 const stars = ref(0);
 const firstTime = ref(false);
@@ -456,13 +500,48 @@ function keep() {
   backToList();
 }
 
+// ---------- frigo ----------
+const mealRows = computed(() => Object.entries(inv.meals)
+  .filter(([, q]) => q > 0)
+  .map(([id, qty]) => ({
+    recipe: V1_RECIPES.find((x) => x.id === id), qty,
+    stars: inv.recipeStars[id] || 1,
+    fav: id === store.tastes?.food && inv.isTasteSeen("food"),
+    can: store.canEatMeal?.(id) || { ok: true },
+  }))
+  .filter((m) => m.recipe));
+const pantryRows = computed(() => Object.entries(inv.pantry)
+  .filter(([, q]) => q > 0)
+  .map(([id, qty]) => ({ ing: ingredientById(id), qty }))
+  .filter((x) => x.ing));
+const serveMsg = ref("");
+let serveTimer = 0;
+function serve(m) {
+  const res = inv.serveMeal(m.recipe.id);
+  clearTimeout(serveTimer);
+  if (!res?.ok) serveMsg.value = res?.reason || "Elle n'a pas faim pour le moment.";
+  else {
+    serveMsg.value = res.reaction?.line ? `« ${res.reaction.line} »` : `Miam ! ${m.recipe.label}, quel régal.`;
+    haptic?.([12, 30, 12]);
+  }
+  serveTimer = setTimeout(() => (serveMsg.value = ""), 3500);
+}
+function goShopping() {
+  close();
+  openPage("boutique", { tab: "epicerie" });
+}
+
 // ---------- navigation ----------
-const headTitle = computed(() => (phase.value === "list" ? "Cuisine" : current.value?.label || "Cuisine"));
+const headTitle = computed(() => (phase.value === "list" ? "Cuisine" : phase.value === "frigo" ? "Frigo" : current.value?.label || "Cuisine"));
 const headSub = computed(() => ({
   list: [
     readyCount.value ? `${readyCount.value} prête${readyCount.value > 1 ? "s" : ""}` : "Rien de prêt",
     inv.mealsCount ? `${inv.mealsCount} au frigo` : "",
   ].filter(Boolean).join(" · "),
+  frigo: [
+    `${inv.mealsCount || 0} plat${inv.mealsCount > 1 ? "s" : ""}`,
+    `${inv.pantryCount || 0} ingrédient${inv.pantryCount > 1 ? "s" : ""}`,
+  ].join(" · "),
   cook: "Cuire au bon moment",
   result: "C'est prêt !",
   fed: "Bon appétit !",
@@ -581,6 +660,15 @@ onBeforeUnmount(() => {
 
 /* ---------- cartes ---------- */
 .list { display: flex; flex-direction: column; gap: 10px; padding: 2px 4px 10px; }
+/* frigo */
+.fridge-btn { position: relative; width: 42px; height: 42px; }
+.fridge-btn .ic { width: 24px; height: 24px; color: var(--sky-ink, #2c4f9e); }
+.fridge-n { position: absolute; top: -4px; right: -4px; }
+.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
+.pantry { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: var(--s-2); }
+.pantry .ui-tile { cursor: default; padding: 10px 4px 8px; gap: 2px; }
+.ing-emoji { font-size: 30px; line-height: 1.1; }
+.ing-qty { font-size: var(--t-lg); font-weight: 700; color: var(--ink); }
 .sec { margin: 6px 4px 0; font: 800 var(--t-sm) var(--font-text); letter-spacing: 0.02em; }
 .sec:first-child { margin-top: 0; }
 /* blanche, ombre douce, aucun contour ; arrivée en cascade avec un petit ressort */

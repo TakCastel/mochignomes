@@ -1,8 +1,9 @@
 <template>
-  <div class="ui-page sac">
-    <CurrencyBar />
+  <div class="ui-page sac" :class="{ compact: isCompact }">
+    <!-- barre étroite (Tenues) : rien que la garde-robe ; la Collection rouvre le volet en grand -->
+    <CurrencyBar v-if="!isCompact" />
 
-    <nav v-if="tabs.length > 1" class="ui-tabs" role="tablist" aria-label="Rayons du Sac">
+    <nav v-if="tabs.length > 1 && !isCompact" class="ui-tabs" role="tablist" aria-label="Rayons du Sac">
       <button
         v-for="t in tabs"
         :key="t.key"
@@ -20,54 +21,12 @@
 
     <!-- ============ TENUES : la garde-robe ============ -->
     <section v-if="tab === 'tenues'" class="ui-stack">
-      <WardrobeSheet :focus="focusItem" @shop="(id) => emit('navigate', { to: 'boutique', tab: 'vetements', focus: id || '' })" />
-    </section>
-
-    <!-- ============ FRIGO ============ -->
-    <section v-else-if="tab === 'frigo'" class="ui-stack">
-      <div class="ui-card">
-        <h3 class="ui-section-title"><Icon name="solar:chef-hat-bold-duotone" class="ic" />Plats prêts</h3>
-        <div v-if="mealRows.length" class="ui-stack ui-stack--sm">
-          <div v-for="m in mealRows" :key="m.recipe.id" class="ui-row is-well" :class="{ 'is-love': m.fav }">
-            <span class="ui-thumb"><FoodImg :id="m.recipe.id" :emoji="m.recipe.emoji" /><small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
-            <span class="ui-row-main">
-              <span class="ui-row-title">{{ m.recipe.label }}</span>
-              <span class="ui-row-sub">
-                <span class="ui-stars" :aria-label="`${m.stars} étoile${m.stars > 1 ? 's' : ''}`">
-                  <Icon v-for="s in 3" :key="s" name="solar:star-bold" class="ic" :class="{ on: s <= m.stars }" />
-                </span>
-                <span v-if="m.fav" class="ui-tag ui-tag--love"><Icon name="solar:heart-bold-duotone" class="ic" />Son plat préféré</span>
-              </span>
-            </span>
-            <button class="ui-btn ui-btn--primary ui-btn--sm" :class="{ 'is-poor': !m.can.ok }" @click="serve(m)">
-              <Icon name="solar:donut-bitten-bold-duotone" class="ic" />Servir
-            </button>
-          </div>
-        </div>
-        <div v-else class="ui-empty">
-          <Icon name="solar:fridge-bold-duotone" class="ic" />
-          <p>Aucun plat au frigo. Cuisine-lui quelque chose de bon !</p>
-        </div>
-        <p v-if="serveMsg" class="ui-bubble mt">{{ serveMsg }}</p>
-        <button v-if="store.hasFeature?.('cuisine')" class="ui-btn ui-btn--soft mt" @click="emit('navigate', { to: 'cuisine' })">
-          <Icon name="solar:chef-hat-bold-duotone" class="ic" />Cuisiner
-        </button>
-      </div>
-
-      <div class="ui-card">
-        <h3 class="ui-section-title"><Icon name="solar:fridge-bold-duotone" class="ic" />Ingrédients</h3>
-        <div v-if="pantryRows.length" class="pantry">
-          <div v-for="p in pantryRows" :key="p.ing.id" class="ui-tile is-ghost">
-            <span class="ing-emoji"><FoodImg :id="p.ing.id" :emoji="p.ing.emoji" /></span>
-            <span class="ui-tile-sub">{{ p.ing.label }}</span>
-            <span class="ui-num ing-qty">×{{ p.qty }}</span>
-          </div>
-        </div>
-        <div v-else class="ui-empty"><p>Le frigo est vide.</p></div>
-        <button v-if="store.hasFeature?.('boutique')" class="ui-btn ui-btn--soft mt" @click="emit('navigate', { to: 'boutique', tab: 'epicerie' })">
-          <Icon name="solar:cart-large-2-bold-duotone" class="ic" />Faire les courses
-        </button>
-      </div>
+      <WardrobeSheet
+        :focus="focusItem"
+        :compact="isCompact"
+        :collection="has('collection')"
+        @collection="tab = 'collection'"
+        @shop="(id) => emit('navigate', { to: 'boutique', tab: 'vetements', focus: id || '' })" />
     </section>
 
     <!-- ============ COLLECTION ============ -->
@@ -165,20 +124,22 @@
 import { computed, ref, watch } from "vue";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { useTamagotchiStore } from "~/stores/useTamagotchiStore";
-import { gameToast } from "~/composables/useCreatureMood";
+import { gameBus, gameToast } from "~/composables/useCreatureMood";
 import {
   SLOTS, SLOT_LABELS, SLOT_ICONS, SETS, V1_ITEMS, V1_RECIPES,
-  itemById, itemColors, recipeById, ingredientById, setProgress,
+  itemById, itemColors, setProgress,
 } from "~/lib/catalog";
 import { itemIcon, inkFor } from "~/lib/itemIcons";
 
 const props = defineProps({
-  // onglet initial : "tenues" | "frigo" | "collection"
+  // onglet initial : "tenues" | "collection" (le frigo est dans la Cuisine)
   tab: { type: String, default: "tenues" },
+  // volet latéral étroit : la garde-robe en barre verticale (sous-menus emplacement > vêtement > couleur)
+  compact: { type: Boolean, default: false },
   // vêtement à mettre en avant (passé à la garde-robe, ou ouvert en collection)
   focus: { type: String, default: "" },
 });
-// navigate : { to: "boutique" | "cuisine", tab?, focus? } (l'intégrateur ouvre l'écran demandé)
+// navigate : { to: "boutique", tab?, focus? } (l'intégrateur ouvre l'écran demandé)
 const emit = defineEmits(["navigate"]);
 
 const inv = useInventoryStore();
@@ -188,47 +149,18 @@ const has = (k) => !!store.hasFeature?.(k);
 // ---------- onglets ----------
 const tabs = computed(() => [
   { key: "tenues", label: "Tenues", icon: "solar:hanger-bold-duotone", badge: inv.unseenCount || 0 },
-  // le frigo arrive avec la cuisine (ou dès qu'il contient quelque chose) ; un compteur de plats
-  // n'est pas une chose à faire : pas de pastille
-  has("cuisine") || inv.mealsCount > 0 || inv.pantryCount > 0 ? { key: "frigo", label: "Frigo", icon: "solar:fridge-bold-duotone", badge: 0 } : null,
   has("collection") ? { key: "collection", label: "Collection", icon: "solar:album-bold-duotone", badge: inv.setsReady.length || 0 } : null,
 ].filter(Boolean));
 const validTab = (t) => (tabs.value.some((x) => x.key === t) ? t : "tenues");
 const tab = ref(validTab(props.tab));
 const focusItem = ref(props.focus && itemById(props.focus) ? props.focus : "");
 watch(() => props.tab, (t) => { tab.value = validTab(t); });
+// l'onglet ouvert remonte au bus : Tenues = barre étroite, Collection = volet large (GameSheet)
+watch(tab, (t) => { gameBus.pageTab = t; }, { immediate: true });
+const isCompact = computed(() => props.compact && tab.value === "tenues");
 watch(() => props.focus, (f) => {
   if (f && itemById(f)) { focusItem.value = f; tab.value = "tenues"; }
 });
-
-// ---------- frigo ----------
-const tastes = computed(() => store.tastes || {});
-const mealRows = computed(() => Object.entries(inv.meals)
-  .filter(([, q]) => q > 0)
-  .map(([id, qty]) => ({
-    recipe: recipeById(id), qty,
-    stars: inv.recipeStars[id] || 1,
-    fav: id === tastes.value.food && inv.isTasteSeen("food"),
-    can: store.canEatMeal?.(id) || { ok: true },
-  }))
-  .filter((m) => m.recipe));
-const pantryRows = computed(() => Object.entries(inv.pantry)
-  .filter(([, q]) => q > 0)
-  .map(([id, qty]) => ({ ing: ingredientById(id), qty }))
-  .filter((p) => p.ing));
-const serveMsg = ref("");
-let msgTimer = 0;
-function serve(m) {
-  const r = inv.serveMeal(m.recipe.id);
-  clearTimeout(msgTimer);
-  if (!r?.ok) {
-    serveMsg.value = r?.reason || "Elle n'a pas faim pour le moment.";
-  } else {
-    serveMsg.value = r.reaction?.line ? `« ${r.reaction.line} »` : `Miam ! ${m.recipe.label}, quel régal.`;
-    try { navigator.vibrate?.([12, 30, 12]); } catch { /* non supporté */ }
-  }
-  msgTimer = setTimeout(() => (serveMsg.value = ""), 3500);
-}
 
 // ---------- collection ----------
 const ratio = computed(() => (inv.totalVariants ? inv.collected / inv.totalVariants : 0));
@@ -273,13 +205,6 @@ function claim(setId) {
 
 <style scoped>
 .mt { margin-top: var(--s-3); }
-
-/* frigo */
-.qty { position: absolute; right: -6px; bottom: -6px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 800 var(--t-xs)/18px var(--font-title); box-shadow: var(--sh-1); }
-.pantry { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: var(--s-2); }
-.pantry .ui-tile { cursor: default; padding: 10px 4px 8px; gap: 2px; }
-.ing-emoji { font-size: 30px; line-height: 1.1; }
-.ing-qty { font-size: var(--t-lg); font-weight: 700; color: var(--ink); }
 
 /* collection : résumé */
 .summary { display: flex; align-items: center; gap: var(--s-4); }
