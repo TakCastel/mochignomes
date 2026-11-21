@@ -15,15 +15,15 @@ const IMG = "/icons/actions/";
 const ACT_IMG = { foot: "jouer", course: "course", tele: "tele" };
 
 const BASE = [
-  { key: "nourrir", label: "Manger", img: IMG + "manger.png", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
-  { key: "laver", label: "Laver", img: IMG + "laver.png", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
-  { key: "jouer", label: "Jouer", img: IMG + "jouer.png", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
-  { key: "calin", label: "Tendresse", img: IMG + "tendresse.png", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
-  { key: "chatouiller", label: "Chatouiller", img: IMG + "jouer.png", icon: "solar:hand-heart-bold-duotone", color: ["#ffd0e0", "#ff4f86"] },
-  { key: "coucher", label: "Dodo", img: IMG + "dodo.png", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
-  { key: "soigner", label: "Soigner", img: IMG + "soigner.png", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
-  { key: "danser", label: "Danser", img: IMG + "danser.png", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
-  { key: "photo", label: "Photo", img: IMG + "photo.png", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
+  { key: "nourrir", label: "Manger", img: IMG + "manger.svg", icon: "solar:donut-bitten-bold-duotone", color: ["#ffcf8a", "#e8781c"], need: "hunger" },
+  { key: "laver", label: "Laver", img: IMG + "laver.svg", icon: "solar:bath-bold-duotone", color: ["#a9dcff", "#2f86e0"], need: "cleanliness" },
+  { key: "jouer", label: "Jouer", img: IMG + "jouer.svg", icon: "solar:football-bold-duotone", color: ["#b4ec9c", "#2a9a3a"], need: "fun" },
+  { key: "calin", label: "Tendresse", img: IMG + "tendresse.svg", icon: "solar:hand-heart-bold-duotone", color: ["#f9bf94", "#ef3d6c"] },
+  { key: "chatouiller", label: "Chatouiller", img: IMG + "jouer.svg", icon: "solar:hand-heart-bold-duotone", color: ["#ffd0e0", "#ff4f86"] },
+  { key: "coucher", label: "Dodo", img: IMG + "dodo.svg", icon: "solar:bed-bold-duotone", color: ["#8f9fff", "#3a4bc0"], need: "energy" },
+  { key: "soigner", label: "Soigner", img: IMG + "soigner.svg", icon: "solar:medical-kit-bold-duotone", color: ["#ff6d62", "#c42a24"], need: "health" },
+  { key: "danser", label: "Danser", img: IMG + "danser.svg", icon: "solar:music-notes-bold-duotone", color: ["#e0c4ff", "#8048e0"] },
+  { key: "photo", label: "Photo", img: IMG + "photo.svg", icon: "solar:camera-bold-duotone", color: ["#4fd2ca", "#0f6f69"] },
 ];
 
 // Motifs de vibration par action (respecte le réglage « tamagotchi-haptics »)
@@ -104,7 +104,7 @@ export function useActionList() {
         const w = store.wish;
         return {
           ...a, label: SHORT[act.id] || act.label, icon: act.icon,
-          img: ACT_IMG[act.id] ? IMG + ACT_IMG[act.id] + ".png" : null, reason: null, cool: null, locked: false,
+          img: ACT_IMG[act.id] ? IMG + ACT_IMG[act.id] + ".svg" : null, reason: null, cool: null, locked: false,
           activity: act.id, wanted: w?.action === "activite" && w.target === act.id, suggest: true,
           glow: gameBus.highlight?.action === a.key,
         };
@@ -112,7 +112,7 @@ export function useActionList() {
       if (a.key === "nourrir" && suggestCooking.value) {
         const wish = store.wish?.action === "repas" ? store.wish.target : "";
         return {
-          ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", img: IMG + "cuisiner.png", reason: null, cool: null, locked: false,
+          ...a, label: "Cuisiner", icon: "solar:chef-hat-bold-duotone", img: IMG + "cuisiner.svg", reason: null, cool: null, locked: false,
           cook: wish || "", wanted: !!wish, glow: gameBus.highlight?.action === a.key,
         };
       }
@@ -122,7 +122,7 @@ export function useActionList() {
         ...a,
         label: wake ? "Réveil" : a.label,
         icon: wake ? "solar:sun-bold-duotone" : a.icon,
-        img: wake ? IMG + "reveil.png" : a.img,
+        img: wake ? IMG + "reveil.svg" : a.img,
         color: wake ? ["#ffe58a", "#f29400"] : a.color,
         ...st,
         wanted: !st.reason && (store.wish?.action === a.key || (a.key === "nourrir" && mealPath.value && store.wish?.action === "repas")),

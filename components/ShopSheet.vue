@@ -84,7 +84,7 @@
     <section v-else-if="tab === 'epicerie'" class="ui-stack">
       <div class="ui-stack ui-stack--sm">
         <div v-for="ing in groceries" :id="'shop-' + ing.id" :key="ing.id" class="ui-row" :class="{ focus: focusId === ing.id }">
-          <span class="ui-thumb">{{ ing.emoji }}</span>
+          <span class="ui-thumb"><FoodImg :id="ing.id" :emoji="ing.emoji" /></span>
           <span class="ui-row-main">
             <span class="ui-row-title">{{ ing.label }}</span>
             <span class="ui-row-sub">Au frigo : {{ inv.pantry[ing.id] || 0 }}</span>
@@ -255,7 +255,7 @@
                 </template>
                 <template v-else-if="chest.result.kind === 'ingredients'">
                   <span class="loot-foods">
-                    <span v-for="(q, id) in chest.result.ingredients" :key="id" class="loot-food">{{ ingredientById(id)?.emoji }}<small>×{{ q }}</small></span>
+                    <span v-for="(q, id) in chest.result.ingredients" :key="id" class="loot-food"><FoodImg :id="id" :emoji="ingredientById(id)?.emoji" /><small>×{{ q }}</small></span>
                   </span>
                   <strong class="ui-dialog-title">{{ chest.result.label }}</strong>
                 </template>

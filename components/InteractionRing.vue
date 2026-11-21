@@ -92,7 +92,7 @@ function subItems(cat) {
       if (c.locked) continue; // pas encore découverte : n'apparaît pas
       out.push({
         key: "act:" + act.id, label: ACT_SHORT[act.id] || act.label, icon: act.icon,
-        img: ACT_IMG[act.id] ? `/icons/actions/${ACT_IMG[act.id]}.png` : null,
+        img: ACT_IMG[act.id] ? `/icons/actions/${ACT_IMG[act.id]}.svg` : null,
         color: jouerColor, activity: act.id, reason: c.ok ? null : c.reason || "Pas maintenant...", cool: null,
       });
     }

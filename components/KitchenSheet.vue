@@ -229,7 +229,7 @@ const firstTime = ref(false);
 const flashId = ref("");
 // images des plats et ingrédients (Fluent Emoji 3D) ; si l'une manque, on retombe sur l'icône du catalogue
 const imgFail = reactive({});
-const foodSrc = (id) => `/icons/food/${id}.png`;
+const foodSrc = (id) => `/icons/food/${id}.svg`;
 
 // ---------- aperçu des effets ----------
 const MINOR = [

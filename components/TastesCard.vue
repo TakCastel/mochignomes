@@ -12,7 +12,7 @@
         <span class="ui-thumb">
           <template v-if="e.known">
             <span v-if="e.swatch" class="swatch" :style="{ background: e.swatch }" />
-            <span v-else-if="e.emoji">{{ e.emoji }}</span>
+            <span v-else-if="e.emoji"><FoodImg :id="e.foodId" :emoji="e.emoji" /></span>
             <Icon v-else :name="e.icon" class="ic" :style="e.ink ? { color: e.ink } : null" />
           </template>
           <Icon v-else name="solar:question-circle-bold-duotone" class="ic q" />
@@ -32,7 +32,7 @@
         <span class="ui-thumb">
           <template v-if="e.known">
             <span v-if="e.swatch" class="swatch" :style="{ background: e.swatch }" />
-            <span v-else-if="e.emoji">{{ e.emoji }}</span>
+            <span v-else-if="e.emoji"><FoodImg :id="e.foodId" :emoji="e.emoji" /></span>
             <Icon v-else :name="e.icon" class="ic" :style="e.ink ? { color: e.ink } : null" />
           </template>
           <Icon v-else name="solar:question-circle-bold-duotone" class="ic q" />
@@ -86,7 +86,7 @@ function entry(key) {
         hint: key === "color" ? "Mets-lui des vêtements de couleurs différentes." : "Certaines couleurs la font bouder… observe-la." };
     case "food": case "foodDislike": {
       const r = recipeById(v);
-      return { ...base, kind: key === "food" ? "Plat préféré" : "Plat", value: lower(r?.label), emoji: r?.emoji,
+      return { ...base, kind: key === "food" ? "Plat préféré" : "Plat", value: lower(r?.label), emoji: r?.emoji, foodId: r?.id,
         hint: key === "food" ? "Cuisine-lui des plats variés." : "Un plat la fait grimacer : lequel ?" };
     }
     case "activity": {

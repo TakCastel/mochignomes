@@ -36,7 +36,7 @@ const IMG = {
 };
 const shownImg = computed(() => {
   const f = IMG[shown.value?.action];
-  return f ? `/icons/actions/${f}.png` : null;
+  return f ? `/icons/actions/${f}.svg` : null;
 });
 // la bulle se calme (ne bouge plus) après 3 s
 const calm = ref(false);

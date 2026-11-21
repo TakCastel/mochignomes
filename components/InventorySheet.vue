@@ -29,7 +29,7 @@
         <h3 class="ui-section-title"><Icon name="solar:chef-hat-bold-duotone" class="ic" />Plats prêts</h3>
         <div v-if="mealRows.length" class="ui-stack ui-stack--sm">
           <div v-for="m in mealRows" :key="m.recipe.id" class="ui-row is-well" :class="{ 'is-love': m.fav }">
-            <span class="ui-thumb">{{ m.recipe.emoji }}<small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
+            <span class="ui-thumb"><FoodImg :id="m.recipe.id" :emoji="m.recipe.emoji" /><small v-if="m.qty > 1" class="qty">×{{ m.qty }}</small></span>
             <span class="ui-row-main">
               <span class="ui-row-title">{{ m.recipe.label }}</span>
               <span class="ui-row-sub">
@@ -58,7 +58,7 @@
         <h3 class="ui-section-title"><Icon name="solar:fridge-bold-duotone" class="ic" />Ingrédients</h3>
         <div v-if="pantryRows.length" class="pantry">
           <div v-for="p in pantryRows" :key="p.ing.id" class="ui-tile is-ghost">
-            <span class="ing-emoji">{{ p.ing.emoji }}</span>
+            <span class="ing-emoji"><FoodImg :id="p.ing.id" :emoji="p.ing.emoji" /></span>
             <span class="ui-tile-sub">{{ p.ing.label }}</span>
             <span class="ui-num ing-qty">×{{ p.qty }}</span>
           </div>
@@ -149,7 +149,7 @@
         <h3 class="ui-section-title"><Icon name="solar:chef-hat-bold-duotone" class="ic" />Recettes découvertes</h3>
         <div class="coll-grid">
           <div v-for="r in recipeRows" :key="r.recipe.id" class="ui-tile coll recipe" :class="{ 'is-ghost': !r.known }">
-            <span class="coll-art"><span class="r-emoji">{{ r.recipe.emoji }}</span></span>
+            <span class="coll-art"><span class="r-emoji"><FoodImg :id="r.recipe.id" :emoji="r.recipe.emoji" /></span></span>
             <span class="ui-tile-label coll-name">{{ r.known ? r.recipe.label : "???" }}</span>
             <span class="ui-stars small">
               <Icon v-for="s in 3" :key="s" name="solar:star-bold" class="ic" :class="{ on: s <= r.stars }" />

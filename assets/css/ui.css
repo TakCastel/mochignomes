@@ -786,3 +786,11 @@ button.ui-row:active { transform: scale(0.97); transition-duration: 0.08s; }
 .grab-zone > * { margin: 0 !important; }
 /* demi-feuilles : la barre du bas passe par-dessus, on lui garde la place */
 .ui-half-sheet { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 14px); transition: height 0.38s cubic-bezier(0.22, 1, 0.36, 1), max-height 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* emoji en image (Noto Emoji) détouré d'un contour blanc façon autocollant, avec une petite ombre */
+.sticker {
+  filter:
+    drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff)
+    drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25));
+}
