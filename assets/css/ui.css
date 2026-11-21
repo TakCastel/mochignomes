@@ -66,12 +66,15 @@
   --glass-edge: inset 0 0 0 1.5px rgba(255, 255, 255, 0.95), inset 0 2px 0 #fff;
   --glass-shadow: 0 10px 30px rgba(30, 70, 120, 0.18);
 
-  /* HUD de l'écran principal : trois niveaux (jauges = verre bleu profond, actions = verre clair, barre = bleu ciel dense) */
-  --hud-deep: linear-gradient(180deg, rgba(46, 104, 178, 0.82), rgba(24, 66, 132, 0.86));
-  --hud-deep-edge: inset 0 1.5px 0 rgba(255, 255, 255, 0.45), inset 0 0 0 1.5px rgba(160, 210, 255, 0.35);
-  --hud-light: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(222, 238, 255, 0.82));
-  --nav-sky: linear-gradient(180deg, #2f86dd 0%, #1f66bd 55%, #19559f 100%);
-  --nav-sky-edge: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 0 0 1.5px rgba(170, 215, 255, 0.35);
+  /* HUD de l'écran principal, façon jeu de simulation de vie : panneaux blancs nets,
+     bandes gris-bleu très clair, filets fins, texte bleu marine, pilules blanches */
+  --hud-ink: #2c4f9e; /* texte bleu marine */
+  --hud-ink-2: #6f86b3; /* texte bleu discret */
+  --hud-band: #eef2f7; /* bande gris-bleu sous les libellés */
+  --hud-line: #d6dfea; /* filet entre les cases */
+  --hud-shadow: 0 6px 18px rgba(30, 55, 100, 0.18);
+  --hud-pill: linear-gradient(180deg, #ffffff 0%, #f6f8fb 55%, #e6ecf3 100%);
+  --hud-pill-shadow: 0 2px 0 #c9d4e2, 0 4px 10px rgba(30, 55, 100, 0.16);
 
   /* ressorts */
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);

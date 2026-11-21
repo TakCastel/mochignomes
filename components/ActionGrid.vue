@@ -1,10 +1,11 @@
 <template>
+  <!-- actions en pilules blanches au texte bleu, l'objet 3D déborde à gauche -->
   <section class="panel" aria-label="Actions">
     <button
       v-for="(a, i) in shownActions"
       :key="a.key"
-      class="tile"
-      :style="{ '--i': i }"
+      class="act"
+      :style="{ '--i': i, '--c1': a.color[0], '--c2': a.color[1] }"
       :class="{
         best: primary?.kind === 'best' && primary.key === a.key,
         wanted: primary?.kind === 'wanted' && primary.key === a.key,
@@ -16,14 +17,16 @@
       :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
-      <span class="disc" :style="{ '--c1': a.color[0], '--c2': a.color[1] }">
-        <span v-if="a.cool" :key="a.cool.readyAt" class="cool-ring" :style="a.cool.style" aria-hidden="true" />
-        <img v-if="a.img" :src="a.img" class="ic emoji" alt="" draggable="false" />
-        <Icon v-else :name="a.icon" mode="svg" class="ic" />
-        <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
-        <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
+      <span class="pill">
+        <span v-if="a.cool" :key="a.cool.readyAt" class="cool-fill" :style="a.cool.style" aria-hidden="true" />
+        <span class="lbl">{{ a.label }}</span>
       </span>
-      <span class="lbl">{{ a.label }}</span>
+      <span class="obj">
+        <img v-if="a.img" :src="a.img" class="emoji" alt="" draggable="false" />
+        <Icon v-else :name="a.icon" mode="svg" class="ic" />
+      </span>
+      <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
+      <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
       <span v-for="f in floats.filter((x) => x.key === a.key)" :key="f.id" class="float" :style="{ '--fx': f.dx + 'px' }">{{ f.text }}</span>
     </button>
   </section>
@@ -237,139 +240,108 @@ function press(a) {
 </script>
 
 <style scoped>
-/* 4 boutons par rangée ; une rangée incomplète (Danser pas encore appris) se centre */
+/* panneau blanc net, 3 pilules par rangée (une rangée incomplète se centre) */
 .panel {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--gap, 12px);
-  position: relative;
-  padding: 16px 10px 14px;
-  border-radius: 28px;
-  /* niveau 2 : verre clair lumineux, c'est le panneau héros */
-  background: var(--hud-light);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: 0 12px 30px rgba(24, 64, 128, 0.26), var(--glass-edge), inset 0 -10px 22px rgba(108, 194, 255, 0.22);
-  animation: panel-in 0.55s var(--spring) 0.1s both;
+  gap: 10px 8px;
+  padding: 12px 10px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fbfcfe, var(--hud-band));
+  box-shadow: var(--hud-shadow), 0 0 0 1px var(--hud-line);
+  animation: panel-in 0.5s var(--spring) 0.08s both;
 }
-@keyframes panel-in { from { opacity: 0; transform: translateY(24px) scale(0.96); } }
-/* bouton = disque rond + libellé dessous */
-.tile {
+@keyframes panel-in { from { opacity: 0; transform: translateY(18px); } }
+
+/* une action : l'objet 3D à gauche, posé à cheval sur une pilule blanche */
+.act {
   position: relative;
-  flex: 0 0 calc((100% - 3 * var(--gap, 12px)) / 4);
+  flex: 0 0 calc((100% - 2 * 8px) / 3);
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+  height: 46px;
   padding: 0;
   border: 0;
   background: none;
+  font: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  /* les boutons sortent l'un après l'autre en rebondissant */
-  animation: tile-in 0.5s var(--spring-strong) calc(0.18s + var(--i, 0) * 45ms) both;
+  animation: act-in 0.45s var(--spring-strong) calc(0.15s + var(--i, 0) * 40ms) both;
 }
-@keyframes tile-in { from { opacity: 0; transform: scale(0.3) translateY(10px); } }
-.disc {
+@keyframes act-in { from { opacity: 0; transform: scale(0.6) translateY(8px); } }
+.pill {
+  position: absolute;
+  left: 16px;
+  right: 0;
+  top: 5px;
+  bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 6px 0 24px;
+  border-radius: 999px;
+  background: var(--hud-pill);
+  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 #fff;
+  transition: transform 0.4s var(--spring-strong), box-shadow 0.2s, background 0.2s;
+}
+.lbl {
   position: relative;
+  z-index: 1;
+  min-width: 0;
+  font: 800 clamp(11px, 3.1vw, 13px)/1 var(--font-text);
+  color: var(--hud-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.obj {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 2;
   display: grid;
   place-items: center;
-  width: var(--tile, 68px);
-  max-width: 100%;
-  aspect-ratio: 1;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  /* pastille pastel de la couleur de l'action : le contour blanc de l'objet ressort dessus */
-  background: radial-gradient(circle at 50% 22%, color-mix(in srgb, var(--c1) 34%, #fff), color-mix(in srgb, var(--c1) 88%, #fff) 70%, color-mix(in srgb, var(--c2) 38%, var(--c1)) 100%);
-  box-shadow: 0 6px 12px color-mix(in srgb, var(--c2) 34%, transparent), 0 1px 0 rgba(40, 55, 80, 0.06), inset 0 -4px 8px color-mix(in srgb, var(--c2) 26%, transparent);
-  transition: transform 0.42s var(--spring-strong), box-shadow 0.2s;
-}
-/* reflet de verre en haut du disque */
-.disc::after {
-  content: "";
-  position: absolute;
-  top: 5%;
-  left: 17%;
-  width: 66%;
-  height: 34%;
-  border-radius: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
   pointer-events: none;
+  transition: transform 0.45s var(--spring-strong);
 }
-.disc .emoji, .disc .ic { position: relative; z-index: 1; }
-/* pression : le disque s'écrase vite puis rebondit au relâcher */
-.tile:active .disc { transform: scale(0.86); box-shadow: 0 1px 3px rgba(40, 55, 80, 0.12); transition-duration: 0.08s; }
-.disc .emoji { transition: transform 0.5s var(--spring-strong); }
-.tile:active .disc .emoji { transform: scale(1.12) rotate(-6deg); transition-duration: 0.1s; }
-@media (hover: hover) {
-  .tile:hover .disc { transform: translateY(-3px); }
-  .tile:hover .disc .emoji { transform: scale(1.08) rotate(-4deg); }
-}
-/* icône Solar bicolore : ton clair pour le fond de l'objet, ton soutenu pour le dessin */
-.ic {
-  width: 58%;
-  height: 58%;
-  color: var(--c2);
-  filter: drop-shadow(0 3px 3px rgba(40, 55, 80, 0.16));
-}
-.ic :deep([opacity]) { opacity: 1; color: var(--c1); }
-/* objet 3D détouré d'un contour blanc façon autocollant, puis petite ombre portée */
+/* objet 3D détouré d'un contour blanc façon autocollant */
 .emoji {
-  width: 64%;
-  height: 64%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
   filter:
     drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
     drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
-    drop-shadow(0 3px 3px rgba(40, 55, 80, 0.25));
+    drop-shadow(0 3px 3px rgba(30, 55, 100, 0.28));
 }
-/* action conseillée : halo bleu ciel qui respire doucement */
-.best .disc {
-  border-color: #fff;
-  animation: halo 1.8s ease-in-out infinite;
+.ic { width: 32px; height: 32px; color: var(--c2); filter: drop-shadow(0 0 2px #fff) drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25)); }
+.ic :deep([opacity]) { opacity: 1; color: var(--c1); }
+
+/* toucher : la pilule s'écrase, l'objet saute ; retour en rebond */
+.act:active .pill { transform: scale(0.93); transition-duration: 0.08s; }
+.act:active .obj { transform: scale(1.15) rotate(-8deg); transition-duration: 0.1s; }
+@media (hover: hover) {
+  .act:hover .pill { background: linear-gradient(180deg, #fff, #eef5ff 60%, #dde9f7); }
+  .act:hover .obj { transform: translateY(-2px) rotate(-5deg); }
 }
-@keyframes halo {
-  0%, 100% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55), 0 4px 10px rgba(30, 70, 120, 0.15); }
-  50% { box-shadow: 0 0 0 3px var(--sky-hi), 0 0 18px 8px rgba(108, 194, 255, 0.35), 0 4px 10px rgba(30, 70, 120, 0.15); }
-}
-/* indisponible : disque désaturé mais clair, objet encore lisible (pas « cassé ») */
-.off .disc { filter: saturate(0.4) brightness(1.03); box-shadow: 0 3px 8px rgba(40, 70, 110, 0.16), inset 0 -3px 6px rgba(80, 100, 130, 0.12); }
-.off .emoji, .off .ic { opacity: 0.8; }
-.off .lbl { color: var(--ink-3); background: rgba(255, 255, 255, 0.5); }
-.lbl {
-  max-width: 100%;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 1px 3px rgba(30, 70, 120, 0.12);
-  font: 800 11px/1 var(--font-text);
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: transform 0.35s var(--spring-strong);
-}
-.tile:active .lbl { transform: scale(0.94); }
-/* anneau de recharge : rempli en continu par une animation linéaire
+
+/* recharge : la pilule se remplit de bleu clair, en continu, de gauche à droite
    (durée = recharge totale, délai négatif = temps déjà écoulé) */
 @property --p {
   syntax: "<number>";
   inherits: false;
   initial-value: 0;
 }
-.cool-ring {
+.cool-fill {
   position: absolute;
-  inset: -5px;
-  border-radius: 50%;
-  padding: 3px;
-  background: conic-gradient(#4fbf34 calc(var(--p) * 360deg), rgba(150, 160, 175, 0.28) 0);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  inset: 0;
+  background: linear-gradient(90deg, rgba(108, 194, 255, 0.42) calc(var(--p) * 100%), transparent 0);
   pointer-events: none;
   animation: cool var(--dur, 1s) linear var(--delay, 0s) forwards;
 }
@@ -377,31 +349,44 @@ function press(a) {
   from { --p: 0; }
   to { --p: 1; }
 }
-/* envie de la créature : le bouton pulse en rose */
-.wanted .disc {
-  border-color: #ff8fb0;
-  background: linear-gradient(180deg, #fff6f9, #ffe3ec);
-  animation: pulse 1.3s ease-in-out infinite;
+
+/* action conseillée : liseré bleu ciel lumineux qui respire */
+.best .pill { animation: halo 1.8s ease-in-out infinite; }
+@keyframes halo {
+  0%, 100% { box-shadow: 0 0 0 2.5px var(--sky-hi), 0 0 8px 2px rgba(108, 194, 255, 0.55), var(--hud-pill-shadow); }
+  50% { box-shadow: 0 0 0 2.5px var(--sky-hi), 0 0 16px 6px rgba(108, 194, 255, 0.35), var(--hud-pill-shadow); }
 }
-.glow .disc { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
-.dot { position: absolute; z-index: 2; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
-@keyframes pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
-  50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }
+/* envie de la créature : pilule rose qui pulse */
+.wanted .pill {
+  background: linear-gradient(180deg, #fff7fa, #ffe6ee);
+  box-shadow: 0 0 0 2.5px #ff9ab8, 0 4px 10px rgba(255, 79, 134, 0.25);
 }
+.wanted { animation: act-in 0.45s var(--spring-strong) calc(0.15s + var(--i, 0) * 40ms) both, pulse 1.3s ease-in-out 0.8s infinite; }
+.wanted .lbl { color: var(--love-ink); }
+.glow .pill { box-shadow: 0 0 0 2.5px #ffc21a, 0 0 12px rgba(255, 194, 26, 0.6); }
+.glow { animation: pulse 0.9s ease-in-out 3; }
+@keyframes pulse { 50% { transform: scale(1.06); } }
+.dot { position: absolute; z-index: 3; top: 1px; left: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
+
+/* indisponible : texte bleu pâle, objet un peu éteint, mais toujours lisible */
+.off .lbl { color: var(--hud-ink-2); }
+.off .obj { filter: saturate(0.35); opacity: 0.75; }
+.off .pill { background: linear-gradient(180deg, #f8fafc, #e9eef4); }
+
+/* petits « +N » qui sautent puis montent depuis l'action */
 .float {
   position: absolute;
-  top: 6px;
+  top: -4px;
   left: 50%;
   z-index: 5;
   padding: 2px 8px;
   border-radius: 999px;
   background: #fff;
   color: #2a9a3a;
-  font: 800 13px "Fredoka", "Nunito", system-ui, sans-serif;
+  font: 800 13px var(--font-title);
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 2px 6px rgba(40, 55, 80, 0.2);
+  box-shadow: 0 2px 6px rgba(30, 55, 100, 0.22);
   animation: up 1.05s ease-out forwards;
 }
 @keyframes up {
@@ -411,25 +396,17 @@ function press(a) {
   75% { opacity: 1; }
   100% { transform: translate(calc(-50% + var(--fx)), -58px) scale(0.95); opacity: 0; }
 }
-.lock {
-  z-index: 2;
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 14px;
-  height: 14px;
-  color: #9aa4b2;
-}
-.wiggle .disc { animation: wiggle 0.4s ease-in-out; }
+.lock { position: absolute; z-index: 3; top: 2px; right: 4px; width: 14px; height: 14px; color: #9aa4b2; }
+.wiggle { animation: wiggle 0.4s ease-in-out; }
 @keyframes wiggle {
-  20% { transform: rotate(-6deg); }
-  40% { transform: rotate(5deg); }
+  20% { transform: rotate(-5deg); }
+  40% { transform: rotate(4deg); }
   60% { transform: rotate(-3deg); }
   80% { transform: rotate(2deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wanted .disc, .glow .disc, .wiggle .disc, .tile, .panel { animation: none; }
-  .best .disc { animation: none; box-shadow: 0 0 0 3px var(--sky-hi), 0 0 10px 3px rgba(108, 194, 255, 0.55); }
-  .disc, .disc .emoji, .lbl { transition: none; }
+  .panel, .act, .wanted, .glow, .wiggle, .best .pill { animation: none; }
+  .best .pill { box-shadow: 0 0 0 2.5px var(--sky-hi), var(--hud-pill-shadow); }
+  .pill, .obj { transition: none; }
 }
 </style>

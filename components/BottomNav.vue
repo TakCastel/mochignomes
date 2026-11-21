@@ -65,27 +65,18 @@ const items = computed(() =>
 </script>
 
 <style scoped>
-/* niveau 3 : barre bleu ciel dense, ancrée en bas, reflet de verre en haut */
+/* barre blanche nette, icônes et libellés bleus ; l'onglet actif est une pastille bleu ciel */
 .nav {
   position: relative;
   display: flex;
   justify-content: space-around;
+  align-items: center;
   height: var(--nav-h, 78px);
   box-sizing: content-box;
   padding: 0 10px env(safe-area-inset-bottom, 0px);
-  border-radius: 30px 30px 0 0;
-  background: var(--nav-sky);
-  box-shadow: 0 -8px 26px rgba(20, 60, 130, 0.32), var(--nav-sky-edge);
-  align-items: center;
-}
-.nav::before {
-  content: "";
-  position: absolute;
-  inset: 3px 3px auto 3px;
-  height: 38%;
-  border-radius: 28px 28px 50% 50% / 28px 28px 14px 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
-  pointer-events: none;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(180deg, #ffffff, #f3f6fa);
+  box-shadow: 0 -4px 18px rgba(30, 55, 100, 0.14), 0 -1px 0 var(--hud-line);
 }
 .item {
   position: relative;
@@ -100,9 +91,9 @@ const items = computed(() =>
   margin: 0 3px;
   padding: 4px 0;
   border: 0;
-  border-radius: 20px;
+  border-radius: 18px;
   background: none;
-  color: #fff;
+  color: var(--hud-ink-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   animation: pop 0.45s var(--spring-strong) backwards;
@@ -113,18 +104,16 @@ const items = computed(() =>
 .item:nth-child(4) { animation-delay: 0.12s; }
 .item:nth-child(5) { animation-delay: 0.16s; }
 .item:active { transform: scale(0.88); transition-duration: 0.08s; }
-.ic { width: 28px; height: 28px; filter: drop-shadow(0 2px 2px rgba(10, 40, 100, 0.4)); transition: transform 0.45s var(--spring-strong); }
-.label { font: 800 11px/1 var(--font-text); text-shadow: 0 1px 2px rgba(10, 40, 100, 0.55); }
+.ic { width: 28px; height: 28px; transition: transform 0.45s var(--spring-strong); }
+.label { font: 800 11px/1 var(--font-text); }
 @media (hover: hover) { .item:not(.on):hover .ic { transform: translateY(-2px) scale(1.08); } }
-/* onglet actif : pilule blanche en relief, icône bleu ciel qui saute */
 .on {
-  background: linear-gradient(180deg, #ffffff, #dff0ff);
-  color: var(--sky-ink);
-  box-shadow: 0 5px 12px rgba(8, 36, 90, 0.38), inset 0 -3px 6px rgba(108, 194, 255, 0.4), inset 0 2px 0 #fff;
+  background: linear-gradient(180deg, #f2f9ff, #dcedff);
+  color: var(--hud-ink);
+  box-shadow: inset 0 0 0 2px #a9d4fb, 0 2px 6px rgba(47, 149, 232, 0.18);
   animation: pop 0.45s var(--spring-strong) backwards, settle 0.5s var(--spring-strong);
 }
-.on .ic { color: var(--sky); filter: drop-shadow(0 2px 2px rgba(30, 100, 190, 0.3)); transform: translateY(-2px) scale(1.1); }
-.on .label { text-shadow: none; }
+.on .ic { color: var(--sky); transform: translateY(-2px) scale(1.1); }
 .badge {
   position: absolute;
   top: 4px;
@@ -133,7 +122,7 @@ const items = computed(() =>
   height: 11px;
   border-radius: 50%;
   background: var(--dot);
-  box-shadow: 0 0 0 2px #fff, 0 0 8px rgba(255, 59, 59, 0.7);
+  box-shadow: 0 0 0 2px #fff;
   animation: badge 1.6s ease-in-out infinite;
 }
 @keyframes badge { 50% { transform: scale(1.25); } }
