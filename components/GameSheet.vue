@@ -2,7 +2,7 @@
   <div>
     <!-- pages plein écran (la barre du bas reste visible) : Elle, Jours, Album, Boutique.
          Le Sac s'ouvre en volet sur la droite : on la voit à gauche essayer ses tenues -->
-    <BaseSheet fullscreen :side="gameBus.page === 'sac'" :narrow="sacNarrow" :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
+    <BaseSheet fullscreen :side="gameBus.page === 'sac'" :narrow="sacNarrow" :wide="sacWide" :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
       <CreatureSheet v-if="gameBus.page === 'elle'" />
       <JournalSheet v-else-if="gameBus.page === 'jours'" />
       <AlbumSheet v-else-if="gameBus.page === 'album'" />
@@ -59,6 +59,9 @@ const sacSubtitle = computed(() => {
 });
 // Sac sur Tenues : une barre verticale étroite, on la voit en grand à gauche
 const sacNarrow = computed(() => gameBus.page === "sac" && (gameBus.pageTab || "tenues") === "tenues");
+
+// Sac sur Collection : volet large, tant pis s'il cache un peu la créature
+const sacWide = computed(() => gameBus.page === "sac" && gameBus.pageTab === "collection");
 
 const meta = computed(() => {
   switch (gameBus.page) {

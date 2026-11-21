@@ -1,7 +1,7 @@
 <template>
   <Transition :name="side ? 'slide' : fullscreen ? 'page' : 'sheet'">
     <div v-if="open" class="overlay" :class="{ full: fullscreen, side }" @click.self="!fullscreen && close()">
-      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, side, narrow: side && narrow, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen, side, narrow: side && narrow, wide: side && wide && !narrow, 'is-tall': tall }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
         <div v-if="!fullscreen" class="grab-zone" v-on="grabOn"><div class="grab" /></div>
         <header class="head">
           <button v-if="fullscreen && !side" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
@@ -39,6 +39,8 @@ const props = defineProps({
   side: { type: Boolean, default: false },
   // avec side : simple barre verticale (le contenu gère ses sous-menus), l'en-tête se réduit à la croix
   narrow: { type: Boolean, default: false },
+  // avec side : volet large (Collection) qui passe un peu sur elle ; elle garde le cadrage du volet normal
+  wide: { type: Boolean, default: false },
 });
 
 function close() {
@@ -57,7 +59,12 @@ watch([sheetEl, () => props.side && props.open], ([el, on]) => {
   sideRo?.disconnect();
   sideRo = null;
   if (!el || !on) { if (gameBus.sideW) gameBus.sideW = 0; return; }
-  const put = () => (gameBus.sideW = Math.round(el.getBoundingClientRect().width));
+  // volet large : on annonce la largeur du volet normal (clamp(240px, 62vw, 440px)), elle ne rapetisse pas
+  const normalW = () => Math.min(440, Math.max(240, window.innerWidth * 0.62));
+  const put = () => {
+    const w = el.getBoundingClientRect().width;
+    gameBus.sideW = Math.round(props.wide && !props.narrow ? Math.min(w, normalW()) : w);
+  };
   sideRo = new ResizeObserver(put);
   sideRo.observe(el);
   put();
@@ -132,6 +139,8 @@ onBeforeUnmount(() => {
 .sheet.side h2 { font-size: 22px; }
 /* la largeur glisse : la créature suit (gameBus.sideW est mesuré en continu) */
 .sheet.full.side { transition: width 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+/* Collection : volet large, il peut cacher un peu la créature */
+.sheet.full.side.wide { width: clamp(300px, 88vw, 560px); }
 .sheet.full.side.narrow {
   width: 88px;
   padding-left: 8px;
