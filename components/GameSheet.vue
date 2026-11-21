@@ -2,7 +2,7 @@
   <div>
     <!-- pages plein écran (la barre du bas reste visible) : Elle, Jours, Album, Boutique.
          Le Sac s'ouvre en volet sur la droite : on la voit à gauche essayer ses tenues -->
-    <BaseSheet fullscreen :side="gameBus.page === 'sac'" :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
+    <BaseSheet fullscreen :side="gameBus.page === 'sac'" :narrow="sacNarrow" :open="!!gameBus.page" :title="meta.title" :subtitle="meta.subtitle" :icon="meta.icon">
       <CreatureSheet v-if="gameBus.page === 'elle'" />
       <JournalSheet v-else-if="gameBus.page === 'jours'" />
       <AlbumSheet v-else-if="gameBus.page === 'album'" />
@@ -10,6 +10,7 @@
         v-else-if="gameBus.page === 'sac'"
         :tab="gameBus.pageTab || 'tenues'"
         :focus="gameBus.pageFocus"
+        compact
         @navigate="navigate"
       />
       <ShopSheet
@@ -53,11 +54,10 @@ function closeKitchen() {
 
 // le sous-titre ne parle que de ce qui est déjà découvert
 const sacSubtitle = computed(() => {
-  const parts = ["Ses tenues"];
-  if (store.features?.cuisine) parts.push("son frigo");
-  if (store.features?.collection) parts.push("sa collection");
-  return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} et ${parts.at(-1)}` : parts[0];
+  return store.features?.collection ? "Ses tenues et sa collection" : "Ses tenues";
 });
+// Sac sur Tenues : une barre verticale étroite, on la voit en grand à gauche
+const sacNarrow = computed(() => gameBus.page === "sac" && (gameBus.pageTab || "tenues") === "tenues");
 
 const meta = computed(() => {
   switch (gameBus.page) {
