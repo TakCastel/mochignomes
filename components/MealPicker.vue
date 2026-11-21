@@ -121,7 +121,7 @@ const meals = computed(() =>
 
 const canCook = computed(() => (store.hasFeature ? store.hasFeature("cuisine") : !!store.features?.cuisine));
 const readyCount = computed(() =>
-  V1_RECIPES.filter((r) => (store.level || 1) >= (r.minLevel || 1) && !Object.keys(missingIngredients(r.id, inv.pantry)).length).length
+  V1_RECIPES.filter((r) => (store.topLevel || store.level || 1) >= (r.minLevel || 1) && !Object.keys(missingIngredients(r.id, inv.pantry)).length).length
 );
 const subtitle = computed(() => (meals.value.length ? `${inv.mealsCount} plat${inv.mealsCount > 1 ? "s" : ""} prêt${inv.mealsCount > 1 ? "s" : ""}` : "Un goûter ou un bon repas ?"));
 

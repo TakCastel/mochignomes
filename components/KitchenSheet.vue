@@ -254,7 +254,7 @@ const cards = computed(() => {
     });
     const unbuyableIds = Object.keys(miss).filter((id) => !shopIds.value.has(id));
     const cost = Object.entries(miss).reduce((s, [id, n]) => s + (ingredientById(id)?.price || 0) * n, 0);
-    const locked = (store.level || 1) < (r.minLevel || 1);
+    const locked = (store.topLevel || store.level || 1) < (r.minLevel || 1);
     const ready = !Object.keys(miss).length;
     const known = (inv.recipesKnown || []).includes(r.id);
     return {

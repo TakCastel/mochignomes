@@ -41,6 +41,9 @@
       </details>
     </section>
 
+    <!-- la maison : dès qu'une 2e place s'ouvre (en jouant) -->
+    <HouseCard v-if="showHouse" ref="houseEl" />
+
     <p v-if="sulking" class="ui-note ui-note--violet">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
     <p v-if="store.illness" class="ui-note ui-note--accent">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
     <p v-else-if="store.exhausted" class="ui-note ui-note--violet">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
@@ -102,7 +105,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { STATS, TRAIT_INFO } from "~/lib/gameUi";
 import { MOOD_LABELS } from "~/lib/creatureLook";
 import { appearanceText, oddsText, RARITY_INFO, RARITY_ODDS, ORIGINAL_APPEARANCE } from "~/lib/appearance";
@@ -120,6 +123,14 @@ const traitRows = computed(() =>
 );
 
 const pages = computed(() => store.unlockedPages || []);
+const showHouse = computed(() => (store.slotsOpen || 1) > 1 || (store.roster?.length || 0) > 1);
+// ouverte depuis la carte « Une nouvelle place » : on descend jusqu'à la maison
+const houseEl = ref(null);
+onMounted(async () => {
+  if (gameBus.pageFocus !== "maison") return;
+  await nextTick();
+  houseEl.value?.$el?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+});
 const questReady = computed(() =>
   (store.features?.defis && (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed))
   || store.pendingBonus > 0 || !!store.questBonusReady);

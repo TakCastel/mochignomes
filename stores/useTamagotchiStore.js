@@ -12,9 +12,10 @@ import { appearanceFor, ORIGINAL_APPEARANCE } from "~/lib/appearance";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import {
   activityById, activityReward, recipeById, starMult, MASTERY, masteryById, PLAY_DAYS_REWARDS, RECORD_COINS,
-  V1_ACTIVITIES, V1_RECIPES,
+  V1_ACTIVITIES, V1_RECIPES, SLOTS,
 } from "~/lib/catalog";
 import { tastesFor, reaction as tasteReaction } from "~/lib/tastes";
+import { activeActivity } from "~/composables/useLiveCreature";
 
 // Vitesse de vie, en points par heure réelle.
 // La créature vit même quand l'appli est fermée : à l'ouverture,
@@ -61,6 +62,61 @@ const SURPRISES = [
   { icon: "solar:leaf-bold-duotone", text: "Elle a cueilli une feuille pour toi." },
   { icon: "solar:sparkles-bold-duotone", text: "Elle a fait un joli dessin avec ton prénom." },
 ];
+
+// ---------- La maison : plusieurs créatures, une seule dans le pré ----------
+// Le store garde à plat la créature ACTIVE (celle du pré). Les autres se reposent « au chaud » :
+// leurs champs PER_CREATURE_KEYS sont rangés dans `roster` (un nid chacune), avec leur tenue
+// (inventory.outfit) et leurs goûts découverts (inventory.stats.tastesSeen), échangés au changement.
+//
+// PROPRE À CHAQUE CRÉATURE : nom, jauges, sommeil, caractère, niveau / xp, stade, éclosion et
+// tutoriel, apparence, goûts (tasteSeed + goûts révélés), compteurs, journal, envies, maladie,
+// recharges, bonus de repas, tenue portée, photos (composables/useGallery.js), portrait.
+// GLOBAL (le joueur) : le Sac (pièces, Étoiles, vêtements possédés, frigo, plats, objets),
+// collection, records et maîtrises (inventory.stats.best : ce sont les records du joueur, ils
+// rapportent des Étoiles une seule fois), nouveautés débloquées (features), jours de jeu,
+// série, défis du jour, bonus du jour, parties du jour (rendement dégressif : changer de
+// créature ne remet pas les compteurs à zéro), succès de l'Album, palette, temps de jeu.
+export const PER_CREATURE_KEYS = [
+  "name", "hunger", "cleanliness", "fun", "energy", "health", "isSleeping", "lastUpdate", "traits",
+  "neglectedAt", "xp", "bornAt", "counters", "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage",
+  "cooldowns", "wish", "wishesDone", "illness", "exhausted", "journal", "nextWishAt", "lastWishId",
+  "surpriseLog", "tasteSeed", "mealBoostUntil", "appearance",
+];
+// Places dans la maison : elles s'ouvrent en jouant, jamais en payant.
+// Une place s'ouvre au premier des deux critères atteint : le niveau de N'IMPORTE quelle
+// créature, ou les jours de jeu cumulés (totalDays, global). Places dans l'ordre.
+export const SLOT_RULES = [
+  null, // place 1 : la première créature
+  { level: 8, days: 5 },
+  { level: 15, days: 14 },
+];
+export const MAX_SLOTS = SLOT_RULES.length;
+// Au repos (pas dans le pré), elle vit au ralenti : usure à 25 % de la vitesse normale,
+// jamais malade, aucune jauge ne descend sous 30 (si elle était au-dessus), la santé ne
+// baisse jamais et le temps de repos ne compte pas comme une négligence (ni rancune).
+// Son âge, lui, avance normalement (elle grandit aussi en se reposant).
+export const REST_FACTOR = 0.25;
+export const REST_FLOOR = 30;
+const REST_TALK_MIN = 10 * 60; // au-delà de 10 min de repos, elle raconte sa sieste
+
+const generateRandomName = () => {
+  const prefixes = ["Mo", "Chi", "Ba", "Lu", "Ki", "Zo", "Po", "Ni"];
+  const suffixes = ["mi", "chan", "bo", "ri", "nette", "ki", "zou", "pouf"];
+  return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
+};
+// Une créature toute neuve : un œuf à faire éclore
+function freshCreatureData(now = Date.now()) {
+  return {
+    name: generateRandomName(), hunger: 75, cleanliness: 75, fun: 80, energy: 100, health: 100,
+    isSleeping: false, lastUpdate: now, traits: Object.fromEntries(TRAITS.map((t) => [t, 0])),
+    neglectedAt: 0, xp: 0, bornAt: now, counters: {}, hatched: false, eggHeat: 0, onboardStep: 0,
+    hatchedAt: 0, stage: "oeuf", cooldowns: {}, wish: null, wishesDone: 0, illness: null, exhausted: false,
+    journal: [], nextWishAt: 0, lastWishId: "", surpriseLog: { day: "", n: 0 }, tasteSeed: "",
+    mealBoostUntil: 0, appearance: null,
+  };
+}
+const clone = (v) => (v == null || typeof v !== "object" ? v : JSON.parse(JSON.stringify(v)));
+const newCreatureId = () => `c${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
@@ -148,6 +204,12 @@ export const useTamagotchiStore = defineStore(
     // schéma 6 : son apparence (lib/appearance.js), tirée à l'éclosion et gardée toute sa vie.
     // null tant qu'elle est dans l'œuf ; les créatures écloses avant ce schéma gardent l'original.
     const appearance = ref(null);
+    // schéma 7 : la maison (plusieurs créatures, une seule dans le pré)
+    // roster : [{ id, createdAt, data (PER_CREATURE_KEYS, figé tant qu'elle se repose), outfit,
+    //            tastesSeen, portrait (petite image), restingSince (0 si elle est dans le pré) }]
+    const roster = ref([]);
+    const activeId = ref("");
+    const slotsSeen = ref(1); // places déjà annoncées (carte « Une nouvelle place dans la maison ! »)
     // non persistant
     let sessionStartPlay = 0;
     let lastPlayTick = 0;
@@ -160,13 +222,17 @@ export const useTamagotchiStore = defineStore(
     let needQuestUpgrade = false;
 
     const level = computed(() => levelInfo(xp.value).level);
+    // le plus haut niveau de la maison : la progression (nouveautés, boutique, places) ne recule
+    // pas quand un bébé vient dans le pré
+    const topLevel = computed(() => Math.max(level.value, ...roster.value
+      .filter((e) => e.id !== activeId.value).map((e) => levelInfo(e.data?.xp || 0).level)));
     // ses goûts (nouveaux à chaque œuf) : voir lib/tastes.js
     const tastes = computed(() => tastesFor(tasteSeed.value || `${hatchedAt.value || 0}${name.value || ""}`));
     const unlockedPages = computed(() => {
       const pages = ["maison", "elle"];
       // la page Jours (bonus, défis, journal) arrive avec les défis
       if (features.value.defis) pages.push("jours");
-      if (level.value >= PAGE_UNLOCK_LEVEL.album) pages.push("album");
+      if (topLevel.value >= PAGE_UNLOCK_LEVEL.album) pages.push("album");
       return pages;
     });
 
@@ -353,11 +419,6 @@ export const useTamagotchiStore = defineStore(
       if (clean) name.value = clean;
     }
 
-    function generateRandomName() {
-      const prefixes = ["Mo", "Chi", "Ba", "Lu", "Ki", "Zo", "Po", "Ni"];
-      const suffixes = ["mi", "chan", "bo", "ri", "nette", "ki", "zou", "pouf"];
-      return prefixes[Math.floor(Math.random() * prefixes.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
-    }
     function initName() {
       if (!name.value) name.value = generateRandomName();
     }
@@ -380,6 +441,8 @@ export const useTamagotchiStore = defineStore(
       // l'inventaire et les nouveautés débloquées sont CONSERVÉS : on redécouvre la garde-robe
       // avec une autre personnalité (nouveaux goûts à découvrir)
       try { inv().resetTastes(); } catch { /* Sac indisponible */ }
+      roster.value = []; activeId.value = ""; slotsSeen.value = 1;
+      ensureRoster();
       schema.value = SCHEMA;
       checkDailyVisit();
     }
@@ -403,6 +466,8 @@ export const useTamagotchiStore = defineStore(
 
     // ---------- migration ----------
     function migrate() {
+      // la créature déjà là devient la première de la maison (rien n'est perdu)
+      ensureRoster();
       const patch = migrateSnapshot({
         schema: schema.value, hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
         energy: energy.value, health: health.value, lastUpdate: lastUpdate.value, bornAt: bornAt.value,
@@ -460,7 +525,8 @@ export const useTamagotchiStore = defineStore(
       lastUpdate.value = now;
       nextWishAt.value = now + (rand(25, 45) * 1000);
       checkDailyVisit();
-      if (!pendingBonus.value && streak.value <= 1) pendingBonus.value = 10;
+      // bonus de bienvenue : seulement pour la toute première créature
+      if (!veteran.value && !pendingBonus.value && streak.value <= 1) pendingBonus.value = 10;
     }
 
     // ---------- actions ----------
@@ -621,6 +687,7 @@ export const useTamagotchiStore = defineStore(
       return true;
     }
 
+    const gauges = { hunger, cleanliness, fun, energy };
     const snap = () => ({ hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, health: health.value });
     const diffGains = (before) => {
       const after = snap(), gains = {};
@@ -750,7 +817,7 @@ export const useTamagotchiStore = defineStore(
     // Conditions de déblocage (voir lib/growth.js FEATURES). Ordre imposé par la chaîne.
     function featureDue(key, now) {
       const f = features.value;
-      const lvl = level.value;
+      const lvl = topLevel.value;
       const mins = hatchedAt.value ? ((now - hatchedAt.value) * speed.value) / 60000 : 0;
       const reach = lvl >= FEATURES[key].level;
       switch (key) {
@@ -969,9 +1036,11 @@ export const useTamagotchiStore = defineStore(
 
     // ---------- vie ----------
     // Fait vivre la créature pendant `seconds` secondes, à l'instant simulé `simT`.
-    function decay(seconds, simT, offline) {
+    // resting : elle se repose dans la maison (voir REST_FACTOR / REST_FLOOR)
+    function decay(seconds, simT, offline, resting = false) {
       if (exhausted.value) return;
-      const hours = seconds / 3600;
+      const hours = (seconds / 3600) * (resting ? REST_FACTOR : 1);
+      const floors = resting ? Object.fromEntries(["hunger", "cleanliness", "fun", "energy"].map((k) => [k, Math.min(REST_FLOOR, gauges[k].value)])) : null;
       const night = dayPhase(new Date(simT)) === "night";
       const awakeNight = night && !isSleeping.value ? 1.3 : 1;
       const wear = hours * (isSleeping.value ? SLEEP_FACTOR : 1);
@@ -987,12 +1056,14 @@ export const useTamagotchiStore = defineStore(
         energy.value = Math.max(energy.value - RATES.energyAwake * wear * awakeNight, 0);
         if (energy.value === 0) isSleeping.value = true;
       }
+      if (floors) for (const [k, f] of Object.entries(floors)) gauges[k].value = Math.max(gauges[k].value, f);
 
       // santé
       const prev = health.value;
       let drain = 0;
       if (hunger.value === 0) drain += RATES.healthStarving * hours;
       if (illness.value) drain += RATES.illness * hours;
+      if (resting) drain = 0; // au chaud, la santé ne baisse jamais
       if (drain > 0) {
         const floor = offline ? Math.min(prev, OFFLINE_HEALTH_FLOOR) : 0;
         health.value = Math.max(prev - drain, floor);
@@ -1010,7 +1081,7 @@ export const useTamagotchiStore = defineStore(
 
       // maladie : jamais dans les 24 h après l'éclosion
       if (!illness.value) {
-        const safe = !hatchedAt.value || simT - hatchedAt.value < DAY_MS;
+        const safe = resting || !hatchedAt.value || simT - hatchedAt.value < DAY_MS;
         if (!safe && onboardStep.value >= 6 && (cleanliness.value < 25 || hunger.value < 10)) {
           if (Math.random() < 1 - Math.pow(0.85, hours)) {
             illness.value = { kind: "rhume", since: simT };
@@ -1022,8 +1093,10 @@ export const useTamagotchiStore = defineStore(
         addJournal("sante", "Son rhume est passé tout seul.", "solar:pill-bold-duotone");
       }
 
-      if (hunger.value === 0 || fun.value === 0 || cleanliness.value === 0) nudge("rancuniere", 0.03 * hours);
-      if (hunger.value < 15 || fun.value < 15 || cleanliness.value < 15) neglectedDuringDecay = true;
+      if (!resting) {
+        if (hunger.value === 0 || fun.value === 0 || cleanliness.value === 0) nudge("rancuniere", 0.03 * hours);
+        if (hunger.value < 15 || fun.value < 15 || cleanliness.value < 15) neglectedDuringDecay = true;
+      }
 
       const fade = 1 - (TRAIT_FADE_PER_DAY * hours) / 24;
       for (const t of TRAITS) traits.value[t] = (traits.value[t] || 0) * fade;
@@ -1115,7 +1188,157 @@ export const useTamagotchiStore = defineStore(
       tickWishes(now);
       evalStage();
       checkUnlocks(now);
+      checkSlots(now);
       return total;
+    }
+
+    // ---------- la maison : plusieurs créatures, une seule dans le pré ----------
+    const perRefs = {
+      name, hunger, cleanliness, fun, energy, health, isSleeping, lastUpdate, traits, neglectedAt, xp, bornAt,
+      counters, hatched, eggHeat, onboardStep, hatchedAt, stage, cooldowns, wish, wishesDone, illness, exhausted,
+      journal, nextWishAt, lastWishId, surpriseLog, tasteSeed, mealBoostUntil, appearance,
+    };
+    const snapshotActive = () => Object.fromEntries(PER_CREATURE_KEYS.map((k) => [k, clone(perRefs[k].value)]));
+    const patchEntry = (id, fields) => { roster.value = roster.value.map((e) => (e.id === id ? { ...e, ...fields } : e)); };
+
+    // Toujours au moins une créature dans la maison : la sauvegarde existante devient la n° 1
+    function ensureRoster() {
+      if (roster.value.some((e) => e.id === activeId.value)) return;
+      const id = activeId.value || newCreatureId();
+      roster.value = [...roster.value, {
+        id, createdAt: hatchedAt.value || bornAt.value || Date.now(), data: {}, outfit: null, tastesSeen: [], portrait: "", restingSince: 0,
+      }];
+      activeId.value = id;
+    }
+
+    // places ouvertes (voir SLOT_RULES) : on joue, on grandit, la maison s'agrandit
+    const slotsOpen = computed(() => {
+      let n = 1;
+      for (let i = 1; i < MAX_SLOTS; i++) {
+        const r = SLOT_RULES[i];
+        if (topLevel.value >= r.level || totalDays.value >= r.days) n = i + 1;
+        else break;
+      }
+      return n;
+    });
+    // une autre créature déjà éclose dans la maison : pas de tutoriel complet pour la suivante
+    const veteran = computed(() => roster.value.some((e) => e.id !== activeId.value && e.data?.hatched));
+    // vue simple pour l'interface (la créature du pré avec ses valeurs en direct)
+    const house = computed(() => roster.value.map((e) => {
+      const active = e.id === activeId.value;
+      const d = active ? { name: name.value, appearance: appearance.value, stage: stage.value, xp: xp.value, hatched: hatched.value } : e.data || {};
+      return {
+        id: e.id, active, name: d.name || "...", appearance: d.appearance || null, hatched: !!d.hatched,
+        stage: d.hatched ? d.stage || "bebe" : "oeuf", level: levelInfo(d.xp || 0).level, portrait: e.portrait || "",
+        sleeping: !active && !!d.isSleeping,
+      };
+    }));
+    const canAdopt = computed(() => hatched.value && onboardStep.value >= 6 && roster.value.length < slotsOpen.value);
+
+    function setPortrait(id, url) {
+      const e = roster.value.find((x) => x.id === id);
+      if (e && url && e.portrait !== url) patchEntry(id, { portrait: url });
+    }
+
+    // Range la créature du pré dans son nid (elle se repose à partir de maintenant)
+    function stashActive(now) {
+      const data = snapshotActive();
+      data.wish = null; // une envie ne survit pas à la sieste
+      let outfit = null, seen = [];
+      try { outfit = clone(inv().outfit); seen = [...(inv().stats?.tastesSeen || [])]; } catch { /* Sac indisponible */ }
+      patchEntry(activeId.value, { data, outfit, tastesSeen: seen, restingSince: now });
+    }
+
+    // Rattrape le temps de repos au ralenti. Renvoie { seconds, before } ou null.
+    function restCatchUp(from, now) {
+      const realSec = from > 0 && from < now ? (now - from) / 1000 : 0;
+      if (!realSec) return null;
+      const before = snap();
+      let elapsed = Math.min(realSec * speed.value, MAX_CATCH_UP);
+      let simT = from;
+      while (elapsed > 0) {
+        const step = Math.min(CATCH_UP_STEP, elapsed);
+        simT += step * 1000;
+        decay(step, simT, true, true);
+        elapsed -= step;
+      }
+      neglectedDuringDecay = false;
+      return { seconds: realSec, before };
+    }
+
+    // Ce qu'elle raconte en arrivant dans le pré
+    function arrivalLine(rest) {
+      const who = name.value || "Elle";
+      if (!hatched.value) return "";
+      if (!rest || rest.seconds < REST_TALK_MIN) return pickOne([`Coucou ! Me revoilà dans le pré !`, `Youpi, c'est mon tour !`, `${who} est là !`]);
+      const b = rest.before;
+      if (b.hunger - hunger.value > 12) return "Pendant que je me reposais, j'ai eu un petit creux…";
+      if (b.fun - fun.value > 12) return "Pendant que je me reposais, je me suis un peu ennuyée. On joue ?";
+      if (energy.value - b.energy > 10) return "Pendant que je me reposais, j'ai fait une super sieste au chaud !";
+      return pickOne(["Je me suis bien reposée au chaud ! Tu m'as manqué.", "Pendant que je me reposais, j'ai rêvé de toi !", "Quelle bonne sieste ! Coucou !"]);
+    }
+    const pickOne = (a) => a[Math.floor(Math.random() * a.length)];
+
+    // Installe une créature du roster dans le pré (les refs du store prennent ses valeurs)
+    function loadEntry(entry, now) {
+      const fresh = freshCreatureData(now);
+      const data = entry.data || {};
+      for (const k of PER_CREATURE_KEYS) perRefs[k].value = clone(k in data ? data[k] : fresh[k]);
+      activeId.value = entry.id;
+      try {
+        const i = inv();
+        i.outfit = { ...Object.fromEntries(SLOTS.map((k) => [k, null])), ...(entry.outfit || {}) };
+        i.stats = { ...i.stats, tastesSeen: [...(entry.tastesSeen || [])] };
+      } catch { /* Sac indisponible */ }
+      away.value = null;
+      neglectedDuringDecay = false;
+      let rest = null;
+      if (hatched.value && onboardStep.value >= 6) {
+        rest = restCatchUp(entry.restingSince || lastUpdate.value, now);
+        if (rest && rest.seconds >= REST_TALK_MIN) addJournal("maison", "De retour dans le pré après un bon repos au chaud.", "solar:home-smile-bold-duotone");
+        wish.value = null;
+        nextWishAt.value = now + (rand(30, 60) * 1000) / (speed.value > 1 ? speed.value : 1);
+      }
+      lastUpdate.value = now;
+      tick.value = now;
+      patchEntry(entry.id, { restingSince: 0 });
+      evalStage();
+      return rest;
+    }
+
+    // Fait venir une autre créature dans le pré. Renvoie { ok, reason?, line }
+    function switchTo(id) {
+      ensureRoster();
+      if (id === activeId.value) return { ok: false, reason: "Elle est déjà dans le pré !" };
+      const entry = roster.value.find((e) => e.id === id);
+      if (!entry) return { ok: false, reason: "Elle n'est pas dans la maison." };
+      if (activeActivity.value) return { ok: false, reason: "Pas pendant une activité !" };
+      const now = Date.now();
+      stashActive(now);
+      const rest = loadEntry(roster.value.find((e) => e.id === id), now);
+      return { ok: true, line: arrivalLine(rest) };
+    }
+
+    // Adopte un œuf de mochignome dans une place libre : il arrive dans le pré, à faire éclore
+    function adoptEgg() {
+      ensureRoster();
+      if (!canAdopt.value) return { ok: false, reason: roster.value.length >= slotsOpen.value ? "Pas de place libre dans la maison." : "Pas tout de suite." };
+      if (activeActivity.value) return { ok: false, reason: "Pas pendant une activité !" };
+      const now = Date.now();
+      stashActive(now);
+      const entry = { id: newCreatureId(), createdAt: now, data: freshCreatureData(now), outfit: null, tastesSeen: [], portrait: "", restingSince: 0 };
+      roster.value = [...roster.value, entry];
+      loadEntry(entry, now);
+      return { ok: true, id: entry.id };
+    }
+
+    // Une nouvelle place s'ouvre : une carte (UnlockCard, clé « maison »), une à la fois
+    function checkSlots(now) {
+      if (!hatched.value || onboardStep.value < 6) return;
+      if (slotsOpen.value <= slotsSeen.value || cardPending(now)) return;
+      slotsSeen.value = slotsOpen.value;
+      unlockEvent.value = { key: "maison", label: "Nouvelle place", icon: "solar:home-smile-bold-duotone", at: now, seen: false };
+      addJournal("maison", "Une nouvelle place s'est libérée dans la maison !", "solar:home-smile-bold-duotone");
     }
 
     function payWelcomeGift() {
@@ -1200,6 +1423,7 @@ export const useTamagotchiStore = defineStore(
       hasFeature, unlockFeature, checkUnlocks, onEquip, tasteReactionFor, showReaction, claimMastery, fulfillWish,
       canAct, applyAction, hatch, tapEgg, setOnboardStep, finishOnboarding, dismissAway,
       wakeUp, startSleeping, startDecay, predictNext, migrate,
+      roster, activeId, slotsSeen, topLevel, slotsOpen, veteran, house, canAdopt, setPortrait, switchTo, adoptEgg,
     };
   },
   {
@@ -1210,7 +1434,7 @@ export const useTamagotchiStore = defineStore(
         "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
         "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
         "welcomeGift", "features", "tasteSeed", "playsToday", "mealBoostUntil", "playDaysRewarded", "returnGift",
-        "playMs", "sessions", "revealAt", "unlockEvent", "appearance",
+        "playMs", "sessions", "revealAt", "unlockEvent", "appearance", "roster", "activeId", "slotsSeen",
       ],
       afterHydrate: (ctx) => { ctx.store.migrate?.(); },
     },

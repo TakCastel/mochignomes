@@ -3,6 +3,9 @@
 // frigo (ingrédients et repas prêts), objets d'activité, records, collection, goûts révélés.
 // `gems` s'affiche « Étoiles » : elles se gagnent en jouant, jamais achetées.
 // L'inventaire est conservé quand on recommence un œuf (seuls les goûts révélés repartent à zéro).
+// Plusieurs créatures (la maison) : le Sac est PARTAGÉ. Seuls `outfit` (sa tenue) et
+// `stats.tastesSeen` (ses goûts découverts) sont ceux de la créature du pré : le store
+// principal les échange quand une autre vient (useTamagotchiStore switchTo / adoptEgg).
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { gameBus, gameToast } from "~/composables/useCreatureMood";
@@ -27,7 +30,8 @@ function countEvent(key, n = 1) {
   try { useTamagotchiStore().countEvent(key, n); } catch { /* store indisponible */ }
 }
 function playerLevel() {
-  try { return useTamagotchiStore().level || 1; } catch { return 1; }
+  // niveau le plus haut de la maison : la boutique ne se reverrouille pas pour un bébé
+  try { const s = useTamagotchiStore(); return s.topLevel || s.level || 1; } catch { return 1; }
 }
 
 export const useInventoryStore = defineStore(

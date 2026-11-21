@@ -1,7 +1,9 @@
 // composables/useCreaturePortrait.js
 // Avatar généré à partir de la créature vivante (liveCreature.portrait) : sa couleur, sa forme,
-// sa tenue. Mis en cache dans localStorage (une image par créature), refait quand son apparence,
-// sa tenue ou son stade changent. Secours : l'image fixe /images/avatar.webp.
+// sa tenue. Mis en cache dans localStorage (une image par créature de la maison : clé
+// « tamagotchi-portrait:<id> »), refait quand son apparence, sa tenue ou son stade changent.
+// Le dernier portrait est aussi rangé dans son nid (store.roster[].portrait) pour les cartes
+// de la maison. Secours : l'image fixe /images/avatar.webp.
 //
 //   const { src, live } = useCreaturePortrait()   // src : URL de l'image, live : portrait généré ?
 import { computed, effectScope, ref, watch } from "vue";
@@ -14,20 +16,22 @@ const KEY = "tamagotchi-portrait";
 const url = ref("");
 let started = false;
 
-function readCache() {
-  try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch { return null; }
+const keyOf = (id) => `${KEY}:${id || "?"}`;
+function readCache(id) {
+  try { return JSON.parse(localStorage.getItem(keyOf(id)) || "null"); } catch { return null; }
 }
-function writeCache(v) {
-  try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* stockage plein ou bloqué */ }
+function writeCache(id, v) {
+  try { localStorage.setItem(keyOf(id), JSON.stringify(v)); } catch { /* stockage plein ou bloqué */ }
 }
 
 function start() {
   if (started || typeof window === "undefined") return;
   started = true;
+  try { localStorage.removeItem(KEY); } catch { /* ancienne clé unique, d'avant la maison */ }
   const store = useTamagotchiStore();
   const inv = useInventoryStore();
   const sig = () => (store.hatched && store.appearance
-    ? JSON.stringify([store.hatchedAt, store.appearance, store.stage, inv.outfit])
+    ? JSON.stringify([store.activeId, store.hatchedAt, store.appearance, store.stage, inv.outfit])
     : "");
   let timer = null, tries = 0;
 
@@ -49,14 +53,15 @@ function start() {
     try { data = c.portrait({ size: 160 }); } catch (err) { console.warn("[portrait]", err); }
     if (!data || s !== sig()) return;
     url.value = data;
-    writeCache({ sig: s, id: store.hatchedAt, url: data });
+    writeCache(store.activeId, { sig: s, id: store.hatchedAt, url: data });
+    store.setPortrait?.(store.activeId, data);
   }
   function refresh() {
     const s = sig();
     clearTimeout(timer); timer = null;
     if (!s) { url.value = ""; return; }
-    const cached = readCache();
-    if (cached?.sig === s) { url.value = cached.url; return; }
+    const cached = readCache(store.activeId);
+    if (cached?.sig === s) { url.value = cached.url; store.setPortrait?.(store.activeId, cached.url); return; }
     // même créature, autre tenue : l'ancienne image en attendant la nouvelle
     url.value = cached?.id === store.hatchedAt ? cached.url : "";
     tries = 0;
@@ -65,7 +70,7 @@ function start() {
 
   effectScope(true).run(() => {
     watch(sig, refresh, { immediate: true });
-    watch(liveCreature, (c) => { if (c && sig() && readCache()?.sig !== sig()) refresh(); });
+    watch(liveCreature, (c) => { if (c && sig() && readCache(store.activeId)?.sig !== sig()) refresh(); });
   });
 }
 
