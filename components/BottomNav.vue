@@ -101,11 +101,12 @@ const items = computed(() =>
 // ---- barre droite à onglet arrondi : l'onglet (bouton actif + humeur) glisse d'une entrée à l'autre,
 // s'élargit selon l'humeur et change de côté en douceur (ressorts sur sa position et ses deux bords) ----
 const BUMP_H = 28; // hauteur de l'onglet au-dessus de la barre
-const SLOPE = 24; // largeur d'un flanc arrondi (raccord creux + coin bombé)
+const SLOPE = 28; // largeur d'un flanc : raccord creux (6) + coin bombé (22 = coin du bouton 16 + marge 6)
 const ORB = 54; // diamètre de la bulle
-const PAD = 0; // marge entre la bulle et le flanc (le coin arrondi en laisse déjà)
+const INSET = 6; // marge autour du bouton : la même en haut, à gauche et à droite
+const FILLET = SLOPE * 6 / 28; // largeur du raccord creux au pied du flanc
 const MOOD_GAP = 7; // entre la bulle et l'humeur
-const MOOD_END = 2; // après l'humeur, avant le flanc
+const MOOD_END = 10; // après l'humeur, avant le bord droit du flanc
 const nav = ref(null);
 const btns = ref([]);
 const moodEl = ref(null);
@@ -123,10 +124,10 @@ let ready = false;
 
 const activeItem = computed(() => items.value.find((t) => t.key === active.value) || items.value[0]);
 const targetX = computed(() => centers.value[activeItem.value?.key] ?? size.value.w / 2);
-const near = ORB / 2 + PAD + SLOPE; // côté sans humeur
+const near = ORB / 2 + INSET + FILLET; // côté sans humeur : bouton à INSET du bord
 // l'humeur ne s'affiche qu'à l'accueil ; ailleurs l'onglet se resserre autour du seul bouton
 const showMood = computed(() => active.value === "maison");
-const moodFar = computed(() => ORB / 2 + MOOD_GAP + moodW.value + MOOD_END + SLOPE);
+const moodFar = computed(() => ORB / 2 + MOOD_GAP + moodW.value + MOOD_END + FILLET);
 const far = computed(() => (showMood.value ? moodFar.value : near)); // côté de l'humeur
 // l'humeur va à droite du bouton, sauf si elle déborderait de l'écran
 const side = computed(() => (targetX.value + moodFar.value > size.value.w - 4 ? "left" : "right"));
@@ -268,7 +269,7 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: 2;
   left: 0;
-  top: calc(6px - var(--tab));
+  top: calc(6px - var(--tab)); /* = INSET */
   width: var(--orb);
   height: var(--orb);
   cursor: pointer;
