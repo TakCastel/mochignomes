@@ -826,12 +826,14 @@ export const useTamagotchiStore = defineStore(
       const mins = hatchedAt.value ? ((now - hatchedAt.value) * speed.value) / 60000 : 0;
       const reach = lvl >= FEATURES[key].level;
       switch (key) {
-        case "ballon": return mins >= 3 || reach;
+        case "ballon": return mins >= 1.5 || reach;
         // d'abord par la 1re partie de foot ; sinon, deux visites plus tard
         case "coins": return f.ballon && ((counters.value["activite:foot"] || 0) > 0 || (reach && sessions.value - revealAt.value.session >= 2));
-        case "sac": return f.coins && (mins >= 6 || reach);
-        case "boutique": case "cuisine": return f.sac && reach;
-        case "tele": case "defis": return f.cuisine && (mins >= 8 * 60 || totalDays.value >= 2 || reach);
+        case "sac": return f.coins && (mins >= 3 || reach);
+        case "cuisine": return f.sac && (mins >= 5 || reach);
+        case "boutique": return f.cuisine && (mins >= 7 || reach);
+        case "tele": return f.boutique && (mins >= 10 || reach);
+        case "defis": return f.tele && (mins >= 13 || reach);
         case "collection": return f.tele && f.defis && (totalDays.value >= 2 || reach);
         case "course": case "etoiles": return f.collection && (totalDays.value >= 3 || reach);
         default: return false;
