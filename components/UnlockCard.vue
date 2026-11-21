@@ -2,26 +2,28 @@
   <!-- petit moment de découverte : « Elle a trouvé un ballon ! » (une nouveauté à la fois) -->
   <Transition name="unlock">
     <div v-if="card" :key="card.at" class="unlock" role="status" aria-live="polite">
-      <span class="badge"><Icon :name="card.icon" class="badge-ic" /></span>
-      <div class="txt">
-        <span class="kicker">Nouveau !</span>
-        <strong>{{ card.title }}</strong>
-        <p>{{ card.text }}</p>
-        <div class="btns">
-          <button class="later" @click="dismiss">{{ card.cta ? "Plus tard" : "Super !" }}</button>
-          <button v-if="card.cta" class="go" @click="go">{{ card.cta }}</button>
+      <div class="head">
+        <span class="ui-medal ui-medal--gold badge"><Icon :name="card.icon" class="ic" /></span>
+        <div class="txt">
+          <span class="ui-kicker">Nouveau !</span>
+          <strong>{{ card.title }}</strong>
         </div>
+      </div>
+      <p class="ui-text">{{ card.text }}</p>
+      <div class="ui-actions">
+        <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="dismiss">{{ card.cta ? "Plus tard" : "Super !" }}</button>
+        <button v-if="card.cta" class="ui-btn ui-btn--primary ui-btn--sm" @click="go">{{ card.cta }}</button>
       </div>
     </div>
   </Transition>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 import { COLORS } from "~/lib/catalog";
 
 const { store } = useCreatureMood();
-const dismissedAt = ref(0);
+const turn = useOverlayTurn();
 let hideTimer = null;
 
 const who = () => store.name || "Elle";
@@ -61,7 +63,8 @@ function describe(key) {
 
 const card = computed(() => {
   const ev = store.unlockEvent;
-  if (!ev || ev.at <= dismissedAt.value) return null;
+  // une carte à la fois : attend son tour (retrouvailles d'abord) et l'écran principal libre
+  if (!ev || ev.seen || turn.value !== "unlock") return null;
   const d = describe(ev.key);
   if (!d) return null;
   return { ...d, icon: ev.icon || "solar:gift-bold-duotone", at: ev.at };
@@ -70,12 +73,12 @@ const card = computed(() => {
 // s'efface tout seul au bout d'un moment (la nouveauté reste accessible)
 watch(() => card.value?.at, (at) => {
   clearTimeout(hideTimer);
-  if (at) hideTimer = setTimeout(() => { dismissedAt.value = at; }, 16000);
+  if (at) hideTimer = setTimeout(() => store.ackUnlock(), 16000);
 }, { immediate: true });
 onBeforeUnmount(() => clearTimeout(hideTimer));
 
 function dismiss() {
-  if (card.value) dismissedAt.value = card.value.at;
+  store.ackUnlock();
 }
 function go() {
   const run = card.value?.run;
@@ -85,50 +88,30 @@ function go() {
 </script>
 
 <style scoped>
+/* posée dans le ciel libre, sous la carte de profil (jamais par-dessus) */
 .unlock {
   position: fixed;
   left: 50%;
-  top: calc(env(safe-area-inset-top, 0px) + 74px);
+  top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px) + 84px);
   z-index: 30;
-  display: flex;
-  gap: 12px;
-  width: min(420px, calc(100% - 24px));
-  box-sizing: border-box;
-  padding: 14px;
-  transform: translateX(-50%);
-  border-radius: 24px;
-  background: #fff;
-  color: #2b3440;
-  box-shadow: 0 12px 32px rgba(40, 55, 80, 0.25);
-  font-family: "Nunito", system-ui, sans-serif;
-}
-.badge {
-  flex: none;
   display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #ffe58a, #ffb81a 70%);
-  box-shadow: 0 4px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5);
-  animation: wobble 1.6s ease-in-out 2;
+  gap: 10px;
+  width: min(420px, calc(100% - 28px));
+  box-sizing: border-box;
+  padding: var(--s-4);
+  transform: translateX(-50%);
+  border-radius: var(--r-lg);
+  background: linear-gradient(180deg, var(--panel-top), var(--panel-bottom));
+  color: var(--ink);
+  box-shadow: var(--sh-3), var(--hl);
 }
-.badge-ic { width: 30px; height: 30px; color: #fff; }
+.head { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.badge { width: 52px; height: 52px; animation: wobble 1.6s ease-in-out 2; }
+.badge .ic { width: 28px; height: 28px; }
 .txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.kicker { font-weight: 800; font-size: 12px; color: #3c9a22; text-transform: uppercase; letter-spacing: 0.5px; }
-strong { font: 700 18px/1.2 "Fredoka", "Nunito", system-ui, sans-serif; }
-p { margin: 2px 0 0; font-weight: 700; font-size: 14px; color: #5b6676; }
-.btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
-.btns button {
-  min-height: 44px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 999px;
-  font: 800 14px "Nunito", system-ui, sans-serif;
-  cursor: pointer;
-}
-.later { background: #eef3f8; color: #4a5565; }
-.go { background: linear-gradient(180deg, #7fdc5a, #4fbf34); color: #fff; box-shadow: 0 3px 0 #3c9a22; }
+strong { font: 700 var(--t-xl)/1.2 var(--font-title); }
+.ui-actions .ui-btn { flex: 0 1 auto; }
+.ui-actions { justify-content: flex-end; }
 .unlock-enter-active, .unlock-leave-active { transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1), opacity 0.25s; }
 .unlock-enter-from, .unlock-leave-to { transform: translate(-50%, -20px) scale(0.92); opacity: 0; }
 @keyframes wobble {

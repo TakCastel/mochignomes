@@ -25,9 +25,12 @@ const mounted = ref(false);
 onMounted(() => { mounted.value = true; });
 
 const WEEK = 7 * 24 * 3600 * 1000;
+const turn = useOverlayTurn();
 const show = computed(() =>
   mounted.value && !dismissed.value
+  && turn.value === "notif"
   && (store.unlocked?.length || 0) >= 1
+  && (store.sessions || 0) >= 2 // jamais pendant la toute première visite
   && store.onboardStep >= 6
   && permission.value === "default"
   && !enabled.value

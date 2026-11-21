@@ -58,10 +58,9 @@ onMounted(() => store.initName());
   flex: 1;
   max-width: 260px;
   padding: 6px 14px 6px 6px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 6px 20px rgba(40, 55, 80, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 20px rgba(40, 55, 80, 0.16), var(--hl);
 }
 .avatar {
   flex: none;
@@ -78,13 +77,13 @@ onMounted(() => store.initName());
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
 .info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
-  font: 700 18px/1.1 "Fredoka", "Nunito", system-ui, sans-serif;
+  font: 700 18px/1.1 var(--font-title);
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.meta { font: 700 12px/1.2 "Nunito", system-ui, sans-serif; color: #7a8494; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { font: 700 12px/1.2 var(--font-text); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .level {
   width: 100%;
   display: flex;
@@ -95,21 +94,22 @@ onMounted(() => store.initName());
   background: none;
   cursor: pointer;
 }
-.sprout { flex: none; width: 18px; height: 18px; color: #52b83a; }
-.lvl { font: 800 12.5px "Nunito", system-ui, sans-serif; color: #5b6676; white-space: nowrap; }
+.sprout { flex: none; width: 18px; height: 18px; color: var(--accent); }
+.lvl { font: 800 12.5px var(--font-text); color: var(--ink-2); white-space: nowrap; }
 .track {
   flex: 1;
   min-width: 40px;
   height: 10px;
   border-radius: 999px;
-  background: #dfe5ec;
+  background: var(--surface-3);
   overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.1);
 }
 .track span {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(180deg, #7fdc5a, #4fbf34);
+  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
 }
 .round {
   position: relative;
@@ -127,7 +127,6 @@ onMounted(() => store.initName());
 .ic { width: 26px; height: 26px; color: #4a5260; }
 @media (max-width: 370px) {
   .avatar { width: 52px; height: 52px; }
-  .round { width: 48px; height: 48px; }
   .name { font-size: 17px; }
 }
 </style>

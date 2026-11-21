@@ -1,65 +1,55 @@
 <template>
-  <div class="elle">
+  <div class="ui-page elle">
     <!-- portrait, nom touchable pour renommer, stade -->
-    <section class="card portrait">
+    <section class="ui-card portrait">
       <div class="photo"><img src="/images/avatar.webp" alt="" width="96" height="96"></div>
       <div class="who">
         <form v-if="editing" class="rename" @submit.prevent="saveName">
           <input ref="input" v-model="draft" maxlength="16" aria-label="Nouveau nom" @keydown.esc="editing = false">
-          <button class="ok" type="submit" aria-label="Valider"><Icon name="solar:check-circle-bold" class="ok-ic" /></button>
+          <button class="ui-btn ui-btn--primary ok" type="submit" aria-label="Valider"><Icon name="solar:check-circle-bold" class="ic" /></button>
         </form>
         <button v-else class="name" aria-label="Renommer" @click="startEdit">
           {{ store.name || "..." }}
           <Icon name="solar:pen-bold" class="pen" />
         </button>
         <span class="stage">{{ stage.label }}</span>
-        <span class="mood" :style="{ '--c': moodInfo[1] }">{{ moodInfo[0] }}</span>
+        <span class="ui-tag mood" :style="{ '--c': moodInfo[1] }">{{ moodInfo[0] }}</span>
       </div>
     </section>
 
+    <p v-if="sulking" class="ui-note ui-note--violet">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
+    <p v-if="store.illness" class="ui-note ui-note--accent">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
+    <p v-else-if="store.exhausted" class="ui-note ui-note--violet">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
+
     <!-- raccourcis : ses journées, l'album, ses jeux (hors de la barre du bas) -->
     <nav v-if="shortcuts.length" class="shortcuts" aria-label="Plus">
-      <button v-for="c in shortcuts" :key="c.key" class="short" @click="c.run">
+      <button v-for="c in shortcuts" :key="c.key" class="ui-tile short" @click="c.run">
         <Icon :name="c.icon" class="short-ic" />
-        <span>{{ c.label }}</span>
-        <span v-if="c.badge" class="short-dot" aria-hidden="true" />
+        <span class="ui-tile-label">{{ c.label }}</span>
+        <span v-if="c.badge" class="ui-dot" aria-hidden="true" />
       </button>
     </nav>
 
-    <p v-if="sulking" class="note sulk">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
-    <p v-if="store.illness" class="note sick">Elle est malade. Un soin et un peu de repos la remettront sur pattes.</p>
-    <p v-else-if="store.exhausted" class="note tired">Elle est à bout de forces. Un bon dodo lui fera du bien.</p>
+    <!-- carnet « Ce qu'elle aime » : ses goûts découverts en jouant -->
+    <TastesCard />
 
     <!-- croissance -->
-    <section class="card">
-      <h3>Croissance</h3>
+    <section class="ui-card">
+      <h3 class="ui-section-title"><Icon name="solar:leaf-bold-duotone" class="ic" />Croissance</h3>
       <template v-if="stage.next">
-        <div class="bar"><div class="fill" :style="{ width: Math.round((stage.progress || 0) * 100) + '%' }" /></div>
-        <p class="small">Prochain stade : <strong>{{ stage.nextLabel }}</strong>. {{ stage.hint }}</p>
+        <div class="ui-bar"><i :style="{ width: Math.round((stage.progress || 0) * 100) + '%' }" /></div>
+        <p class="ui-text small">Prochain stade : <strong>{{ stage.nextLabel }}</strong>. {{ stage.hint }}</p>
       </template>
-      <p v-else class="small">Elle a fini de grandir. Elle compte sur toi pour la suite.</p>
-    </section>
-
-    <!-- santé -->
-    <section class="card">
-      <h3>Santé et forme</h3>
-      <ul class="bars">
-        <li v-for="s in statRows" :key="s.key">
-          <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
-          <span class="bar-label">{{ s.label }}</span>
-          <div class="bar thin"><div class="fill" :style="{ width: s.width + '%', background: s.color }" /></div>
-          <span class="bar-value">{{ Math.round(s.value) }}</span>
-        </li>
-      </ul>
+      <p v-else class="ui-text">Elle a fini de grandir. Elle compte sur toi pour la suite.</p>
     </section>
 
     <!-- caractère -->
-    <section class="card">
-      <h3>Caractère</h3>
+    <section class="ui-card">
+      <h3 class="ui-section-title"><Icon name="solar:magic-stick-3-bold-duotone" class="ic" />Caractère</h3>
       <ul class="bars traits">
         <li v-for="t in traitRows" :key="t.key">
           <span class="bar-label">{{ t.label }}</span>
-          <div class="bar thin"><div class="fill" :style="{ width: Math.round(t.value * 100) + '%', background: t.color }" /></div>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: Math.round(t.value * 100) + '%', background: t.color }" /></div>
           <span class="bar-value">{{ Math.round(t.value * 100) }}</span>
         </li>
       </ul>
@@ -72,8 +62,18 @@
       </details>
     </section>
 
-    <!-- carnet « Ce qu'elle aime » : ses goûts découverts en jouant -->
-    <TastesCard />
+    <!-- santé (déjà visible en jauges sur l'écran principal : en dernier) -->
+    <section class="ui-card">
+      <h3 class="ui-section-title"><Icon name="solar:heart-pulse-bold-duotone" class="ic" />Santé et forme</h3>
+      <ul class="bars">
+        <li v-for="s in statRows" :key="s.key">
+          <Icon :name="s.icon" class="bar-icon" :style="{ color: s.color }" />
+          <span class="bar-label">{{ s.label }}</span>
+          <div class="ui-bar ui-bar--thin"><i :style="{ width: s.width + '%', background: s.color }" /></div>
+          <span class="bar-value">{{ Math.round(s.value) }}</span>
+        </li>
+      </ul>
+    </section>
   </div>
 </template>
 
@@ -92,7 +92,8 @@ const traitRows = computed(() =>
 
 const pages = computed(() => store.unlockedPages || []);
 const questReady = computed(() =>
-  (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed) || store.pendingBonus > 0 || !!store.questBonusReady);
+  (store.features?.defis && (store.quests?.list || []).some((q) => q.progress >= q.target && !q.claimed))
+  || store.pendingBonus > 0 || !!store.questBonusReady);
 const shortcuts = computed(() => [
   pages.value.includes("jours") && { key: "jours", label: "Jours", icon: "solar:calendar-bold-duotone", badge: questReady.value, run: () => openPage("jours") },
   pages.value.includes("album") && { key: "album", label: "Album", icon: "solar:gallery-bold-duotone", badge: store.unlocked.length > gameBus.seenUnlocked, run: () => openPage("album") },
@@ -116,97 +117,68 @@ function saveName() {
 </script>
 
 <style scoped>
-.elle { display: grid; gap: 12px; padding-bottom: 8px; }
-.card {
-  padding: 14px;
-  border-radius: 22px;
-  background: #fff;
-  box-shadow: 0 4px 14px rgba(40, 55, 80, 0.1);
-}
-.portrait { display: flex; align-items: center; gap: 14px; }
+.portrait { display: flex; align-items: center; gap: var(--s-4); }
 .photo {
   flex: none;
-  width: 96px;
-  height: 96px;
-  border-radius: 24px;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--r-lg);
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
-  border: 4px solid #fff;
-  box-shadow: 0 4px 12px rgba(40, 55, 80, 0.2);
+  box-shadow: 0 0 0 4px #fff, 0 6px 14px rgba(40, 55, 80, 0.2);
 }
 .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateY(4%); }
 .who { display: grid; gap: 4px; justify-items: start; min-width: 0; flex: 1; }
 .name {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
+  gap: var(--s-2);
+  max-width: 100%;
+  min-height: var(--tap);
   padding: 0;
   border: 0;
   background: none;
   color: var(--ink);
-  font: 700 26px "Fredoka", "Nunito", system-ui, sans-serif;
+  font: 700 26px/1.1 var(--font-title);
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pen { width: 20px; height: 20px; color: #8a94a3; }
+.pen { flex: none; width: 20px; height: 20px; color: var(--ink-3); }
 .rename { display: flex; gap: 6px; width: 100%; }
 .rename input {
   flex: 1;
   min-width: 0;
   min-height: 48px;
   padding: 0 12px;
-  border: 2px solid #cfe9c4;
-  border-radius: 14px;
-  font: 700 20px "Fredoka", "Nunito", system-ui, sans-serif;
-  color: var(--ink);
-}
-.ok { width: 48px; height: 48px; border: 0; border-radius: 50%; background: #e9fadf; cursor: pointer; }
-.ok-ic { width: 28px; height: 28px; color: #3c9a22; }
-.stage { font-weight: 800; font-size: 14px; color: #5b6676; }
-.mood {
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--c) 18%, #fff);
-  color: color-mix(in srgb, var(--c) 70%, #000);
-  font-weight: 800;
-  font-size: 13px;
-}
-.note { margin: 0; padding: 10px 12px; border-radius: 14px; font-weight: 700; font-size: 14px; }
-.sulk { background: #efe6ff; color: #5b3aa8; }
-.sick { background: #e8f3d8; color: #4a6a1e; }
-.tired { background: #e8ecff; color: #4a4f9e; }
-h3 { margin: 0 0 10px; font: 600 17px "Fredoka", "Nunito", system-ui, sans-serif; color: var(--ink); }
-.bar { height: 14px; border-radius: 999px; background: #e4e9ef; overflow: hidden; }
-.bar.thin { height: 12px; }
-.fill { height: 100%; border-radius: 999px; background: linear-gradient(180deg, #7fdc5a, #44b82e); transition: width 0.5s; }
-.small { margin: 8px 0 0; font-size: 14px; font-weight: 700; color: #5b6676; }
-.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.bars li { display: grid; grid-template-columns: 26px 88px 1fr 34px; align-items: center; gap: 8px; }
-.traits li { grid-template-columns: 96px 1fr 34px; }
-.bar-icon { width: 24px; height: 24px; }
-.bar-label { font-weight: 800; font-size: 14px; }
-.bar-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; font-size: 14px; }
-.how { margin-top: 12px; font-size: 14px; color: #5b6676; }
-.how summary { cursor: pointer; font-weight: 800; min-height: 32px; }
-.how ul { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; }
-.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
-.short {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-height: 64px;
-  padding: 8px 4px;
   border: 0;
-  border-radius: 18px;
-  background: #fff;
-  color: #3c9a22;
-  font: 800 13px "Nunito", system-ui, sans-serif;
-  box-shadow: 0 4px 14px rgba(40, 55, 80, 0.1);
-  cursor: pointer;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  box-shadow: inset 0 2px 4px rgba(40, 55, 80, 0.1), 0 0 0 3px var(--accent-hi);
+  font: 700 20px var(--font-title);
+  color: var(--ink);
+  outline: none;
 }
-.short span { color: var(--ink); }
-.short-ic { width: 28px; height: 28px; }
-.short-dot { position: absolute; top: 8px; right: calc(50% - 22px); width: 10px; height: 10px; border-radius: 50%; background: #ff3b3b; box-shadow: 0 0 0 2px #fff; }
+.ok { width: 48px; padding: 0; }
+.stage { font: 800 var(--t-md) var(--font-text); color: var(--ink-2); }
+.mood { font-size: 13px; padding: 4px 12px; }
+.small { margin-top: 10px; font-size: var(--t-md); }
+
+/* raccourcis : mêmes tuiles que la grille d'actions */
+.shortcuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
+.short { min-height: 72px; justify-content: center; }
+.short-ic { width: 30px; height: 30px; color: var(--accent); }
+.short .ui-tile-label { font-size: 13px; }
+.short .ui-dot { right: calc(50% - 26px); }
+
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 24px minmax(0, 84px) 1fr 30px; align-items: center; gap: var(--s-2); }
+.traits li { grid-template-columns: minmax(0, 96px) 1fr 30px; }
+.bar-icon { width: 24px; height: 24px; }
+.bar-label { font: 800 var(--t-md) var(--font-text); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-value { text-align: right; font: 700 var(--t-md) var(--font-title); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.how { margin-top: var(--s-3); font: 700 var(--t-md)/1.4 var(--font-text); color: var(--ink-2); }
+.how summary { display: flex; align-items: center; min-height: var(--tap); cursor: pointer; font-weight: 800; color: var(--accent-ink); }
+.how ul { margin: var(--s-1) 0 0; padding-left: 18px; display: grid; gap: 4px; }
 </style>

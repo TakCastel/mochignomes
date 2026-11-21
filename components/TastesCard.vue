@@ -1,51 +1,51 @@
 <template>
   <!-- carnet « Ce qu'elle aime » (page Elle) : ses goûts découverts en jouant -->
-  <section class="card tastes" aria-label="Ce qu'elle aime">
-    <header class="head">
-      <h3><Icon name="solar:notebook-bold-duotone" class="h-ic" />Ce qu'elle aime</h3>
-      <span class="count" :class="{ full: seenCount === TASTE_KEYS.length }">{{ seenCount }}/{{ TASTE_KEYS.length }}</span>
+  <section class="ui-card tastes" aria-label="Ce qu'elle aime">
+    <header class="ui-section-head">
+      <h3 class="ui-section-title"><Icon name="solar:notebook-bold-duotone" class="ic love" />Ce qu'elle aime</h3>
+      <span class="ui-tag" :class="seenCount === TASTE_KEYS.length ? 'ui-tag--accent' : 'ui-tag--love'">{{ seenCount }}/{{ TASTE_KEYS.length }}</span>
     </header>
-    <div class="bar"><div class="fill" :style="{ width: Math.round((seenCount / TASTE_KEYS.length) * 100) + '%' }" /></div>
+    <div class="ui-bar ui-bar--thin bar"><i :style="{ width: Math.round((seenCount / TASTE_KEYS.length) * 100) + '%' }" /></div>
 
     <ul class="list">
-      <li v-for="e in loves" :key="e.key" class="entry" :class="{ known: e.known, fresh: e.known && fresh.has(e.key) }">
-        <span class="badge love">
+      <li v-for="e in loves" :key="e.key" class="ui-row is-well entry" :class="{ 'is-love': e.known, fresh: e.known && fresh.has(e.key) }">
+        <span class="ui-thumb">
           <template v-if="e.known">
             <span v-if="e.swatch" class="swatch" :style="{ background: e.swatch }" />
-            <span v-else-if="e.emoji" class="emoji">{{ e.emoji }}</span>
-            <Icon v-else :name="e.icon" class="b-ic" :style="e.ink ? { color: e.ink } : null" />
+            <span v-else-if="e.emoji">{{ e.emoji }}</span>
+            <Icon v-else :name="e.icon" class="ic" :style="e.ink ? { color: e.ink } : null" />
           </template>
-          <Icon v-else name="solar:question-circle-bold-duotone" class="b-ic q" />
+          <Icon v-else name="solar:question-circle-bold-duotone" class="ic q" />
         </span>
-        <span class="txt">
-          <span class="kind">{{ e.kind }}</span>
-          <strong v-if="e.known">{{ e.value }}</strong>
+        <span class="ui-row-main">
+          <span class="ui-caption">{{ e.kind }}</span>
+          <strong v-if="e.known" class="ui-row-title">{{ e.value }}</strong>
           <span v-else class="hint">{{ e.hint }}</span>
         </span>
-        <Icon v-if="e.known" name="solar:heart-bold-duotone" class="mood love-ic" />
+        <Icon v-if="e.known" name="solar:heart-bold-duotone" class="mood" />
       </li>
     </ul>
 
-    <h4><Icon name="solar:heart-broken-bold-duotone" class="h4-ic" />Ce qu'elle boude</h4>
+    <h4 class="ui-section-title sub"><Icon name="solar:heart-broken-bold-duotone" class="ic violet" />Ce qu'elle boude</h4>
     <ul class="list">
-      <li v-for="e in dislikes" :key="e.key" class="entry dis" :class="{ known: e.known, fresh: e.known && fresh.has(e.key) }">
-        <span class="badge">
+      <li v-for="e in dislikes" :key="e.key" class="ui-row is-well entry" :class="{ dis: e.known, fresh: e.known && fresh.has(e.key) }">
+        <span class="ui-thumb">
           <template v-if="e.known">
             <span v-if="e.swatch" class="swatch" :style="{ background: e.swatch }" />
-            <span v-else-if="e.emoji" class="emoji">{{ e.emoji }}</span>
-            <Icon v-else :name="e.icon" class="b-ic" :style="e.ink ? { color: e.ink } : null" />
+            <span v-else-if="e.emoji">{{ e.emoji }}</span>
+            <Icon v-else :name="e.icon" class="ic" :style="e.ink ? { color: e.ink } : null" />
           </template>
-          <Icon v-else name="solar:question-circle-bold-duotone" class="b-ic q" />
+          <Icon v-else name="solar:question-circle-bold-duotone" class="ic q" />
         </span>
-        <span class="txt">
-          <span class="kind">{{ e.kind }}</span>
-          <strong v-if="e.known">{{ e.value }}</strong>
+        <span class="ui-row-main">
+          <span class="ui-caption">{{ e.kind }}</span>
+          <strong v-if="e.known" class="ui-row-title">{{ e.value }}</strong>
           <span v-else class="hint">{{ e.hint }}</span>
         </span>
       </li>
     </ul>
-    <p v-if="isBaby" class="note">Un bébé aime tout ! Ce qu'elle boude se révélera quand elle grandira.</p>
-    <p v-else-if="seenCount === TASTE_KEYS.length" class="note done">Tu la connais par cœur.</p>
+    <p v-if="isBaby" class="ui-caption foot">Un bébé aime tout ! Ce qu'elle boude se révélera quand elle grandira.</p>
+    <p v-else-if="seenCount === TASTE_KEYS.length" class="ui-caption foot done">Tu la connais par cœur.</p>
   </section>
 </template>
 
@@ -113,34 +113,23 @@ const dislikes = computed(() => ["colorDislike", "foodDislike", "itemDislike"].m
 </script>
 
 <style scoped>
-.card { padding: 14px; border-radius: 22px; background: #fff; box-shadow: 0 4px 14px rgba(40, 55, 80, 0.1); }
-.head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-h3 { display: flex; align-items: center; gap: 6px; margin: 0; font: 600 17px "Fredoka", "Nunito", system-ui, sans-serif; color: var(--ink, #2f3a4a); }
-.h-ic { width: 22px; height: 22px; color: #ff4f86; }
-.count { padding: 3px 10px; border-radius: 999px; background: #ffeef4; color: #c22d63; font: 800 13px "Nunito", system-ui, sans-serif; }
-.count.full { background: #eefae6; color: #2a7a1a; }
-.bar { height: 8px; border-radius: 999px; background: #f1e3ea; overflow: hidden; margin-bottom: 12px; }
-.fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #ff9ec0, #ff4f86); transition: width 0.5s; }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.entry { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 16px; background: #f8fafc; border: 2px dashed #e3e8ee; }
-.entry.known { background: #fff6f9; border: 2px solid #ffe0ea; }
-.entry.dis.known { background: #f6f2ff; border-color: #e6dcff; }
+.ic.love { color: var(--love); }
+.ic.violet { color: var(--violet); }
+.bar { margin-bottom: var(--s-3); }
+.bar > i { background: linear-gradient(90deg, #ff9ec0, var(--love)); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.entry { min-height: 60px; padding: var(--s-2) 10px; }
+.entry.dis { background: #f5f1ff; box-shadow: inset 0 0 0 2px #e6dcff; }
 .entry.fresh { animation: reveal 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
 @keyframes reveal { 0% { transform: scale(0.9); } 60% { transform: scale(1.04); } 100% { transform: scale(1); } }
-.badge { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: #fff; box-shadow: 0 2px 6px rgba(40, 55, 80, 0.08); }
-.b-ic { width: 28px; height: 28px; }
-.b-ic.q { color: #c3cad4; }
-.swatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(40, 55, 80, 0.15); }
-.emoji { font-size: 26px; line-height: 1; }
-.txt { flex: 1; display: grid; gap: 1px; min-width: 0; }
-.kind { font: 800 12px "Nunito", system-ui, sans-serif; color: #8a94a3; }
-.txt strong { font: 700 16px "Fredoka", "Nunito", system-ui, sans-serif; color: var(--ink, #2f3a4a); }
-.hint { font-weight: 700; font-size: 13px; color: #6b7686; }
-.mood { flex: none; width: 22px; height: 22px; }
-.love-ic { color: #ff4f86; }
-h4 { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font: 600 15px "Fredoka", "Nunito", system-ui, sans-serif; color: #5b3aa8; }
-.h4-ic { width: 20px; height: 20px; }
-.note { margin: 10px 0 0; font-weight: 700; font-size: 13px; color: #8a94a3; }
-.note.done { color: #2a7a1a; }
+.ui-thumb { width: 42px; height: 42px; font-size: 26px; background: #fff; }
+.ui-thumb .ic { width: 28px; height: 28px; }
+.q { color: var(--ink-4); }
+.swatch { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(40, 55, 80, 0.25); }
+.hint { font: 700 13px/1.3 var(--font-text); color: var(--ink-2); }
+.mood { flex: none; width: 22px; height: 22px; color: var(--love); }
+.sub { margin-top: var(--s-4); font-size: 15px; }
+.foot { margin-top: 10px; }
+.foot.done { color: var(--accent-ink); }
 @media (prefers-reduced-motion: reduce) { .entry.fresh { animation: none; } }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <Transition name="wb">
-    <button v-if="shown" :key="shown.key" class="wish" :class="{ wish: true, real: shown.wish, urgent: shown.urgent }" type="button" @click="tap">
+    <button v-if="shown" :key="shown.key" class="wish" :class="{ real: shown.wish, urgent: shown.urgent }" type="button" @click="tap">
       <Icon :name="shown.icon" class="wi" />
       <span class="wt">{{ shown.text }}</span>
       <span class="tail" aria-hidden="true" />
@@ -84,24 +84,26 @@ onBeforeUnmount(() => { clearInterval(lineTimer); clearTimeout(hideTimer); });
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   max-width: min(260px, 78vw);
-  min-height: 44px;
+  min-height: var(--tap);
   padding: 8px 14px 8px 10px;
   border: 0;
-  border-radius: 22px;
+  border-radius: var(--r-lg);
   background: #fff;
-  color: #2b3440;
-  font: 700 14px/1.2 "Nunito", system-ui, sans-serif;
+  color: var(--ink);
+  font: 700 var(--t-md)/1.25 var(--font-text);
   text-align: left;
   box-shadow: 0 6px 16px rgba(40, 55, 80, 0.2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   animation: bob 3s ease-in-out infinite;
 }
-.wish.real { box-shadow: 0 6px 16px rgba(255, 79, 134, 0.3), 0 0 0 2px #ffb3cb; }
-.wish.urgent .wi { color: #e8781c; }
-.wi { flex: none; width: 26px; height: 26px; color: #ef3d6c; }
+/* vraie envie : anneau rose doux (même langage que la tuile « envie ») */
+.wish.real { box-shadow: 0 6px 16px rgba(255, 79, 134, 0.28), inset 0 0 0 2px #ffc2d4; }
+.wish.urgent .wi { color: var(--warn); }
+.wi { flex: none; width: 26px; height: 26px; color: var(--love); }
+.wt { min-width: 0; }
 .tail {
   position: absolute;
   left: 22px;

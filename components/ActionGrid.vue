@@ -1,25 +1,25 @@
 <template>
   <section class="panel" aria-label="Actions">
     <button
-      v-for="a in actions"
+      v-for="a in shownActions"
       :key="a.key"
       class="tile"
       :class="{
-        best: a.key === best && !a.wanted,
-        wanted: a.wanted,
+        best: primary?.kind === 'best' && primary.key === a.key,
+        wanted: primary?.kind === 'wanted' && primary.key === a.key,
         glow: a.glow,
         off: !!a.reason,
         cooling: a.ring > 0,
         wiggle: wiggling === a.key,
       }"
-      :aria-label="a.label + (a.reason ? ` (${a.reason})` : a.wanted ? ' (elle en a envie)' : a.key === best ? ' (conseillé)' : '')"
+      :aria-label="a.label + (a.reason ? ` (${a.reason})` : primary?.key === a.key ? (primary.kind === 'wanted' ? ' (elle en a envie)' : ' (conseillé)') : '')"
       @click="press(a)"
     >
-      <span v-if="a.ring > 0" class="ring" :style="{ '--p': a.ring }" aria-hidden="true" />
+      <span v-if="a.ring > 0" class="cool-ring" :style="{ '--p': a.ring }" aria-hidden="true" />
       <Icon :name="a.icon" mode="svg" class="ic" :style="{ '--c1': a.color[0], '--c2': a.color[1] }" />
       <span class="lbl">{{ a.label }}</span>
       <Icon v-if="a.locked" name="solar:lock-keyhole-bold" class="lock" />
-      <span v-if="a.wanted" class="dot" aria-hidden="true" />
+      <span v-if="primary?.kind === 'wanted' && primary.key === a.key" class="dot" aria-hidden="true" />
       <span v-for="f in floats.filter((x) => x.key === a.key)" :key="f.id" class="float" :style="{ '--fx': f.dx + 'px' }">{{ f.text }}</span>
     </button>
   </section>
@@ -107,9 +107,11 @@ const actions = computed(() =>
   BASE.map((a) => {
     if (a.key === "jouer" && suggestedActivity.value) {
       const act = activityById(suggestedActivity.value);
+      const w = store.wish;
       return {
         ...a, label: SHORT[act.id] || act.label, icon: act.icon, reason: null, ring: 0, locked: false,
-        activity: act.id, wanted: true, glow: gameBus.highlight?.action === a.key,
+        activity: act.id, wanted: w?.action === "activite" && w.target === act.id, suggest: true,
+        glow: gameBus.highlight?.action === a.key,
       };
     }
     if (a.key === "nourrir" && suggestCooking.value) {
@@ -132,6 +134,19 @@ const actions = computed(() =>
     };
   })
 );
+
+// Une action pas encore apprise (Danser) n'apparaît pas du tout : pas de tuile cadenassée
+const shownActions = computed(() => actions.value.filter((a) => !a.locked));
+
+// UN seul appel à l'action à la fois : son envie > l'activité proposée > le besoin le plus bas
+const primary = computed(() => {
+  const list = shownActions.value;
+  const wish = list.find((a) => a.wanted && !a.reason);
+  if (wish) return { key: wish.key, kind: "wanted" };
+  const sug = list.find((a) => a.suggest);
+  if (sug) return { key: sug.key, kind: "wanted" };
+  return best.value ? { key: best.value, kind: "best" } : null;
+});
 
 // Action conseillée : celle du besoin le plus bas (sans compter Soigner si elle va bien)
 const best = computed(() => {
@@ -198,19 +213,22 @@ function press(a) {
 </script>
 
 <style scoped>
+/* 4 tuiles par rangée ; une rangée incomplète (Danser pas encore appris) se centre */
 .panel {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--gap, 12px);
   padding: 14px;
   border-radius: 26px;
-  background: rgba(244, 246, 249, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), inset 0 1px 0 #fff;
+  background: rgba(244, 246, 249, 0.94);
+  box-shadow: 0 10px 28px rgba(40, 55, 80, 0.16), var(--hl);
 }
 /* tuile blanche douce */
 .tile {
   position: relative;
+  flex: 0 0 calc((100% - 3 * var(--gap, 12px)) / 4);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -238,14 +256,14 @@ function press(a) {
 /* action conseillée : fond vert tendre et liseré vert */
 .best {
   border-color: #8fdc6a;
-  background: linear-gradient(180deg, #f3fdec, #e2f7d4);
-  box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), inset 0 1px 0 #fff;
+  background: var(--sel-bg);
+  box-shadow: 0 4px 12px rgba(80, 180, 50, 0.25), var(--hl);
 }
 .off .ic { opacity: 0.45; filter: grayscale(0.5); }
 .off .lbl { opacity: 0.6; }
-.lbl { font: 800 11px/1 "Nunito", system-ui, sans-serif; color: #4a5565; padding-bottom: 6px; }
+.lbl { max-width: 100%; font: 800 11px/1 var(--font-text); color: var(--ink-2); padding-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* anneau de recharge */
-.ring {
+.cool-ring {
   position: absolute;
   inset: -2px;
   border-radius: 20px;
@@ -263,7 +281,7 @@ function press(a) {
   animation: pulse 1.3s ease-in-out infinite;
 }
 .glow { animation: pulse 0.9s ease-in-out 3; border-color: #ffc21a; }
-.dot { position: absolute; top: 6px; left: 6px; width: 9px; height: 9px; border-radius: 50%; background: #ff4f86; }
+.dot { position: absolute; top: 6px; left: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px #fff; }
 @keyframes pulse {
   0%, 100% { transform: scale(1); box-shadow: 0 4px 10px rgba(40, 55, 80, 0.1), 0 0 0 0 rgba(255, 90, 140, 0.45); }
   50% { transform: scale(1.06); box-shadow: 0 6px 14px rgba(40, 55, 80, 0.14), 0 0 0 8px rgba(255, 90, 140, 0); }

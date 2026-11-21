@@ -52,26 +52,27 @@ const { shown: shownGems, bump: bumpGems } = useCountUp(() => inv.gems);
 </script>
 
 <style scoped>
-.currency-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.currency-bar { display: flex; gap: var(--s-2); flex-wrap: wrap; }
+/* même plaque que les puces : blanc, ombre douce, aucun filet */
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 4px 14px 4px 6px;
-  border-radius: 999px;
+  min-height: var(--tap);
+  padding: 0 16px 0 8px;
+  border-radius: var(--r-pill);
   background: #fff;
-  box-shadow: 0 3px 10px rgba(40, 55, 80, 0.12), inset 0 -2px 0 rgba(40, 55, 80, 0.05);
-  font: 700 18px/1 "Fredoka", "Nunito", system-ui, sans-serif;
-  color: var(--ink, #2f3a4a);
+  box-shadow: var(--sh-1), var(--hl);
+  font: 700 var(--t-xl)/1 var(--font-title);
+  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.ic { width: 26px; height: 26px; }
-.coins .ic { color: #f2b01e; }
-.gems .ic { color: #a77bff; }
+.ic { width: 28px; height: 28px; }
+.coins .ic { color: var(--coin); }
+.gems .ic { color: var(--gem); }
 .bump { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
-.coins.bump { box-shadow: 0 0 0 4px rgba(242, 176, 30, 0.25), 0 3px 10px rgba(40, 55, 80, 0.12); }
-.gems.bump { box-shadow: 0 0 0 4px rgba(167, 123, 255, 0.25), 0 3px 10px rgba(40, 55, 80, 0.12); }
+.coins.bump { box-shadow: 0 0 0 4px rgba(242, 176, 30, 0.25), var(--sh-1); }
+.gems.bump { box-shadow: 0 0 0 4px rgba(167, 123, 255, 0.25), var(--sh-1); }
 @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .bump { animation: none; } }
 </style>

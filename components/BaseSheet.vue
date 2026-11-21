@@ -1,21 +1,21 @@
 <template>
   <Transition :name="fullscreen ? 'page' : 'sheet'">
     <div v-if="open" class="overlay" :class="{ full: fullscreen }" @click.self="!fullscreen && close()">
-      <section class="sheet" :class="{ full: fullscreen }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
+      <section ref="sheetEl" class="sheet" :class="{ full: fullscreen }" role="dialog" :aria-modal="!fullscreen" :aria-label="title">
         <div v-if="!fullscreen" class="grab" />
         <header class="head">
-          <button v-if="fullscreen" class="back" aria-label="Retour à la maison" @click="close">
-            <Icon name="solar:arrow-left-bold" class="back-ic" />
+          <button v-if="fullscreen" class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
+            <Icon name="solar:arrow-left-bold" class="ic" />
           </button>
           <div class="title">
-            <span v-if="icon" class="title-badge"><Icon :name="icon" class="title-icon" /></span>
-            <div>
+            <span v-if="icon" class="ui-medal ui-medal--sm"><Icon :name="icon" class="ic" /></span>
+            <div class="title-txt">
               <h2>{{ title }}</h2>
               <p v-if="subtitle" class="subtitle">{{ subtitle }}</p>
             </div>
           </div>
-          <button v-if="!fullscreen" class="close" aria-label="Fermer" @click="close">
-            <Icon name="solar:close-circle-bold" class="close-ic" />
+          <button v-if="!fullscreen" class="ui-icon-btn" aria-label="Fermer" @click="close">
+            <Icon name="solar:close-circle-bold" class="ic" />
           </button>
         </header>
         <div class="body"><slot /></div>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -40,6 +40,9 @@ function close() {
   if (props.fullscreen) closePage();
   else closeSettings();
 }
+// changement de page : on repart du haut (pas de défilement hérité de la page précédente)
+const sheetEl = ref(null);
+watch(() => props.title, () => { if (sheetEl.value) sheetEl.value.scrollTop = 0; });
 const onKey = (e) => e.key === "Escape" && props.open && close();
 onMounted(() => window.addEventListener("keydown", onKey));
 onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
@@ -53,7 +56,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(40, 20, 60, 0.4);
+  background: var(--scrim);
 }
 /* page : laisse la barre du bas libre */
 .overlay.full {
@@ -78,7 +81,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
   height: 100%;
   border-radius: 0;
   padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 20px;
-  background: #f4f7fb;
+  background: var(--surface-2);
   box-shadow: none;
   pointer-events: auto;
   -webkit-overflow-scrolling: touch;
@@ -93,48 +96,33 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 .head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
 }
 .title {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--s-3);
   min-width: 0;
 }
-.title-badge {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, var(--accent-hi), var(--accent) 70%);
-  box-shadow: 0 4px 0 var(--accent-lo), inset 0 2px 0 rgba(255, 255, 255, 0.4);
-}
-.title-icon { width: 26px; height: 26px; color: #fff; }
+.title-txt { min-width: 0; }
 h2 {
   margin: 0;
-  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
-  font-size: 26px;
-  font-weight: 700;
+  font: 700 26px/1.1 var(--font-title);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.subtitle { margin: 2px 0 0; font-weight: 700; color: color-mix(in srgb, var(--ink) 72%, #fff); font-size: 14px; }
-.back, .close {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 0;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--ink);
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(40, 55, 80, 0.14);
+.subtitle {
+  margin: 2px 0 0;
+  font: 700 var(--t-md)/1.25 var(--font-text);
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.back-ic, .close-ic { width: 24px; height: 24px; }
+.body { min-width: 0; }
 .sheet-enter-active, .sheet-leave-active { transition: background 0.25s; }
 .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }
 .sheet-enter-from, .sheet-leave-to { background: rgba(40, 20, 60, 0); }

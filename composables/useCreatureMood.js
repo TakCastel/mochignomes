@@ -32,9 +32,12 @@ export function gameCommand(type, value) {
 }
 
 let toastId = 0;
+const MAX_TOASTS = 2; // jamais une pile de bandeaux : les plus anciens laissent la place
 export function gameToast(text, icon = "solar:stars-bold-duotone") {
+  if (gameBus.toasts.some((t) => t.text === text)) return; // déjà affiché
   const id = ++toastId;
   gameBus.toasts.push({ id, text, icon });
+  while (gameBus.toasts.length > MAX_TOASTS) gameBus.toasts.shift();
   setTimeout(() => {
     const i = gameBus.toasts.findIndex((t) => t.id === id);
     if (i >= 0) gameBus.toasts.splice(i, 1);
@@ -118,6 +121,37 @@ export function highlightAction(action) {
   gameBus.page = null;
   gameBus.sheet = null;
   gameBus.highlight = { action, id: Math.random() };
+}
+
+// Une seule carte à la fois sur l'écran principal, par ordre de priorité :
+// tutoriel (WelcomeCard) → retrouvailles (AwayCard) → nouveauté (UnlockCard) → rappels (NotifPrompt).
+// Les cartes de nouveauté et de rappels attendent aussi que l'écran principal soit libre
+// (aucune page, fenêtre ou activité ouverte).
+export function useOverlayTurn() {
+  const store = useTamagotchiStore();
+  return computed(() => {
+    if (!store.hatched || (store.onboardStep ?? 6) < 6) return "welcome";
+    if (store.away) return "away";
+    if (gameBus.page || gameBus.sheet || gameBus.activity) return null;
+    const ev = store.unlockEvent;
+    if (ev && !ev.seen) return "unlock";
+    return "notif";
+  });
+}
+
+// Succès déjà vus dans l'Album (pastille) : retenu d'une visite à l'autre
+const SEEN_KEY = "tamagotchi-succes-vus";
+export function loadSeenUnlocked(fallback) {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    const v = Number(raw);
+    if (raw != null && Number.isFinite(v)) gameBus.seenUnlocked = v;
+    else markSeenUnlocked(fallback);
+  } catch { gameBus.seenUnlocked = fallback; }
+}
+export function markSeenUnlocked(n) {
+  gameBus.seenUnlocked = n;
+  try { localStorage.setItem(SEEN_KEY, String(n)); } catch { /* stockage indisponible */ }
 }
 
 export function useCreatureMood() {
