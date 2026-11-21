@@ -103,7 +103,8 @@ const playing = computed(() => !!gameBus.activity || !!activeActivity.value);
 watch(playing, (p) => creature.value?.setPlaying?.(p));
 // flèches « tourner » : à hauteur des pieds, de part et d'autre de la créature (elle fait ~0,8 fois sa hauteur de large),
 // sans sortir de l'écran ; elles s'écartent un peu quand on zoome
-const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping);
+// Sac ouvert (volet latéral) : pas d'anneau, il déborderait de la place libre ; on la tourne au doigt
+const arrowsHidden = computed(() => !!ring.value || playing.value || stageKey.value === "oeuf" || houseFx.swapping || gameBus.sideW > 0);
 // anneau de flèches en relief au sol (3D) : mêmes conditions que les zones tactiles ; la flèche pressée s'allume
 const rotPressed = ref(0);
 // branché au montage : arrowsHidden lit stageKey / houseFx, déclarés plus bas dans ce script
