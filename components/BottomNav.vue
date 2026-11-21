@@ -40,7 +40,8 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from "vue";
+import { navOrb } from "~/composables/useNavOrb";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 
 // 5 destinations au plus : Maison, Sac, Boutique, Cuisine, Elle (Jours et Album s'ouvrent depuis Elle)
@@ -90,7 +91,7 @@ const items = computed(() =>
 // ---- barre en relief : une bosse lisse sous l'onglet actif, qui glisse (ressort) d'un onglet à l'autre ----
 const BUMP_H = 24; // hauteur de la bosse au-dessus de la barre
 const BUMP_W = 44; // demi-largeur caractéristique de la bosse
-const RADIUS = 28; // coins de la barre
+const RADIUS = 0; // barre droite, sans coins arrondis
 const nav = ref(null);
 const btns = ref([]);
 const size = ref({ w: 0, h: 0 });
@@ -109,6 +110,8 @@ function measure() {
   const el = nav.value;
   if (!el) return;
   size.value = { w: el.clientWidth, h: el.clientHeight };
+  const r = el.getBoundingClientRect();
+  navBox.value = { left: r.left, top: r.top };
   const c = {};
   for (const b of btns.value) if (b) c[b.dataset.key] = b.offsetLeft + b.offsetWidth / 2;
   centers.value = c;
@@ -142,21 +145,32 @@ watch(target, () => {
 });
 
 // le bord haut = coins arrondis + bosse en cloche (qui s'aplatit et s'étire avec la vitesse)
+const bump = computed(() => {
+  const s = Math.min(Math.abs(speed.value) / 1800, 0.4);
+  return { cx: x.value, bh: BUMP_H * (1 - s * 0.55), bw: BUMP_W * (1 + s * 0.6) };
+});
+// on publie la forme de la bosse (coordonnées écran) pour que le panneau des jauges l'épouse
+const navBox = ref({ left: 0, top: 0 });
+watchEffect(() => {
+  const b = bump.value;
+  navOrb.on = !!size.value.w;
+  navOrb.x = navBox.value.left + b.cx;
+  navOrb.top = navBox.value.top;
+  navOrb.bh = b.bh;
+  navOrb.bw = b.bw;
+});
 const path = computed(() => {
   const { w, h } = size.value;
   if (!w) return "";
   const top = BUMP_H;
   const total = top + h;
-  const s = Math.min(Math.abs(speed.value) / 1800, 0.4);
-  const bh = BUMP_H * (1 - s * 0.55);
-  const bw = BUMP_W * (1 + s * 0.6);
-  const cx = x.value;
+  const { cx, bh, bw } = bump.value;
   const pts = [];
   for (let px = 0; px <= w; px += 2) {
     const xx = Math.min(px, w);
     let y = top;
-    if (xx < RADIUS) y += RADIUS - Math.sqrt(RADIUS * RADIUS - (RADIUS - xx) ** 2);
-    else if (xx > w - RADIUS) y += RADIUS - Math.sqrt(RADIUS * RADIUS - (xx - (w - RADIUS)) ** 2);
+    if (RADIUS && xx < RADIUS) y += RADIUS - Math.sqrt(RADIUS * RADIUS - (RADIUS - xx) ** 2);
+    else if (RADIUS && xx > w - RADIUS) y += RADIUS - Math.sqrt(RADIUS * RADIUS - (xx - (w - RADIUS)) ** 2);
     const t = (xx - cx) / bw;
     y -= bh * Math.exp(-t * t * 1.15);
     pts.push(`${xx.toFixed(1)},${y.toFixed(1)}`);
@@ -172,11 +186,14 @@ onMounted(() => {
   measure();
   ro = new ResizeObserver(measure);
   ro.observe(nav.value);
+  window.addEventListener("resize", measure);
 });
 // un onglet qui se débloque décale les autres
 watch(() => items.value.map((t) => t.key).join(), () => nextTick(measure));
 onBeforeUnmount(() => {
   ro?.disconnect();
+  window.removeEventListener("resize", measure);
+  navOrb.on = false;
   cancelAnimationFrame(raf);
 });
 </script>
@@ -192,8 +209,6 @@ onBeforeUnmount(() => {
   height: var(--nav-h, 64px);
   box-sizing: content-box;
   padding: 0 10px env(safe-area-inset-bottom, 0px);
-  /* la bosse dépasse au-dessus de la barre : on lui garde sa place pour ne rien cacher derrière */
-  margin-top: 24px; /* = BUMP_H */
 }
 .shape {
   position: absolute;
