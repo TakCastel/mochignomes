@@ -226,8 +226,8 @@
           </div>
           <div class="ui-actions">
             <button class="ui-btn ui-btn--secondary" @click="stopTry()">Retirer</button>
-            <button v-if="inv.ownsColor(detailItem.id, detail.color)" class="ui-btn ui-btn--primary" @click="stopTry(true); wear()">Lui mettre</button>
-            <button v-else-if="!detailLock" class="ui-btn ui-btn--primary" :class="{ 'is-poor': !inv.canAfford(detailPrice) }" @click="stopTry(); buy()">
+            <button v-if="inv.ownsColor(detailItem.id, detail.color)" class="ui-btn ui-btn--primary" @click="wearFromTry">Lui mettre</button>
+            <button v-else-if="!detailLock" class="ui-btn ui-btn--primary" :class="{ 'is-poor': !inv.canAfford(detailPrice) }" @click="buyFromTry">
               Acheter <span class="ui-price"><Icon :name="curIcon(detailPrice.currency)" class="ic" :class="detailPrice.currency" />{{ detailPrice.amount }}</span>
             </button>
             <button v-else class="ui-btn is-done" disabled>{{ detailLock }}</button>
@@ -467,7 +467,7 @@ function fail(reason) {
   buzz(30);
 }
 function buy() {
-  if (!detail.value) return;
+  if (!detail.value) return false;
   const { id, color } = detail.value;
   if (detailLock.value) return fail(detailLock.value);
   const res = inv.buyItem(id, color);
@@ -481,14 +481,32 @@ function buy() {
   inv.markSeen(`${id}:${color}`);
   buzz([20, 40, 20]);
   gameToast(`${itemById(id).label} ${colorLabel(color)} rejoint ton Sac !`, "solar:bag-4-bold-duotone");
+  return true;
 }
 function wear() {
-  if (!detail.value) return;
+  if (!detail.value) return false;
   const item = itemById(detail.value.id);
   const r = inv.equip(item.slot, item.id, detail.value.color);
-  if (!r) return fail("Impossible de lui mettre pour le moment.");
+  if (!r) { fail("Impossible de lui mettre pour le moment."); return false; }
   reactionLine.value = r.reaction?.line || "";
   buzz(15);
+  return true;
+}
+// depuis l'essayage : acheté (ou déjà à elle) = on le lui met et on revient à l'écran d'accueil pour la voir.
+// L'équipement passe avant la fin de l'aperçu : la tenue portée contient déjà l'article.
+function finishTry() {
+  stopTry();
+  detail.value = null;
+  closePage();
+}
+function buyFromTry() {
+  if (!buy()) { stopTry(); return; } // échec (pas assez de pièces...) : la fiche réapparaît avec la raison
+  wear();
+  finishTry();
+}
+function wearFromTry() {
+  if (wear()) finishTry();
+  else stopTry();
 }
 
 // ---------- essayage gratuit (aperçu 3D, sans acheter) ----------
