@@ -314,7 +314,7 @@ inv.ensureShop();
 
 const has = (k) => !!store.hasFeature?.(k);
 const starsOpen = computed(() => has("etoiles") || inv.gems > 0);
-const curIcon = (cur) => (cur === "gems" ? "solar:star-bold-duotone" : "solar:dollar-minimalistic-bold-duotone");
+const curIcon = (cur) => (cur === "gems" ? "solar:star-bold-duotone" : "mochi:coin");
 const colorLabel = (k) => (COLORS[k]?.label || k).toLowerCase();
 const basePrice = (id, color) => priceFor(id, color, inv.owned[id] || []);
 

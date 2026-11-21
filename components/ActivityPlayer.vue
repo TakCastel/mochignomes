@@ -72,7 +72,7 @@
         <p v-if="result.line" class="ui-bubble line">« {{ result.line }} »</p>
 
         <div class="chips">
-          <span v-if="result.coins > 0" class="ui-tag chip coin"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />+{{ result.coins }}</span>
+          <span v-if="result.coins > 0" class="ui-tag chip coin"><Icon name="mochi:coin" class="ic" />+{{ result.coins }}</span>
           <span v-if="result.gems > 0" class="ui-tag chip gem"><Icon name="solar:star-bold-duotone" class="ic" />+{{ result.gems }} Étoile{{ result.gems > 1 ? "s" : "" }}</span>
           <span v-for="g in result.gains" :key="g.key" class="ui-tag chip" :style="{ '--c': g.color }">
             <Icon :name="g.icon" class="ic" />{{ g.n > 0 ? "+" : "" }}{{ g.n }}

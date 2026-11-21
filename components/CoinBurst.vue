@@ -40,7 +40,7 @@ const COINS = [
   { i: 5, dx: -60, dy: -44, d: 0.12, r: -70 },
 ];
 
-const iconOf = (b) => (b.currency === "gems" ? "solar:star-bold-duotone" : "solar:dollar-minimalistic-bold-duotone");
+const iconOf = (b) => (b.currency === "gems" ? "solar:star-bold-duotone" : "mochi:coin");
 function posOf(b) {
   const lift = b.stack * 34;
   if (b.x != null && b.y != null) return { left: b.x + "px", top: b.y - lift + "px" };

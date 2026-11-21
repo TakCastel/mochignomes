@@ -13,7 +13,7 @@
             <p>{{ headSub }}</p>
           </div>
           <span class="ui-price coins" :aria-label="`${inv.coins} pièces`">
-            <Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />{{ inv.coins }}
+            <Icon name="mochi:coin" class="ic" />{{ inv.coins }}
           </span>
           <button class="ui-icon-btn" aria-label="Fermer la cuisine" @click="close">
             <Icon name="solar:close-circle-bold" class="ic" />
@@ -90,7 +90,7 @@
                       <Icon name="solar:cart-large-2-bold-duotone" class="ic" />
                       <template v-if="c.affordable">
                         <span class="buy-l">Acheter</span>
-                        <span class="ui-price"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />{{ c.cost }}</span>
+                        <span class="ui-price"><Icon name="mochi:coin" class="ic" />{{ c.cost }}</span>
                       </template>
                       <span v-else class="buy-l">Il manque {{ c.cost - inv.coins }} pièce{{ c.cost - inv.coins > 1 ? "s" : "" }}</span>
                     </button>
@@ -314,7 +314,7 @@ const readyCount = computed(() => shownCards.value.filter((c) => c.ready && !c.l
 function buyMissing(c) {
   const miss = missingIngredients(c.r.id, inv.pantry);
   const cost = Object.entries(miss).reduce((s, [id, n]) => s + (ingredientById(id)?.price || 0) * n, 0);
-  if (inv.coins < cost) { gameToast("Pas assez de pièces.", "solar:dollar-minimalistic-bold-duotone"); return; }
+  if (inv.coins < cost) { gameToast("Pas assez de pièces.", "mochi:coin"); return; }
   for (const [id, n] of Object.entries(miss)) {
     const res = inv.buyIngredient(id, n);
     if (!res?.ok) { gameToast(res?.reason || "Achat impossible.", "solar:cart-large-2-bold-duotone"); return; }

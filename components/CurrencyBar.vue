@@ -2,7 +2,7 @@
   <!-- Pièces + Étoiles (à placer DANS l'en-tête du Sac ou de la Boutique seulement) -->
   <div class="currency-bar" role="group" aria-label="Ton porte-monnaie">
     <span class="pill coins" :class="{ bump: bumpCoins }" :aria-label="`${inv.coins} pièces`">
-      <Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />
+      <Icon name="mochi:coin" class="ic" />
       <span class="num">{{ shownCoins }}</span>
     </span>
     <span v-if="showGems" class="pill gems" :class="{ bump: bumpGems }" :aria-label="`${inv.gems} Étoiles`">

@@ -114,7 +114,7 @@
             </button>
             <Icon v-else-if="s.claimed" name="solar:check-circle-bold" class="done-ic" />
             <span v-else class="reward">
-              <span class="ui-price small"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />+{{ s.set.reward.coins }}</span>
+              <span class="ui-price small"><Icon name="mochi:coin" class="ic" />+{{ s.set.reward.coins }}</span>
               <span v-if="s.set.reward.gems" class="ui-price small ui-price--gems"><Icon name="solar:star-bold-duotone" class="ic" />+{{ s.set.reward.gems }}</span>
             </span>
           </div>

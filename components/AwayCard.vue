@@ -16,7 +16,7 @@
           </div>
           <!-- retour après une pause : un cadeau, jamais de reproche (versé en disant bonjour) -->
           <div v-if="store.returnGift > 0" class="surprise">
-            <span class="ui-thumb s-thumb"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic ui-coin" /></span>
+            <span class="ui-thumb s-thumb"><Icon name="mochi:coin" class="ic ui-coin" /></span>
             <span>Elle t'a gardé {{ store.returnGift }} pièces.</span>
           </div>
         </div>
