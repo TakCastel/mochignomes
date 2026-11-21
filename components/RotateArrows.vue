@@ -2,21 +2,21 @@
   <div class="rot" :class="{ hidden }" :style="{ top: `${top}px`, '--off': `${offset}px` }">
     <!-- plateau couché au sol en perspective : un cercle autour des pieds, vu de dessus puis basculé -->
     <div class="stage">
-      <!-- deux arcs du cercle (centre 100,100, rayon 86) ; à gauche, l'avant part vers la gauche puis l'arrière
-           (pointe à l'arrière) ; la droite est le miroir. Copies décalées dessous = épaisseur et ombre. -->
+      <!-- deux arcs du cercle (centre 100,100, rayon 86) ; à gauche, arc du côté gauche
+           (pointe à l'avant, vers le joueur) ; la droite est le miroir. Copies décalées dessous = épaisseur et ombre. -->
       <svg class="arcs" viewBox="0 0 200 200" aria-hidden="true">
         <g v-for="b in BUTTONS" :key="b.dir" :class="['arc', b.cls, { pressed: pressed === b.dir }]" :transform="b.dir === 1 ? 'translate(200 0) scale(-1 1)' : undefined">
           <g class="shadow" transform="translate(0 7)">
             <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 34L39.7 52L25.9 40.4Z" />
+            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
           </g>
           <g class="side" transform="translate(0 3.5)">
             <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 34L39.7 52L25.9 40.4Z" />
+            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
           </g>
           <g class="top">
             <path d="M34.1 155.3A86 86 0 0 1 34.1 44.7" />
-            <path class="head" d="M43.1 34L39.7 52L25.9 40.4Z" />
+            <path class="head" d="M43.1 166L39.7 148L25.9 159.6Z" />
           </g>
         </g>
       </svg>
