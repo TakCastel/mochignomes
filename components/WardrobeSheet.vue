@@ -51,7 +51,7 @@
         </span>
         <span class="ui-tile-label">{{ it.label }}</span>
         <span class="ui-tile-sub">{{ ownedOf(it.id).length }} / {{ itemColors(it).length }} coloris</span>
-        <Icon v-if="wornId === it.id" name="solar:check-circle-bold" class="worn-ic" />
+        <span v-if="wornId === it.id" class="worn-ic"><Icon name="ph:check-bold" class="worn-check" /></span>
       </button>
     </div>
     <div v-else class="ui-empty">
@@ -270,7 +270,8 @@ function shuffle() {
 }
 .card-ic { width: 30px; height: 30px; color: rgba(255, 255, 255, 0.92); filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35)); }
 .card .ui-tile-label { margin-top: 4px; }
-.worn-ic { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; color: var(--accent); }
+.worn-ic { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.worn-check { width: 12px; height: 12px; }
 .heart { position: absolute; top: 6px; left: 6px; width: 18px; height: 18px; color: var(--love); }
 
 .colors { display: flex; flex-wrap: wrap; gap: var(--s-3); align-items: center; }
