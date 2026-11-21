@@ -54,6 +54,8 @@ function describe(key) {
       return { title: "La collection", text: "Complète des ensembles de vêtements pour gagner des récompenses. L'épicerie s'agrandit aussi !", cta: "Voir la collection", run: () => openPage("sac", { tab: "collection" }) };
     case "course":
       return { title: "Des baskets !", text: "Elle peut faire la course maintenant : saute les obstacles et ramasse des fruits.", cta: "Faire la course", run: () => launchActivity("course") };
+    case "maison":
+      return { title: "Une nouvelle place pour un mochignome !", text: "Un petit nid tout chaud s'est libéré dans la maison. Tu peux adopter un œuf de mochignome : un seul dans le pré à la fois, les autres se reposent au chaud.", cta: "Voir la maison", run: () => openPage("elle", { focus: "maison" }) };
     case "etoiles":
       return { title: "Les Étoiles", text: "Une récompense rare, gagnée en maîtrisant ses jeux. En voici 3 pour commencer !", cta: "Voir la boutique", run: () => openPage("boutique") };
     default:

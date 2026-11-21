@@ -5,7 +5,7 @@
       :src="`/images/${MOODS[shownMood].image}.png`"
       alt="Tamagotchi"
       class="fallback-img"
-      :style="{ '--sc': stageScale || 0 }"
+      :style="{ '--sc': houseFx.swapping ? 0 : stageScale || 0 }"
     >
     <div v-if="fallback && fallbackMessage" class="fallback-bubble">{{ fallbackMessage }}</div>
 
@@ -39,6 +39,7 @@ import { idleLine, PHOTO } from "~/lib/dialogue";
 import { STATS, SKY } from "~/lib/gameUi";
 import { setLiveCreature, activeActivity } from "~/composables/useLiveCreature";
 import { bindOutfit } from "~/composables/useOutfit";
+import { houseFx } from "~/composables/useHouse";
 
 const props = defineProps({
   phase: { type: String, default: "day" },
@@ -122,7 +123,15 @@ watch(shownMood, (m, old) => { if (old && !reaction.value && MESSAGES[m]) say(pi
 const STAGE_SCALE = { oeuf: 0, bebe: 0.62, enfant: 0.8, ado: 0.92, adulte: 1 };
 const stageKey = computed(() => (store.hatched === false ? "oeuf" : store.stage || "adulte"));
 const stageScale = computed(() => STAGE_SCALE[stageKey.value] ?? 1);
-watch(stageKey, (k) => creature.value?.setStage?.(k));
+watch(stageKey, (k) => { if (!houseFx.swapping) creature.value?.setStage?.(k); });
+// maison : celle du pré rapetisse et s'en va, la nouvelle venue arrive en grandissant
+// (apparence, tenue et stade sont repris par les watchers pendant qu'elle est invisible)
+watch(() => houseFx.swapping, (out) => {
+  const c = creature.value;
+  if (!c) return;
+  c.setStage?.(out ? "oeuf" : stageKey.value);
+  if (!out) c.setAppearance?.(store.appearance);
+});
 // son apparence (couleur, motif, forme, houppe, oreilles), tirée à l'éclosion : voir lib/appearance.js
 watch(() => store.appearance, (a) => creature.value?.setAppearance?.(a), { deep: true });
 

@@ -2,7 +2,7 @@
   <!-- étape 0 : l'œuf à faire éclore -->
   <Transition name="fade">
     <div v-if="step === 0" class="overlay egg-screen">
-      <p class="top">Un œuf vient d'arriver chez toi...</p>
+      <p class="top">{{ store.veteran ? "Un œuf de mochignome vient d'arriver dans la maison..." : "Un œuf vient d'arriver chez toi..." }}</p>
       <button class="egg-btn" type="button" aria-label="Toucher l'œuf" @click="tap">
         <div class="egg" :class="[`crack-${crack}`, { wob, burst }]" :style="{ '--warm': heat / 12 }">
           <span class="spot s1" /><span class="spot s2" /><span class="spot s3" />
@@ -16,6 +16,10 @@
       </button>
       <div class="meter" aria-hidden="true"><span :style="{ width: `${(heat / 12) * 100}%` }" /></div>
       <p class="hint">{{ heat === 0 ? "Touche l'œuf pour le réchauffer !" : heat < 12 ? "Continue, il bouge !" : "Ça y est !" }}</p>
+      <!-- 2e mochignome et suivants : l'œuf peut attendre au chaud, on retourne voir une autre -->
+      <button v-if="backTo && heat < 12" class="ui-btn ui-btn--secondary ui-btn--sm later" type="button" @click="later">
+        Plus tard, retourner voir {{ backTo.name }}
+      </button>
     </div>
   </Transition>
 
@@ -132,8 +136,21 @@ const cleanName = computed(() => name.value.trim() || store.name || "toi");
 function validateName() {
   const n = name.value.trim();
   if (n) store.rename?.(n);
+  // déjà un mochignome dans la maison : éclosion courte, pas de tutoriel
+  if (store.veteran) {
+    store.finishOnboarding?.();
+    gameCommand("react", "calin");
+    setTimeout(() => gameSay(`Coucou ! Moi c'est ${store.name}, je suis trop contente d'être là !`), 120);
+    return;
+  }
   store.setOnboardStep?.(2);
   gameCommand("react", "calin");
+}
+
+// l'œuf attend au chaud : retour vers un mochignome déjà éclos
+const backTo = computed(() => (store.veteran ? (store.house || []).find((c) => !c.active && c.hatched) : null));
+function later() {
+  if (backTo.value) bringCreature(backTo.value.id);
 }
 
 // --- étapes guidées : on fait pulser la tuile attendue ---
@@ -191,6 +208,7 @@ const confetti = Array.from({ length: 14 }, (_, i) => ({
   background: linear-gradient(180deg, #fff3d6, #ffd9e2 60%, #e5dcff);
 }
 .top { margin: 0; font: 700 20px "Fredoka", "Nunito", system-ui, sans-serif; color: #5a4a6a; text-align: center; }
+.later { margin-top: 6px; }
 .hint { margin: 0; font: 800 15px "Nunito", system-ui, sans-serif; color: #6b5a7a; min-height: 20px; }
 .egg-btn { position: relative; border: 0; background: none; padding: 20px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .egg {

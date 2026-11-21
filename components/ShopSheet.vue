@@ -354,7 +354,7 @@ const dailyItem = computed(() => (daily.value ? itemById(daily.value.itemId) : n
 
 function shortLock(item, lock) {
   if (!lock) return "";
-  if (store.level < item.minLevel) return `Niveau ${item.minLevel}`;
+  if ((store.topLevel || store.level) < item.minLevel) return `Niveau ${item.minLevel}`;
   return lock;
 }
 // prix « dès » : la couleur la moins chère qu'elle n'a pas encore (pièces avant Étoiles)

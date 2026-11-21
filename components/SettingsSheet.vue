@@ -58,10 +58,11 @@
     <!-- Nouvelle partie -->
     <section class="ui-card block">
       <h3 class="ui-section-title"><Icon name="solar:refresh-bold" class="ic danger" />Nouvelle partie</h3>
-      <p class="ui-text">Tout recommencer avec un nouvel œuf. <strong>Tout est effacé</strong> : {{ store.name }}, son niveau, ses goûts, ses photos, le Sac (pièces, vêtements, frigo), la collection et les nouveautés découvertes.</p>
+      <p v-if="many" class="ui-text">Tout recommencer avec un seul œuf. <strong>Tout est effacé</strong> : tous tes mochignomes ({{ names }}), leurs niveaux, leurs goûts, leurs photos, le Sac (pièces, vêtements, frigo), la collection et les nouveautés découvertes.</p>
+      <p v-else class="ui-text">Tout recommencer avec un nouvel œuf. <strong>Tout est effacé</strong> : {{ store.name }}, son niveau, ses goûts, ses photos, le Sac (pièces, vêtements, frigo), la collection et les nouveautés découvertes.</p>
       <button v-if="!confirming" class="ui-btn ui-btn--secondary ui-btn--sm start" @click="confirming = true">Recommencer…</button>
       <div v-else class="wipe">
-        <p class="ui-note ui-note--warn">C'est définitif, impossible de revenir en arrière. Pour confirmer, écris son nom : <strong>{{ store.name }}</strong></p>
+        <p class="ui-note ui-note--warn">C'est définitif, impossible de revenir en arrière{{ many ? ", pour tous tes mochignomes" : "" }}. Pour confirmer, écris {{ many ? "le nom de celle qui est dans le pré" : "son nom" }} : <strong>{{ store.name }}</strong></p>
         <input v-model="typed" class="wipe-input" :placeholder="store.name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Nom de la créature pour confirmer">
         <div class="ui-actions">
           <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="cancelWipe">Annuler</button>
@@ -105,6 +106,8 @@ function setHaptics(on) {
   if (on) navigator.vibrate?.(15);
 }
 const { clearPhotos } = useGallery();
+const many = computed(() => (store.roster?.length || 0) > 1);
+const names = computed(() => (store.house || []).map((c) => c.name).join(", "));
 const typed = ref("");
 const norm = (v) => String(v || "").trim().toLocaleLowerCase("fr");
 const nameOk = computed(() => !!store.name && norm(typed.value) === norm(store.name));
