@@ -15,7 +15,7 @@
       <h3 class="ui-section-title"><Icon name="solar:bell-bold-duotone" class="ic" />Rappels</h3>
       <p v-if="permission === 'denied'" class="ui-note ui-note--warn">Les notifications sont bloquées dans ton navigateur. Autorise-les dans les réglages du site, ou utilise le rappel d'agenda ci-dessous.</p>
       <label v-if="supported" class="switch-row">
-        <span>Prévenir quand elle a besoin de moi</span>
+        <span>Recevoir ses petits rappels</span>
         <input type="checkbox" class="switch" :checked="enabled" :disabled="permission === 'denied'" @change="toggleNotif($event.target.checked)">
       </label>
       <p v-else class="ui-note ui-note--warn">Ce navigateur ne gère pas les notifications. Le rappel d'agenda fonctionne partout.</p>
@@ -58,7 +58,7 @@
     <!-- Nouvelle partie -->
     <section class="ui-card block">
       <h3 class="ui-section-title"><Icon name="solar:refresh-bold" class="ic danger" />Nouvelle partie</h3>
-      <p class="ui-text">Une nouvelle créature remplace {{ store.name }} : jauges, caractère, niveau et succès repartent de zéro. Les photos restent dans la galerie.</p>
+      <p class="ui-text">Une nouvelle créature remplace {{ store.name }} : jauges, caractère, niveau et succès repartent de zéro. Ses photos sont effacées.</p>
       <button v-if="!confirming" class="ui-btn ui-btn--secondary ui-btn--sm start" @click="confirming = true">Recommencer…</button>
       <div v-else class="ui-actions">
         <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="confirming = false">Annuler</button>
@@ -100,8 +100,10 @@ function setHaptics(on) {
   try { localStorage.setItem("tamagotchi-haptics", on ? "on" : "off"); } catch { /* stockage indisponible */ }
   if (on) navigator.vibrate?.(15);
 }
+const { clearPhotos } = useGallery();
 function restart() {
   store.resetGame();
+  clearPhotos();
   confirming.value = false;
   gameBus.sheet = null;
   gameToast(`Bienvenue à ${store.name} !`, "solar:heart-bold-duotone");

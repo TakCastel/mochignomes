@@ -217,7 +217,7 @@ function wear(it, color) {
 function takeOff() {
   if (inv.unequip(slot.value)) {
     said.value = null;
-    gameSay(store.stage === "bebe" ? "Tout nu !" : "Hop, enlevé.");
+    gameSay(store.stage === "bebe" ? "Hop, parti !" : "Hop, enlevé.");
   }
 }
 
@@ -238,7 +238,7 @@ function shuffle() {
     gameCommand("react", best.mood === "love" ? "adore" : "deteste");
     showSaid(best);
   } else {
-    showSaid({ mood: "like", line: Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "Tenue légère aujourd'hui !" });
+    showSaid({ mood: "like", line: Object.values(next).some(Boolean) ? "Ta-da ! Nouvelle tenue !" : "On reste simple aujourd'hui !" });
   }
 }
 </script>

@@ -64,7 +64,7 @@ const rand = (a, b) => a + Math.random() * (b - a);
 const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 
 // Pièces gagnées : activités (au score), envies exaucées, défis, records, niveaux.
-// Rien pour câlin, chatouille, soigner : la récompense, c'est sa réaction.
+// Rien pour coucou, fou rire (chatouiller), soigner : la récompense, c'est sa réaction.
 const LEVEL_COINS = 25; // à chaque niveau
 const WISH_COINS = 5; // envie de soin exaucée
 const OWNED_WISH_COINS = 10; // envie de plat, d'activité ou de tenue exaucée
@@ -175,7 +175,7 @@ export const useTamagotchiStore = defineStore(
       if (key === "oeuf") {
         return { key, label: "Œuf", next: "bebe", nextLabel: "Bébé", progress: Math.min(1, eggHeat.value / 12), hint: "en tapant doucement sur l'œuf" };
       }
-      if (!next) return { key, label: def.label, next: null, nextLabel: "", progress: 1, hint: "Elle a fini de grandir, mais continue de s'attacher à toi." };
+      if (!next) return { key, label: def.label, next: null, nextLabel: "", progress: 1, hint: "Elle a fini de grandir, mais elle a encore plein de choses à découvrir." };
       const days = ageDays(tick.value);
       const pl = Math.min(1, level.value / next.level);
       const pd = next.days ? Math.min(1, days / next.days) : 1;
@@ -578,7 +578,7 @@ export const useTamagotchiStore = defineStore(
       else if (onboardStep.value === 3 && key === "jouer") onboardStep.value = 4;
       else if (onboardStep.value === 4 && key === "chatouiller") onboardStep.value = 5;
 
-      // quelques pièces pour les soins utiles (rien pour câlin, chatouille, soigner),
+      // quelques pièces pour les soins utiles (rien pour coucou, fou rire, soigner),
       // seulement une fois les pièces découvertes
       let coins = 0;
       if (features.value.coins) {
@@ -808,7 +808,7 @@ export const useTamagotchiStore = defineStore(
       if (isSleeping.value) return { ok: false, reason: "Elle dort, chut..." };
       if (exhausted.value) return { ok: false, reason: "Elle est trop épuisée, laisse-la se reposer." };
       // rancunière : refuse de jouer juste après avoir été négligée (la télé, elle, se partage)
-      if (id !== "tele" && tr("rancuniere") > 0.5 && isSulking(tick.value)) return { ok: false, reason: "Elle boude encore un peu... un câlin d'abord ?", sulking: true };
+      if (id !== "tele" && tr("rancuniere") > 0.5 && isSulking(tick.value)) return { ok: false, reason: "Elle boude encore un peu... un petit coucou d'abord ?", sulking: true };
       if (a.energyCost > 0 && energy.value < a.energyCost + 3) return { ok: false, reason: "Elle est trop fatiguée. Un petit dodo ?" };
       return { ok: true, reason: "" };
     }
@@ -1023,12 +1023,12 @@ export const useTamagotchiStore = defineStore(
 
     function buildAway(before, secs, illBefore) {
       const lines = [];
-      if (!illBefore && illness.value) lines.push("Elle a attrapé un petit rhume pendant ton absence.");
+      if (!illBefore && illness.value) lines.push("Elle a attrapé un petit rhume. Un soin, et ça ira mieux !");
       if (energy.value - before.energy > 20) lines.push("Elle a fait un gros dodo.");
-      if (before.hunger - hunger.value > 25) lines.push(hunger.value < 20 ? "Son ventre gargouille, elle t'attendait." : "Elle a eu un petit creux.");
-      if (before.cleanliness - cleanliness.value > 25) lines.push("Elle s'est un peu salie en t'attendant.");
-      if (before.fun - fun.value > 25) lines.push("Elle s'est un peu ennuyée sans toi.");
-      if (!lines.length) lines.push("Elle t'a attendu bien sagement.");
+      if (before.hunger - hunger.value > 25) lines.push(hunger.value < 20 ? "Son ventre gargouille : c'est l'heure du goûter !" : "Elle a eu un petit creux.");
+      if (before.cleanliness - cleanliness.value > 25) lines.push("Elle s'est un peu salie en jouant dans le pré.");
+      if (before.fun - fun.value > 25) lines.push("Elle a hâte de jouer avec toi !");
+      if (!lines.length) lines.push("Elle a passé un moment tout tranquille dans le pré.");
       let surprise = null;
       const today = dayKey(new Date());
       if (surpriseLog.value.day !== today) surpriseLog.value = { day: today, n: 0 };
@@ -1164,11 +1164,11 @@ export const useTamagotchiStore = defineStore(
         push("faim", now + ((hunger.value - 25) / rate) * 3600000, `${who} a un petit creux`, `Son ventre commence à gargouiller. Un petit repas ?`);
       }
       if (!wish.value && nextWishAt.value) {
-        push("envie", Math.max(nextWishAt.value, now + 20 * 60000), `${who} a une envie`, `${who} pense à toi et voudrait faire quelque chose avec toi.`);
+        push("envie", Math.max(nextWishAt.value, now + 20 * 60000), `${who} a une envie`, `${who} a une petite idée de jeu.`);
       }
       const at = (h, min, plusDays = 0) => { const d = new Date(now); d.setDate(d.getDate() + plusDays); d.setHours(h, min, 0, 0); return d.getTime(); };
-      push("bonjour", at(9, 0) > now ? at(9, 0) : at(9, 0, 1), `Bonjour de la part de ${who}`, `Un nouveau jour commence : ${who} t'attend pour la journée.`);
-      push("soir", at(19, 0) > now ? at(19, 0) : at(19, 0, 1), `Le câlin du soir`, `${who} aimerait un petit câlin avant de dormir.`);
+      push("bonjour", at(9, 0) > now ? at(9, 0) : at(9, 0, 1), `Bonjour de la part de ${who}`, `Un nouveau jour se lève sur le pré de ${who} !`);
+      push("soir", at(19, 0) > now ? at(19, 0) : at(19, 0, 1), `Le coucou du soir`, `${who} aimerait un petit coucou avant de dormir.`);
       return out.sort((a, b) => a.at - b.at);
     }
 

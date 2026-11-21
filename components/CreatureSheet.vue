@@ -40,7 +40,7 @@
         <div class="ui-bar"><i :style="{ width: Math.round((stage.progress || 0) * 100) + '%' }" /></div>
         <p class="ui-text small">Prochain stade : <strong>{{ stage.nextLabel }}</strong>. {{ stage.hint }}</p>
       </template>
-      <p v-else class="ui-text">Elle a fini de grandir. Elle compte sur toi pour la suite.</p>
+      <p v-else class="ui-text">Elle a fini de grandir. Plein d'aventures vous attendent encore !</p>
     </section>
 
     <!-- caractère -->
