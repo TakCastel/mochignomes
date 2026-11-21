@@ -11,8 +11,21 @@
     </section>
 
     <!-- défis (après leur découverte) -->
-    <section v-if="store.features?.defis" class="ui-card">
-      <h3 class="ui-section-title"><Icon name="solar:cup-star-bold-duotone" class="ic" />Les 3 défis du jour</h3>
+    <!-- tout est fait (bonus compris) : la carte se replie, un tap la rouvre -->
+    <button v-if="store.features?.defis && allClaimed && !showQuests" class="ui-card quests-done" @click="showQuests = true">
+      <Icon name="solar:check-circle-bold" class="done-ic" />
+      <span class="grow">
+        <strong class="ui-row-title">Défis du jour</strong>
+        <span class="ui-caption">Tout est fait, à demain !</span>
+      </span>
+      <Icon name="solar:alt-arrow-down-linear" class="chev" aria-label="Revoir les défis" />
+    </button>
+    <section v-else-if="store.features?.defis" class="ui-card">
+      <button v-if="allClaimed" class="ui-section-title quests-head" @click="showQuests = false">
+        <Icon name="solar:cup-star-bold-duotone" class="ic" />Les 3 défis du jour
+        <Icon name="solar:alt-arrow-up-linear" class="chev" aria-label="Replier" />
+      </button>
+      <h3 v-else class="ui-section-title"><Icon name="solar:cup-star-bold-duotone" class="ic" />Les 3 défis du jour</h3>
       <ul class="quests">
         <li v-for="q in quests" :key="q.id" class="ui-row is-well" :class="{ claimed: q.claimed }">
           <div class="grow">
@@ -28,7 +41,6 @@
       <button v-if="store.questBonusReady" class="ui-btn ui-btn--gold ui-btn--block mt" @click="claimQuestBonus">
         <Icon name="solar:gift-bold-duotone" class="ic" />Bonus des 3 défis
       </button>
-      <p v-else-if="store.questsAllDone" class="ui-foot-note mt">Tout est fait, à demain !</p>
     </section>
 
     <!-- jours passés ensemble (cumulés : rien à perdre si on rate un jour) -->
@@ -64,10 +76,13 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 const { store } = useCreatureMood();
 const quests = computed(() => store.quests?.list || []);
+// les 3 défis et leur bonus sont récupérés : rien à faire avant demain
+const allClaimed = computed(() => store.questsAllDone && !store.questBonusReady);
+const showQuests = ref(false);
 const pipsOn = computed(() => ((store.totalDays || 0) > 0 ? ((store.totalDays - 1) % 7) + 1 : 0));
 const entries = computed(() => (store.journal || []).slice(0, 40));
 
@@ -100,6 +115,10 @@ function when(t) {
 .quests .claimed { opacity: 0.6; }
 .q-label { font: 800 15px/1.25 var(--font-text); color: var(--ink); }
 .done-ic { flex: none; width: 32px; height: 32px; margin: 0 8px; color: var(--accent-lo); }
+.quests-done { display: flex; align-items: center; gap: var(--s-3); width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.quests-done .done-ic { margin: 0; }
+.quests-head { display: flex; align-items: center; width: 100%; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; color: inherit; }
+.chev { flex: none; width: 20px; height: 20px; margin-left: auto; color: var(--ink-2); }
 
 /* jours ensemble : style propre (plus de « flamme » orange) */
 .top { display: flex; align-items: center; gap: var(--s-3); }
