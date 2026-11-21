@@ -509,8 +509,8 @@ button.ui-row:active { transform: scale(0.98); }
   padding: 2px;
   overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(180deg, #cdd6e2, #e4eaf1);
-  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 1px 0 #fff;
+  background: linear-gradient(180deg, var(--track-lo), var(--track-hi));
+  box-shadow: inset 0 1.5px 2.5px rgba(30, 50, 90, 0.28), inset 0 -1px 0 var(--glint), 0 1px 0 var(--glint);
 }
 .ui-bar--thin { height: 18px; } /* conservé pour compatibilité : toutes les jauges ont la même taille */
 .ui-bar > i {
