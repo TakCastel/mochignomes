@@ -1,16 +1,16 @@
 <template>
   <div ref="root" class="ui-page shop">
-    <!-- porte-monnaie + coffre gratuit du jour -->
+    <!-- 1. où je suis : porte-monnaie, et le coffre du jour en petit bouton -->
     <div class="top">
       <CurrencyBar />
-      <button class="ui-chip chest-btn" :class="{ ready: inv.chestReady }" :aria-label="inv.chestReady ? 'Ouvrir le coffre gratuit du jour' : 'Coffre déjà ouvert aujourd\'hui'" @click="openChest">
+      <button class="chest-btn" :class="{ ready: inv.chestReady }" :aria-label="inv.chestReady ? 'Ouvrir le coffre gratuit du jour' : 'Coffre déjà ouvert aujourd\'hui'" @click="openChest">
         <Icon name="solar:gift-bold-duotone" class="ic chest-ic" />
-        <span>{{ inv.chestReady ? "Coffre gratuit" : "Demain !" }}</span>
+        <span>{{ inv.chestReady ? "Coffre offert" : "Demain !" }}</span>
         <span v-if="inv.chestReady" class="ui-dot" aria-hidden="true" />
       </button>
     </div>
 
-    <!-- onglets (seulement s'il y a plusieurs rayons) -->
+    <!-- 2. le rayon -->
     <nav v-if="tabs.length > 1" class="ui-tabs" role="tablist" aria-label="Rayons de la boutique">
       <button
         v-for="t in tabs"
@@ -28,62 +28,56 @@
 
     <!-- ============ VÊTEMENTS ============ -->
     <section v-if="tab === 'vetements'" class="ui-stack">
-      <!-- coloris du jour : -30 %, sans minuteur -->
-      <button v-if="dailyItem" class="ui-row daily" @click="openDetail(dailyItem.id, daily.color)">
-        <span class="ui-thumb ui-thumb--lg" :style="{ '--ink': inkFor(daily.color) }">
-          <Icon :name="itemIcon(dailyItem.id)" class="ic art-ic" />
-        </span>
-        <span class="ui-row-main">
-          <span class="ui-kicker daily-kicker"><Icon name="solar:sale-bold-duotone" class="ic" />Coloris du jour</span>
-          <span class="ui-row-title">{{ dailyItem.label }} {{ colorLabel(daily.color) }}</span>
-          <span v-if="inv.ownsColor(dailyItem.id, daily.color)" class="ui-row-sub">Déjà dans ton Sac</span>
-          <span v-else class="ui-price">
-            <s>{{ basePrice(dailyItem.id, daily.color).amount }}</s>
-            <Icon :name="curIcon('coins')" class="ic" />{{ inv.itemPrice(dailyItem.id, daily.color).amount }}
-          </span>
-        </span>
-        <span class="ui-tag ui-tag--warn ui-tag--solid daily-badge">−{{ Math.round((daily.discount || 0) * 100) }} %</span>
-      </button>
-
-      <!-- filtre par emplacement -->
-      <div class="ui-chips ui-chips--scroll" role="radiogroup" aria-label="Emplacement">
-        <button v-for="s in slotChips" :key="s.key" class="ui-chip" :class="{ 'is-on': slotFilter === s.key }" role="radio" :aria-checked="slotFilter === s.key" @click="slotFilter = s.key">
-          <Icon v-if="s.icon" :name="s.icon" class="ic" />{{ s.label }}
+      <!-- catégories : rangée d'icônes, un seul niveau -->
+      <div class="cats" role="radiogroup" aria-label="Catégorie">
+        <button v-for="s in slotChips" :key="s.key" class="cat" :class="{ 'is-on': slotFilter === s.key }" role="radio" :aria-checked="slotFilter === s.key" @click="slotFilter = s.key">
+          <Icon :name="s.icon || 'solar:widget-bold-duotone'" class="ic" />
+          <span>{{ s.label }}</span>
         </button>
       </div>
 
-      <div class="grid">
+      <!-- 3. les articles ; l'offre du jour est la première carte, pleine largeur -->
+      <div :key="slotFilter" class="grid">
+        <button v-if="dailyItem && (slotFilter === 'all' || slotFilter === dailyItem.slot)" class="offer" :style="{ '--ink': inkFor(daily.color), '--i': 0 }" @click="openDetail(dailyItem.id, daily.color)">
+          <span class="offer-art"><Icon :name="itemIcon(dailyItem.id)" class="offer-ic" /></span>
+          <span class="offer-main">
+            <span class="offer-kicker">Coloris du jour</span>
+            <span class="offer-title">{{ dailyItem.label }} {{ colorLabel(daily.color) }}</span>
+          </span>
+          <span v-if="inv.ownsColor(dailyItem.id, daily.color)" class="offer-end"><Icon name="solar:check-circle-bold" class="ic" />À toi</span>
+          <span v-else class="offer-end">
+            <span class="offer-badge">−{{ Math.round((daily.discount || 0) * 100) }} %</span>
+            <span class="ui-price"><s>{{ basePrice(dailyItem.id, daily.color).amount }}</s><Icon :name="curIcon('coins')" class="ic" />{{ inv.itemPrice(dailyItem.id, daily.color).amount }}</span>
+          </span>
+        </button>
+
         <button
-          v-for="c in cards"
+          v-for="(c, n) in cards"
           :key="c.item.id"
-          class="ui-tile item"
-          :class="{ locked: !!c.lock, 'is-on': c.have === c.total }"
-          :aria-label="`${c.item.label}${c.lock ? ' (' + c.lock + ')' : ''}`"
+          class="item"
+          :class="{ locked: !!c.lock }"
+          :style="{ '--ink': inkFor(c.color), '--i': Math.min(n + 1, 14) }"
+          :aria-label="`${c.item.label}${c.lock ? ' (' + c.lock + ')' : c.have === c.total ? ' (déjà à toi)' : ''}`"
           @click="openDetail(c.item.id)"
         >
           <span v-if="c.isNew" class="ui-dot" aria-hidden="true" />
-          <span v-if="c.isDaily" class="ui-tag ui-tag--warn ui-tag--solid ui-tag--corner">−30 %</span>
-          <span v-else-if="c.item.rarity !== 'commun'" class="ui-tag ui-tag--corner" :style="{ '--c': RARITIES[c.item.rarity].color }">{{ RARITIES[c.item.rarity].label }}</span>
-          <span class="art" :style="{ '--ink': inkFor(c.color) }">
+          <span v-if="c.isDaily" class="promo">−{{ Math.round((daily.discount || 0) * 100) }} %</span>
+          <span v-else-if="!c.lock && c.have === c.total" class="owned" aria-hidden="true"><Icon name="solar:check-circle-bold" class="ic" /></span>
+          <span class="art">
             <Icon :name="itemIcon(c.item.id)" class="art-ic" />
             <Icon v-if="c.lock" name="solar:lock-keyhole-bold" class="art-lock" />
           </span>
-          <span class="ui-tile-label name">{{ c.item.label }}</span>
-          <span class="dots" aria-hidden="true">
-            <span v-for="k in c.colors.slice(0, 7)" :key="k" class="cdot" :class="{ have: inv.ownsColor(c.item.id, k) }" :style="{ background: swatchBg(k) }" />
-          </span>
+          <span class="name">{{ c.item.label }}</span>
           <span class="meta">
-            <span v-if="c.lock" class="ui-caption">{{ c.lockShort }}</span>
-            <span v-else-if="c.have === c.total" class="done"><Icon name="solar:check-circle-bold" class="ok-ic" />Complet</span>
+            <span v-if="c.lock" class="soon">{{ c.lockShort }}</span>
+            <span v-else-if="c.have === c.total" class="soon">Déjà à toi</span>
             <span v-else class="ui-price small">
-              <span v-if="c.have" class="have">{{ c.have }}/{{ c.total }} ·</span>
-              <Icon :name="curIcon(c.from.currency)" class="ic" :class="c.from.currency" />
-              <span>{{ c.have ? "" : "dès " }}{{ c.from.amount }}</span>
+              <Icon :name="curIcon(c.from.currency)" class="ic" :class="c.from.currency" />{{ c.from.amount }}
             </span>
           </span>
         </button>
       </div>
-      <p class="ui-foot-note">Tous les vêtements qui comptent dans la collection s'achètent avec des pièces gagnées en jouant.</p>
+      <p class="ui-foot-note">Tout s'achète avec des pièces gagnées en jouant. Touche un article pour choisir sa couleur et l'essayer.</p>
     </section>
 
     <!-- ============ ÉPICERIE ============ -->
@@ -639,16 +633,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
 .center { justify-self: center; }
 .center-txt { text-align: center; }
 
-/* coffre : puce dorée quand il est prêt */
-.chest-btn { color: var(--ink-3); }
-.chest-btn .chest-ic { width: 26px; height: 26px; color: #c9a14a; }
-.chest-btn.ready { color: var(--coin-ink); background: linear-gradient(180deg, #fff6dc, #ffe6a8); box-shadow: 0 4px 12px rgba(240, 170, 40, 0.28), var(--hl); }
+/* coffre du jour : petit bouton, doré seulement quand il est prêt */
+.chest-btn { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 10px; border: 0; border-radius: var(--r-pill); background: #fff; box-shadow: var(--ui-soft); color: var(--hud-ink-2); font: 800 var(--t-md) / 1 var(--font-text); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.35s var(--spring-strong); }
+.chest-btn:active { transform: scale(0.94); }
+.chest-btn .chest-ic { width: 24px; height: 24px; color: var(--hud-ink-2); }
+.chest-btn.ready { color: var(--coin-ink); background: linear-gradient(180deg, #fff6dc, #ffe6a8); box-shadow: 0 4px 12px rgba(240, 170, 40, 0.28); }
 .ready .chest-ic { color: var(--warn); animation: wobble 1.8s ease-in-out infinite; }
-.chest-btn .ui-dot { top: 2px; right: 2px; }
+.chest-btn .ui-dot { top: 4px; right: 4px; }
 @keyframes wobble {
   0%, 70%, 100% { transform: rotate(0); }
   76% { transform: rotate(-14deg) scale(1.08); }
@@ -657,31 +652,49 @@ onBeforeUnmount(() => {
   94% { transform: rotate(5deg); }
 }
 
-/* coloris du jour */
-.daily { background: linear-gradient(135deg, #fffaf0, #fff0d1); box-shadow: 0 4px 14px rgba(240, 170, 40, 0.2), inset 0 0 0 2px #ffe3a6; }
-.daily-kicker { color: var(--warn-ink); }
-.daily .ui-thumb { background: #fff; }
-.daily-badge { align-self: flex-start; font: 700 var(--t-md) var(--font-title); padding: 5px 10px; transform: rotate(6deg); }
-.art-ic { color: var(--ink); filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.2)); }
+/* catégories : rangée d'icônes (la sélection = aplat bleu ciel) */
+.cats { display: flex; gap: 8px; overflow-x: auto; margin: -6px -16px; padding: 6px 16px 10px; scrollbar-width: none; }
+.cats::-webkit-scrollbar { display: none; }
+.cat { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 60px; min-height: 56px; padding: 6px 10px; border: 0; border-radius: var(--r-md); background: #fff; box-shadow: var(--ui-soft); color: var(--hud-ink); font: 800 var(--t-xs) / 1 var(--font-text); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong), background 0.2s, color 0.2s; }
+.cat .ic { width: 24px; height: 24px; color: var(--sky); }
+.cat:active { transform: scale(0.93); }
+.cat.is-on { background: var(--ui-on-bg); box-shadow: var(--ui-on-shadow); color: #fff; }
+.cat.is-on .ic { color: #fff; }
 
-/* grille d'articles */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-.item { padding-top: 14px; }
+/* grille d'articles : cartes blanches, une grande image, le nom, un prix */
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.grid > * { animation: rise 0.45s var(--spring) calc(var(--i, 0) * 35ms) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) scale(0.94); } to { opacity: 1; transform: none; } }
+
+.item { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 12px; border: 0; border-radius: var(--r-lg); background: #fff; box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
+.item:active { transform: scale(0.95); }
+.art { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, color-mix(in srgb, var(--ink) 14%, #eef3f9) 100%); }
+.art-ic { width: 56px; height: 56px; color: var(--ink); filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.22)); }
 .item.locked .art-ic { opacity: 0.35; filter: grayscale(0.7); }
-.art { position: relative; display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, var(--surface-2)); }
-.item.is-on .art { background: radial-gradient(circle at 40% 35%, #fff, #e6f7da); }
-.art-ic { width: 42px; height: 42px; }
-.art-lock { position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; padding: 3px; border-radius: 50%; background: #fff; color: var(--ink-3); box-shadow: var(--sh-1); }
-.name { min-height: 2.3em; display: grid; place-items: center; }
-.dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
-.cdot { width: 9px; height: 9px; border-radius: 50%; opacity: 0.3; }
-.cdot.have { opacity: 1; box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px #8fdc6a; }
-.meta { display: flex; align-items: center; justify-content: center; min-height: 22px; }
-.ui-price.small { font-size: var(--t-md); }
-.ui-price.small .ic { width: 17px; height: 17px; }
-.have { color: var(--accent-lo); margin-right: 2px; }
-.done { display: inline-flex; align-items: center; gap: 3px; font: 800 var(--t-sm) var(--font-text); color: var(--accent-lo); }
-.ok-ic { width: 16px; height: 16px; }
+.art-lock { position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; padding: 4px; border-radius: 50%; background: #fff; color: var(--hud-ink-2); box-shadow: var(--ui-soft); }
+.name { max-width: 100%; min-height: 2.3em; display: grid; place-items: center; font: 800 var(--t-md) / 1.15 var(--font-text); color: var(--hud-ink); overflow-wrap: anywhere; }
+.meta { display: flex; align-items: center; justify-content: center; min-height: 24px; }
+.ui-price.small { font-size: var(--t-lg); color: var(--hud-ink); }
+.ui-price.small .ic { width: 20px; height: 20px; }
+.soon { font: 700 var(--t-sm) / 1.2 var(--font-text); color: var(--hud-ink-2); }
+.promo { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: var(--r-pill); background: var(--warn); color: #fff; font: 800 var(--t-xs) / 1.2 var(--font-text); }
+.owned { position: absolute; top: 8px; right: 8px; display: grid; }
+.owned .ic { width: 22px; height: 22px; color: var(--accent-lo); }
+.item .ui-dot { top: 8px; right: 8px; left: auto; }
+
+/* offre du jour : une rangée discrète, première de la grille */
+.offer { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 14px 8px 10px; border: 0; border-radius: var(--r-lg); background: #fff; box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
+.offer:active { transform: scale(0.97); }
+.offer-art { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #fff, color-mix(in srgb, var(--ink) 16%, #eef3f9)); }
+.offer-ic { width: 32px; height: 32px; color: var(--ink); }
+.offer-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.offer-kicker { font: 800 var(--t-xs) / 1 var(--font-text); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warn-ink); }
+.offer-title { font: 800 var(--t-md) / 1.15 var(--font-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.offer-end { flex: none; display: grid; justify-items: end; gap: 3px; color: var(--hud-ink); font: 800 var(--t-sm) var(--font-text); }
+.offer-end .ic { width: 18px; height: 18px; }
+.offer-badge { padding: 2px 7px; border-radius: var(--r-pill); background: var(--warn); color: #fff; font: 800 var(--t-xs) / 1.2 var(--font-text); }
+.offer .ui-price { font-size: var(--t-md); }
 
 /* lignes (épicerie, objets) */
 .ui-row { transition: box-shadow 0.3s; }
@@ -777,7 +790,7 @@ onBeforeUnmount(() => {
 .slide-enter-active, .slide-leave-active { transition: transform 0.3s cubic-bezier(0.3, 1.2, 0.5, 1), opacity 0.2s; }
 .slide-enter-from, .slide-leave-to { transform: translate(-50%, 40px); opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .ready .chest-ic, .shake .big-gift, .open .rays, .hero.party .hero-ic, .loot { animation: none; }
+  .grid > *, .ready .chest-ic, .shake .big-gift, .open .rays, .hero.party .hero-ic, .loot { animation: none; }
   .confetti { display: none; }
 }
 </style>
