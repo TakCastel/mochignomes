@@ -1,13 +1,15 @@
 <template>
   <Transition name="ksheet">
-    <div v-if="open" class="k-overlay" @click.self="onBackdrop">
-      <section ref="kSheet" class="ui-half-sheet k-sheet" :class="{ 'is-tall': tall }" role="dialog" aria-modal="true" aria-label="Cuisine">
-        <div class="grab-zone" v-on="grab"><div class="ui-grab" /></div>
+    <div v-if="open" class="k-overlay">
+      <section class="k-sheet" role="dialog" aria-label="Cuisine">
         <header class="ui-sheet-head">
           <button v-if="phase !== 'list'" class="ui-icon-btn" aria-label="Retour aux recettes" @click="backToList">
             <Icon name="solar:arrow-left-bold" class="ic" />
           </button>
-          <span v-else class="ui-medal ui-medal--sm"><Icon name="solar:chef-hat-bold-duotone" class="ic" /></span>
+          <button v-else class="ui-icon-btn" aria-label="Retour à la maison" @click="close">
+            <Icon name="solar:arrow-left-bold" class="ic" />
+          </button>
+          <span class="ui-medal ui-medal--sm ui-medal--sky"><Icon name="solar:chef-hat-bold-duotone" class="ic" /></span>
           <div class="ui-sheet-title">
             <h2>{{ headTitle }}</h2>
             <p>{{ headSub }}</p>
@@ -15,9 +17,6 @@
           <span class="ui-price coins" :aria-label="`${inv.coins} pièces`">
             <Icon name="mochi:coin" class="ic" />{{ inv.coins }}
           </span>
-          <button class="ui-icon-btn" aria-label="Fermer la cuisine" @click="close">
-            <Icon name="solar:close-circle-bold" class="ic" />
-          </button>
         </header>
 
         <!-- 1. Choisir une recette -->
@@ -197,7 +196,7 @@
 </template>
 
 <script setup>
-// Cuisine : demi-hauteur pour la voir en 3D au-dessus (elle se penche, bave si elle est
+// Cuisine : page plein écran comme les autres onglets (elle se penche, bave si elle est
 // gourmande, goûte). Choisir une recette → UNE étape de timing « cuire » → 1 à 3 étoiles →
 // « Lui donner » ou « Garder au frigo ». Une recette déjà réussie à 3★ se refait d'un geste.
 // Le plat est mis au frigo dès la fin de la cuisson (inv.cook) : fermer en cours de route ne perd rien.
@@ -205,7 +204,6 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue"
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import { V1_RECIPES, ingredientById, missingIngredients, groceryIngredients, starMult } from "~/lib/catalog";
 import { useCreatureMood, gameCommand, gameSay, gameToast } from "~/composables/useCreatureMood";
-import { useSheetDrag } from "~/composables/useSheetDrag";
 import { beep, haptic } from "~/composables/useBeep";
 import * as live from "~/composables/useLiveCreature";
 
@@ -215,9 +213,6 @@ const props = defineProps({
   focus: { type: String, default: "" },
 });
 const emit = defineEmits(["close"]);
-// volet tirable par sa poignée (bas = fermer, haut = agrandir)
-const kSheet = ref(null);
-const { tall, grab } = useSheetDrag(kSheet, () => close());
 
 const { store } = useCreatureMood();
 const inv = useInventoryStore();
@@ -489,10 +484,6 @@ function close() {
   clearTimeout(stopTimer);
   emit("close");
 }
-function onBackdrop() {
-  if (phase.value === "cook" && !stopped.value) return; // pas de fermeture accidentelle en pleine cuisson
-  close();
-}
 
 // ---------- elle, en 3D au-dessus ----------
 function creature() {
@@ -545,7 +536,6 @@ watch(() => props.open, (o) => {
   if (o) {
     phase.value = "list";
     current.value = null;
-    setFraming(true);
     pose("watch");
     if (gourmande()) setTimeout(() => props.open && phase.value === "list" && gameSay("Ça sent bon... j'ai déjà faim !"), 500);
   } else if (import.meta.client) {
@@ -565,18 +555,24 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* page plein écran comme Sac, Boutique, Elle : la barre du bas (z 28) passe par-dessus */
 .k-overlay {
   position: fixed;
   inset: 0;
   z-index: 20;
   display: flex;
-  align-items: flex-end;
   justify-content: center;
-  /* très léger : elle doit rester visible au-dessus */
-  background: linear-gradient(180deg, rgba(30, 40, 70, 0) 30%, rgba(30, 40, 70, 0.18));
 }
-.k-sheet { height: calc(54vh + var(--nav-h, 78px)); height: calc(54dvh + var(--nav-h, 78px)); min-height: 420px; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 12px); }
-.k-sheet.is-tall { height: 92vh; height: 92dvh; }
+.k-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  color: var(--ink);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px calc(env(safe-area-inset-bottom, 0px) + var(--nav-h, 78px) + 12px);
+  background: linear-gradient(180deg, color-mix(in srgb, #e2f0ff var(--tint), var(--surface-2)) 0%, color-mix(in srgb, #eef6ff var(--tint), var(--surface-2)) 30%, var(--surface-2) 70%);
+}
 .coins {
   flex: none; min-height: 36px; padding: 0 12px 0 8px; border-radius: var(--r-pill);
   background: var(--surface); color: var(--hud-ink); font-size: 15px; box-shadow: var(--ui-soft);
@@ -722,12 +718,13 @@ onBeforeUnmount(() => {
 .result-actions { display: flex; gap: 10px; justify-content: center; margin-top: auto; padding: 10px 6px 20px; width: 100%; box-sizing: border-box; }
 .result-actions .ui-btn { flex: 1; min-width: 0; max-width: 220px; font-size: 15px; padding: 0 12px; }
 
-.ksheet-enter-active, .ksheet-leave-active { transition: opacity 0.25s; }
-.ksheet-enter-active .k-sheet, .ksheet-leave-active .k-sheet { transition: transform 0.32s cubic-bezier(0.3, 1.2, 0.5, 1); }
-.ksheet-enter-from, .ksheet-leave-to { opacity: 0; }
-.ksheet-enter-from .k-sheet, .ksheet-leave-to .k-sheet { transform: translateY(100%); }
+/* même entrée que les autres pages : monte de quelques pixels en apparaissant */
+.ksheet-enter-active { transition: opacity 0.28s ease-out, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1); }
+.ksheet-leave-active { transition: opacity 0.16s ease-in, transform 0.18s ease-in; }
+.ksheet-enter-from { opacity: 0; transform: translateY(28px); }
+.ksheet-leave-to { opacity: 0; transform: translateY(12px); }
 @media (prefers-reduced-motion: reduce) {
-  .ksheet-enter-active .k-sheet, .ksheet-leave-active .k-sheet { transition: none; }
+  .ksheet-enter-active, .ksheet-leave-active { transition: none; }
   .stop, .pan.sizzle, .steam i, .core, .card, .card.flash::after { animation: none; }
 }
 </style>
