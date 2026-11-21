@@ -50,6 +50,7 @@ import { gameBus } from "~/composables/useCreatureMood";
 import { activeActivity } from "~/composables/useLiveCreature";
 import { useActionList } from "~/composables/useActionList";
 import { V1_ACTIVITIES } from "~/lib/catalog";
+import { currentGuideStep } from "~/lib/guides";
 
 const props = defineProps({
   anchor: { type: Object, default: () => ({}) }, // { x, y, r, top, bottom } en px, repère du parent plein écran
@@ -351,6 +352,8 @@ function onIdle() {
   if (!afterPick && ordered.value.some((a) => a.cool)) return arm(1000);
   // tutoriel : la pilule de l'étape reste affichée tant qu'on ne l'a pas touchée
   if (!afterPick && !tutoDone.value) return arm(6000);
+  // tuto d'une nouveauté qui se fait ici (Foot, Télé…) : pareil
+  if (!afterPick && props.focus && currentGuideStep(store)?.ring === props.focus) return arm(6000);
   requestClose();
 }
 

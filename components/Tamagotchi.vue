@@ -54,6 +54,7 @@ import { STATS, SKY } from "~/lib/gameUi";
 import { setLiveCreature, activeActivity } from "~/composables/useLiveCreature";
 import { bindOutfit } from "~/composables/useOutfit";
 import { houseFx } from "~/composables/useHouse";
+import { currentGuideStep } from "~/lib/guides";
 
 const props = defineProps({
   phase: { type: String, default: "day" },
@@ -111,6 +112,28 @@ watch(() => [store.onboardStep, !!creature.value], ([s, ready]) => {
   }, s === 2 ? 900 : 1800);
 });
 onBeforeUnmount(() => clearTimeout(tutoTimer));
+// tuto d'une nouveauté (lib/guides.js) : une étape qui se fait dans ce menu l'ouvre seul, la bonne pilule
+// mise en avant (Foot, Télé…). Rouvert au retour sur l'écran principal si l'étape n'est pas faite.
+let guideTimer = 0;
+watch(
+  () => {
+    const st = currentGuideStep(store);
+    const ev = store.unlockEvent;
+    const free = !!creature.value && !(ev && !ev.seen) && !gameBus.page && !gameBus.sheet && !gameBus.activity && !activeActivity.value;
+    return st?.ring && free ? `${store.guide.key}:${store.guide.step}:${st.ring}` : "";
+  },
+  (id) => {
+    clearTimeout(guideTimer);
+    if (!id) return;
+    const focus = id.split(":").slice(2).join(":");
+    guideTimer = setTimeout(() => {
+      if (ring.value || inSac.value || gameBus.page || gameBus.sheet) return;
+      openRing(focus);
+    }, 900);
+  },
+  { immediate: true }
+);
+onBeforeUnmount(() => clearTimeout(guideTimer));
 function onPicked() { touched(); }
 // Sac ouvert (volet latéral) : elle essaie ses tenues. Pas de bulle, pas de menu ;
 // un toucher déclenche une petite pose d'essayage
@@ -361,7 +384,7 @@ function onPoke(p) {
   }
   if (n >= 3) return; // en rafale on ne rouvre pas à chaque toucher
   if (asleep) say("Mmh... laisse-moi dormir");
-  ring.value = { focus: null, minTop: guideBottom() };
+  ring.value = { focus: currentGuideStep(store)?.ring || null, minTop: guideBottom() };
 }
 
 // Poses d'essayage (Sac) : on les enchaîne dans l'ordre, chaque toucher passe à la suivante
