@@ -7,6 +7,8 @@ import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, stageFor, nextStag
 import { pickWish } from "~/lib/wishes";
 import { questsForDay } from "~/lib/quests";
 import { migrateSnapshot, SCHEMA } from "~/lib/migrate";
+import { useInventoryStore } from "~/stores/useInventoryStore";
+import { activityById, activityReward, recipeById, starMult } from "~/lib/catalog";
 
 // Vitesse de vie, en points par heure réelle.
 // La créature vit même quand l'appli est fermée : à l'ouverture,
@@ -30,8 +32,8 @@ const EARLY_MS = 15 * 60000; // première session : tout va plus vite
 const EARLY_COOLDOWN = 0.3;
 const DAY_MS = 86400000;
 
-// Recharges de base (ms)
-const COOLDOWNS = { nourrir: 20000, laver: 20000, jouer: 15000, danser: 15000, calin: 8000, soigner: 30000, coucher: 0, chatouiller: 0 };
+// Recharges de base (ms) : courtes, pour garder un bon rythme
+const COOLDOWNS = { nourrir: 8000, laver: 8000, jouer: 6000, danser: 6000, calin: 3000, soigner: 12000, coucher: 0, chatouiller: 0 };
 export const ACTIONS = Object.keys(COOLDOWNS);
 
 // Personnalité : chaque trait va de 0 à 1 et se forme selon les soins.
@@ -42,8 +44,8 @@ const TRAIT_FADE_PER_DAY = 0.04;
 const XP = { nourrir: 4, laver: 4, jouer: 6, danser: 3, calin: 2, chatouiller: 1, soigner: 3, coucher: 2 };
 
 export function levelInfo(xp) {
-  let level = 1, rest = xp, need = 40;
-  while (rest >= need) { rest -= need; level++; need = 40 + 15 * (level - 1); }
+  let level = 1, rest = xp, need = 25;
+  while (rest >= need) { rest -= need; level++; need = 25 + 10 * (level - 1); }
   return { level, into: rest, need };
 }
 
@@ -55,6 +57,18 @@ const SURPRISES = [
 ];
 
 const rand = (a, b) => a + Math.random() * (b - a);
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+
+// Pièces gagnées
+const LEVEL_COINS = 25; // à chaque niveau
+const LEVEL_GEMS = 10; // tous les 5 niveaux
+const WISH_COINS = 5; // envie exaucée
+const STREAK_GEMS = 5; // tous les 7 jours de série
+// Une activité exauce l'envie correspondante
+const ACTIVITY_WISH = { foot: "jouer", course: "jouer", danse: "danser" };
+
+// Le Sac (pièces, objets) : appelé à l'intérieur des actions seulement
+const inv = () => useInventoryStore();
 const safeToast = (text, icon) => { try { gameToast(text, icon); } catch { /* hors navigateur */ } };
 
 let decayTimer = null;
@@ -103,12 +117,15 @@ export const useTamagotchiStore = defineStore(
     const nextWishAt = ref(0);
     const lastWishId = ref("");
     const surpriseLog = ref({ day: "", n: 0 });
+    // schéma 3
+    const welcomeGift = ref(0); // pièces offertes aux parties existantes, versées au démarrage
     // non persistant
     const away = ref(null);
     const awaySeconds = ref(0);
     const tick = ref(Date.now());
     const speed = ref(1);
     let lastTickleXp = 0;
+    let needQuestUpgrade = false;
 
     const level = computed(() => levelInfo(xp.value).level);
     const unlockedPages = computed(() => {
@@ -168,16 +185,44 @@ export const useTamagotchiStore = defineStore(
       const before = level.value;
       xp.value += n;
       const levelUp = level.value > before;
+      let coins = 0, gems = 0;
       if (levelUp) {
         addJournal("niveau", `Niveau ${level.value} atteint.`, "solar:star-bold-duotone");
         safeToast(`Niveau ${level.value} !`, "solar:star-bold-duotone");
+        for (let l = before + 1; l <= level.value; l++) {
+          coins += LEVEL_COINS;
+          if (l % 5 === 0) gems += LEVEL_GEMS;
+        }
+        try {
+          inv().earn(coins, `Niveau ${level.value}`);
+          if (gems) inv().earnGems(gems, `Niveau ${level.value}`);
+        } catch { /* Sac indisponible */ }
       }
-      return { levelUp, stageUp: evalStage() };
+      return { levelUp, stageUp: evalStage(), coins, gems };
     }
 
     // ---------- visites, série, défis ----------
     function ensureQuests(key) {
-      if (quests.value.day !== key) quests.value = { day: key, list: questsForDay(key) };
+      if (quests.value.day === key) return;
+      let props = null;
+      try { props = inv().props; } catch { /* Sac indisponible */ }
+      quests.value = { day: key, list: questsForDay(key, level.value, props) };
+    }
+    // Ancien format (3 défis sans pièces) : on passe au nouveau en gardant l'avancement du jour
+    function upgradeQuests() {
+      const old = quests.value;
+      if (!old?.day) return;
+      let props = null;
+      try { props = inv().props; } catch { /* Sac indisponible */ }
+      const fresh = questsForDay(old.day, level.value, props);
+      const keep = (old.list || []).filter((q) => !fresh.some((f) => f.action === q.action))
+        .map((q) => ({ ...q, xp: q.xp ?? 10, coins: q.coins ?? 20 }));
+      const list = fresh.map((f) => {
+        const o = (old.list || []).find((q) => q.action === f.action);
+        return o ? { ...f, progress: Math.min(f.target, o.progress || 0), claimed: !!o.claimed } : f;
+      });
+      // les défis déjà commencés restent, on complète jusqu'à 4
+      quests.value = { day: old.day, list: [...keep, ...list].slice(0, Math.max(4, keep.length)) };
     }
 
     function checkDailyVisit() {
@@ -208,22 +253,35 @@ export const useTamagotchiStore = defineStore(
         jokers.value += 1;
         safeToast("Un joker gagné pour ta série !", "solar:gift-bold-duotone");
       }
+      if (hatched.value && streak.value > 0 && streak.value % 7 === 0) {
+        try { inv().earnGems(STREAK_GEMS, `${streak.value} jours de série`); } catch { /* Sac indisponible */ }
+      }
       if (hatched.value && onboardStep.value >= 6) pendingBonus.value = 10 + 5 * (Math.min(streak.value, 7) - 1);
     }
 
+    // Pièces du bonus du jour (selon la série)
+    const pendingBonusCoins = computed(() => (pendingBonus.value ? 20 + 5 * (Math.min(Math.max(streak.value, 1), 7) - 1) : 0));
+
+    // Renvoie l'expérience gagnée (nombre) ; les pièces sont versées dans le Sac
     function claimBonus() {
       const gained = pendingBonus.value;
+      const coins = pendingBonusCoins.value;
       pendingBonus.value = 0;
       if (gained) addXp(gained);
+      if (coins) { try { inv().earn(coins); } catch { /* Sac indisponible */ } }
       return gained;
     }
 
     function claimQuest(id) {
       const q = quests.value.list.find((x) => x.id === id);
-      if (!q || q.claimed || q.progress < q.target) return { ok: false, xp: 0, levelUp: false };
+      if (!q || q.claimed || q.progress < q.target) return { ok: false, xp: 0, coins: 0, levelUp: false };
       q.claimed = true;
-      const r = addXp(10);
-      return { ok: true, xp: 10, levelUp: r.levelUp };
+      const xpGain = q.xp ?? 10;
+      const coins = q.coins ?? 20;
+      try { inv().earn(coins); } catch { /* Sac indisponible */ }
+      const r = addXp(xpGain);
+      count("defi");
+      return { ok: true, xp: xpGain, coins, levelUp: r.levelUp };
     }
 
     const count = (key, n = 1) => {
@@ -234,6 +292,8 @@ export const useTamagotchiStore = defineStore(
         if (q.progress >= q.target) safeToast(`Défi réussi : ${q.label}`, "solar:cup-star-bold-duotone");
       }
     };
+    // Compteur d'événements (défis, succès) utilisable depuis les autres stores et composants
+    function countEvent(key, n = 1) { count(key, n); }
 
     function rename(newName) {
       const clean = String(newName || "").trim().slice(0, 16);
@@ -262,7 +322,9 @@ export const useTamagotchiStore = defineStore(
       quests.value = { day: "", list: [] }; journal.value = [];
       bestStreak.value = 0; totalDays.value = 0; jokers.value = 0; streak.value = 0;
       lastVisitDay.value = ""; pendingBonus.value = 0; nextWishAt.value = 0; lastWishId.value = "";
-      surpriseLog.value = { day: "", n: 0 }; away.value = null;
+      surpriseLog.value = { day: "", n: 0 }; away.value = null; welcomeGift.value = 0;
+      // le Sac repart aussi de zéro, sauf les gemmes (elles ont pu être achetées)
+      try { const keepGems = inv().gems; inv().resetInventory(); inv().gems = Math.max(keepGems, inv().gems); } catch { /* Sac indisponible */ }
       schema.value = SCHEMA;
       checkDailyVisit();
     }
@@ -289,12 +351,15 @@ export const useTamagotchiStore = defineStore(
       const patch = migrateSnapshot({
         schema: schema.value, hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value,
         energy: energy.value, health: health.value, lastUpdate: lastUpdate.value, bornAt: bornAt.value,
-        streak: streak.value, totalDays: totalDays.value, bestStreak: bestStreak.value,
+        streak: streak.value, totalDays: totalDays.value, bestStreak: bestStreak.value, hatched: hatched.value,
       });
       if (!patch) return;
       const refs = { schema, hunger, cleanliness, fun, energy, health, hatched, onboardStep, hatchedAt, stage, exhausted, totalDays, bestStreak };
       for (const [k, v] of Object.entries(patch)) if (refs[k]) refs[k].value = v;
       if (patch.hatched) stage.value = stageFor(level.value, ageDays());
+      if (patch.welcomeCoins) welcomeGift.value += patch.welcomeCoins;
+      // les défis passent au nouveau format au démarrage (le Sac doit être prêt)
+      if (patch.upgradeQuests) needQuestUpgrade = true;
     }
 
     // ---------- éclosion, tutoriel ----------
@@ -446,16 +511,9 @@ export const useTamagotchiStore = defineStore(
 
       // envie exaucée
       let wishDone = false;
-      if (wish.value && wish.value.action === key && !(key === "coucher" && wasSleeping)) {
+      if (!(key === "coucher" && wasSleeping) && fulfillWish(key, now)) {
         wishDone = true;
         xpGain += 5;
-        wishesDone.value += 1;
-        lastWishId.value = wish.value.id;
-        if (wishesDone.value === 1 || wishesDone.value % 5 === 0) {
-          addJournal("envie", `Envie exaucée (${wishesDone.value} au total). Elle est ravie !`, "solar:chat-round-dots-bold-duotone");
-        }
-        wish.value = null;
-        scheduleWish(now);
       }
 
       // tutoriel : l'étape avance dès que l'action attendue est faite
@@ -463,11 +521,126 @@ export const useTamagotchiStore = defineStore(
       else if (onboardStep.value === 3 && key === "jouer") onboardStep.value = 4;
       else if (onboardStep.value === 4 && key === "chatouiller") onboardStep.value = 5;
 
+      // quelques pièces pour chaque soin utile (pas de pièces quand l'action ne rapporte plus d'expérience)
+      let coins = 0;
+      if (xpGain > 0) coins = key === "chatouiller" ? 1 : randInt(2, 4);
+      if (wishDone) coins += WISH_COINS;
+      if (coins) { try { inv().earn(coins); } catch { coins = 0; } }
+
       const r = addXp(xpGain);
       const after = { hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, health: health.value };
       const gains = {};
       for (const k of Object.keys(after)) if (after[k] > before[k]) gains[k] = Math.round(after[k] - before[k]);
-      return { ok: true, gains, xp: xpGain, wishDone, levelUp: r.levelUp, stageUp: r.stageUp };
+      return { ok: true, gains, xp: xpGain, coins, wishDone, levelUp: r.levelUp, stageUp: r.stageUp };
+    }
+
+    // Exauce l'envie en cours si elle correspond à cette action. Renvoie true si exaucée.
+    function fulfillWish(actionKey, now = Date.now()) {
+      if (!wish.value || wish.value.action !== actionKey) return false;
+      wishesDone.value += 1;
+      lastWishId.value = wish.value.id;
+      if (wishesDone.value === 1 || wishesDone.value % 5 === 0) {
+        addJournal("envie", `Envie exaucée (${wishesDone.value} au total). Elle est ravie !`, "solar:chat-round-dots-bold-duotone");
+      }
+      wish.value = null;
+      scheduleWish(now);
+      return true;
+    }
+
+    const snap = () => ({ hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, health: health.value });
+    const diffGains = (before) => {
+      const after = snap(), gains = {};
+      for (const k of Object.keys(after)) if (Math.round(after[k] - before[k]) !== 0) gains[k] = Math.round(after[k] - before[k]);
+      return gains;
+    };
+    const bump = (ref_, n) => { ref_.value = Math.min(100, Math.max(0, ref_.value + n)); };
+
+    // ---------- activités (mini-jeux 3D) ----------
+    // Peut-elle faire cette activité maintenant ? (à vérifier avant de lancer le mini-jeu)
+    function canActivity(id) {
+      const a = activityById(id);
+      if (!a) return { ok: false, reason: "Activité inconnue." };
+      if (!hatched.value) return { ok: false, reason: "Elle n'est pas encore née !" };
+      if (level.value < a.minLevel) return { ok: false, reason: `Débloqué au niveau ${a.minLevel}.` };
+      try { if (a.prop && !inv().hasProp(a.prop)) return { ok: false, reason: "Il te manque un objet.", needProp: a.prop }; } catch { /* Sac indisponible */ }
+      if (isSleeping.value) return { ok: false, reason: "Elle dort, chut..." };
+      if (exhausted.value) return { ok: false, reason: "Elle est trop épuisée, laisse-la se reposer." };
+      if (energy.value < a.energyCost + 3) return { ok: false, reason: "Elle est trop fatiguée. Un petit dodo ?" };
+      return { ok: true, reason: "" };
+    }
+
+    // À la fin d'un mini-jeu : applique les effets, l'expérience, les pièces et le record.
+    // Renvoie { ok, reason?, gains, xp, coins, best, isRecord, wishDone, levelUp, stageUp }
+    function applyActivity(id, { score = 0 } = {}) {
+      const now = Date.now();
+      tick.value = now;
+      const a = activityById(id);
+      // canActivity est vérifié au lancement ; à la fin, on ne refuse que l'impossible
+      // (la partie jouée n'est jamais perdue, même si l'énergie a baissé entre-temps)
+      const reason = !a ? "Activité inconnue." : !hatched.value ? "Elle n'est pas encore née !" : "";
+      if (reason) return { ok: false, reason, gains: {}, xp: 0, coins: 0, best: 0, isRecord: false, wishDone: false, levelUp: false, stageUp: null };
+      const before = snap();
+      const reward = activityReward(id, score);
+      bump(fun, Math.round(a.funGain * (0.7 + 0.5 * reward.ratio) * (1 + 0.2 * tr("joueuse"))));
+      bump(energy, -a.energyCost);
+      bump(hunger, -Math.round(a.energyCost * 0.4));
+      if (id === "foot" || id === "course") bump(cleanliness, -6);
+      if (id === "tele") bump(health, 1);
+      nudge("joueuse", 0.02); soothe("rancuniere", 0.02);
+      count("activite:" + id);
+      count("activite");
+
+      let xpGain = reward.xp;
+      let coins = reward.coins;
+      let wishDone = false;
+      if (ACTIVITY_WISH[id] && fulfillWish(ACTIVITY_WISH[id], now)) { wishDone = true; xpGain += 5; coins += WISH_COINS; }
+      let rec = { best: 0, isRecord: false };
+      try {
+        rec = inv().recordScore(id, score);
+        if (rec.isRecord) coins += 5;
+        inv().earn(coins);
+      } catch { coins = 0; }
+      const r = addXp(xpGain);
+      return { ok: true, gains: diffGains(before), xp: xpGain, coins, best: rec.best, isRecord: rec.isRecord, wishDone, levelUp: r.levelUp, stageUp: r.stageUp };
+    }
+
+    // ---------- repas cuisinés ----------
+    function canEatMeal(recipeId) {
+      if (!recipeById(recipeId)) return { ok: false, reason: "Recette inconnue." };
+      if (isSleeping.value) return { ok: false, reason: "Elle dort, chut..." };
+      if (onboardStep.value >= 6 && hunger.value > 90) return { ok: false, reason: "Elle n'a pas faim." };
+      return { ok: true, reason: "" };
+    }
+
+    // Lui fait manger un plat (le plat a déjà été pris dans le frigo ou vient d'être cuisiné).
+    // stars (1-3) : 1x / 1,25x / 1,5x sur les effets et l'expérience.
+    // Renvoie { ok, reason?, gains, xp, coins, wishDone, levelUp, stageUp }
+    function eatMeal(recipeId, stars = 1) {
+      const now = Date.now();
+      tick.value = now;
+      const c = canEatMeal(recipeId);
+      if (!c.ok) return { ok: false, reason: c.reason, gains: {}, xp: 0, coins: 0, wishDone: false, levelUp: false, stageUp: null };
+      const rcp = recipeById(recipeId);
+      const mult = starMult(stars);
+      const before = snap();
+      const fx = rcp.effects || {};
+      const refs = { hunger, fun, health, energy, cleanliness };
+      for (const [k, v] of Object.entries(fx)) {
+        if (!refs[k]) continue;
+        const boost = k === "hunger" ? 1 + 0.3 * tr("gourmande") : 1;
+        bump(refs[k], v > 0 ? Math.round(v * mult * boost) : v);
+      }
+      nudge("gourmande", 0.03); soothe("rancuniere", 0.02);
+      if (exhausted.value && health.value >= 25) { exhausted.value = false; count("revive"); }
+      count("repas");
+      count("nourrir");
+      let xpGain = Math.round((rcp.xp || 0) * mult);
+      let coins = 2 + Math.max(1, Math.min(3, Math.round(stars)));
+      let wishDone = false;
+      if (fulfillWish("nourrir", now)) { wishDone = true; xpGain += 5; coins += WISH_COINS; }
+      try { inv().earn(coins); } catch { coins = 0; }
+      const r = addXp(xpGain);
+      return { ok: true, gains: diffGains(before), xp: xpGain, coins, wishDone, levelUp: r.levelUp, stageUp: r.stageUp };
     }
 
     function countPhoto() { count("photo"); }
@@ -615,6 +788,12 @@ export const useTamagotchiStore = defineStore(
 
     function startDecay() {
       migrate();
+      if (needQuestUpgrade) { needQuestUpgrade = false; upgradeQuests(); }
+      if (welcomeGift.value > 0) {
+        const n = welcomeGift.value;
+        welcomeGift.value = 0;
+        try { inv().earn(n, "Cadeau : la boutique est ouverte !"); } catch { welcomeGift.value = n; }
+      }
       if (!bornAt.value) bornAt.value = Date.now();
       if (decayTimer) return;
       awaySeconds.value = lastUpdate.value ? Math.max(0, (Date.now() - lastUpdate.value) / 1000) : 0;
@@ -668,8 +847,9 @@ export const useTamagotchiStore = defineStore(
       lastVisitDay, streak, pendingBonus, awaySeconds,
       hatched, eggHeat, onboardStep, hatchedAt, stage, cooldowns, wish, wishesDone, illness, exhausted,
       quests, journal, bestStreak, totalDays, jokers, nextWishAt, lastWishId, surpriseLog,
-      away, tick, level, stageInfo, unlockedPages,
-      rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, addJournal,
+      away, tick, level, stageInfo, unlockedPages, welcomeGift, pendingBonusCoins,
+      rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, addJournal, countEvent,
+      canActivity, applyActivity, canEatMeal, eatMeal,
       canAct, applyAction, hatch, tapEgg, setOnboardStep, finishOnboarding, dismissAway,
       wakeUp, startSleeping, startDecay, predictNext, migrate,
     };
@@ -681,6 +861,7 @@ export const useTamagotchiStore = defineStore(
         "neglectedAt", "xp", "bornAt", "counters", "unlocked", "palette", "ui", "lastVisitDay", "streak", "pendingBonus",
         "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
         "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
+        "welcomeGift",
       ],
       afterHydrate: (ctx) => { ctx.store.migrate?.(); },
     },
