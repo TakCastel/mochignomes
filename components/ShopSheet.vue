@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
 
 .item { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 12px; border: 0; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
 .item:active { transform: scale(0.95); }
-.art { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 14%, #eef3f9) 100%); }
+.art { position: relative; display: grid; place-items: center; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 12%, var(--surface-2)) 100%); }
 .art-ic { width: 56px; height: 56px; color: var(--ink); filter: drop-shadow(0 2px 2px rgba(40, 55, 80, 0.22)); }
 .item.locked .art-ic { opacity: 0.35; filter: grayscale(0.7); }
 .art-lock { position: absolute; right: -2px; bottom: -2px; width: 26px; height: 26px; padding: 4px; border-radius: 50%; background: var(--surface); color: var(--hud-ink-2); box-shadow: var(--ui-soft); }
@@ -707,7 +707,7 @@ onBeforeUnmount(() => {
 /* offre du jour : une rangée discrète, première de la grille */
 .offer { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 14px 8px 10px; border: 0; border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--ui-soft); color: var(--hud-ink); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.38s var(--spring-strong); }
 .offer:active { transform: scale(0.97); }
-.offer-art { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 16%, #eef3f9)); }
+.offer-art { flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(circle at 50% 35%, var(--surface), color-mix(in srgb, var(--ink) 14%, var(--surface-2))); }
 .offer-ic { width: 32px; height: 32px; color: var(--ink); }
 .offer-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
 .offer-kicker { font: 800 var(--t-xs) / 1 var(--font-text); letter-spacing: 0.04em; text-transform: uppercase; color: var(--warn-ink); }

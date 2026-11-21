@@ -64,6 +64,7 @@ html[data-theme="sombre"] {
   --sh-3: 0 10px 28px rgba(0, 0, 0, 0.45);
   --sh-pop: 0 18px 48px rgba(0, 0, 0, 0.6);
   --scrim: rgba(5, 8, 15, 0.6);
+  --nav-shadow: drop-shadow(0 -4px 14px rgba(0, 0, 0, 0.45));
   --halo: #262d3b; /* contour des icônes : la couleur des pilules, pas un blanc qui clignote */
   --sky: #4ea6ee;
   --sky-hi: #7cc0f5;
@@ -137,6 +138,7 @@ html[data-theme="contraste"] {
   --hud-shadow: 0 0 0 2px #000000;
   --ui-sh-1: 0 2px 0 #000000;
   --ui-soft: none;
+  --nav-shadow: none;
 }
 /* contour noir sur toutes les plaques (outline : ne gêne pas l'aplat de sélection) */
 html[data-theme="contraste"] :is(.ui-card, .ui-tile, .ui-row, .ui-chip, .ui-tab, .ui-btn--secondary, .ui-btn--soft, .ui-empty, .ui-thumb, .ui-dialog, .ui-icon-btn, .ui-half-sheet) {
