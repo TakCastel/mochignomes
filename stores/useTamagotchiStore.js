@@ -7,6 +7,7 @@ import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_
 import { pickWish } from "~/lib/wishes";
 import { questsForDay, QUEST_BONUS } from "~/lib/quests";
 import { migrateSnapshot, SCHEMA } from "~/lib/migrate";
+import { appearanceFor, ORIGINAL_APPEARANCE } from "~/lib/appearance";
 import { useInventoryStore } from "~/stores/useInventoryStore";
 import {
   activityById, activityReward, recipeById, starMult, MASTERY, masteryById, PLAY_DAYS_REWARDS, RECORD_COINS,
@@ -143,6 +144,9 @@ export const useTamagotchiStore = defineStore(
     const sessions = ref(0); // nombre de visites (retour après SESSION_GAP_MS)
     const revealAt = ref({ play: 0, session: 0 }); // moment de la dernière nouveauté
     const unlockEvent = ref(null); // dernière nouveauté { key, label, icon, at, seen } (carte UnlockCard)
+    // schéma 6 : son apparence (lib/appearance.js), tirée à l'éclosion et gardée toute sa vie.
+    // null tant qu'elle est dans l'œuf ; les créatures écloses avant ce schéma gardent l'original.
+    const appearance = ref(null);
     // non persistant
     let sessionStartPlay = 0;
     let lastPlayTick = 0;
@@ -371,7 +375,7 @@ export const useTamagotchiStore = defineStore(
       bestStreak.value = 0; totalDays.value = 0; jokers.value = 0; streak.value = 0;
       lastVisitDay.value = ""; pendingBonus.value = 0; nextWishAt.value = 0; lastWishId.value = "";
       surpriseLog.value = { day: "", n: 0 }; away.value = null; welcomeGift.value = 0;
-      tasteSeed.value = ""; playsToday.value = { day: "", counts: {} }; mealBoostUntil.value = 0; returnGift.value = 0;
+      tasteSeed.value = ""; appearance.value = null; playsToday.value = { day: "", counts: {} }; mealBoostUntil.value = 0; returnGift.value = 0;
       // l'inventaire et les nouveautés débloquées sont CONSERVÉS : on redécouvre la garde-robe
       // avec une autre personnalité (nouveaux goûts à découvrir)
       try { inv().resetTastes(); } catch { /* Sac indisponible */ }
@@ -412,6 +416,8 @@ export const useTamagotchiStore = defineStore(
       // les défis passent au nouveau format au démarrage (le Sac doit être prêt)
       if (patch.upgradeQuests) needQuestUpgrade = true;
       if (patch.seedTastes && hatched.value && !tasteSeed.value) tasteSeed.value = `${hatchedAt.value || 0}${name.value || ""}`;
+      // déjà éclose avant les apparences : elle garde son look d'origine (pas de nouveau tirage)
+      if (patch.keepAppearance && hatched.value && !appearance.value) appearance.value = { ...ORIGINAL_APPEARANCE };
       // parties existantes : les nouveautés arrivent une à une (voir checkUnlocks), comme pour
       // une nouvelle partie. Les sauvegardes qui avaient tout reçu d'un coup repartent de zéro
       // (le Sac est conservé ; les cadeaux de découverte ne sont pas doublés).
@@ -431,6 +437,7 @@ export const useTamagotchiStore = defineStore(
       lastUpdate.value = now;
       stage.value = "bebe";
       tasteSeed.value = `${now}${name.value}`; // ses goûts sont fixés à la naissance
+      appearance.value = { ...appearanceFor(tasteSeed.value) }; // et son apparence aussi
       if (onboardStep.value < 1) onboardStep.value = 1;
       // petit creux et petit ennui pour le tutoriel
       hunger.value = 55; fun.value = 50; cleanliness.value = 80; energy.value = 100; health.value = 100;
@@ -1122,6 +1129,8 @@ export const useTamagotchiStore = defineStore(
       // cadeau de bienvenue des anciennes parties : versé quand la boutique ouvre
       if (features.value.boutique) payWelcomeGift();
       if (!bornAt.value) bornAt.value = hatchedAt.value || Date.now();
+      // filet de sécurité : une créature éclose sans apparence garde l'original
+      if (hatched.value && !appearance.value) appearance.value = { ...ORIGINAL_APPEARANCE };
       if (decayTimer) return;
       awaySeconds.value = lastUpdate.value ? Math.max(0, (Date.now() - lastUpdate.value) / 1000) : 0;
       if (typeof window !== "undefined") {
@@ -1179,7 +1188,7 @@ export const useTamagotchiStore = defineStore(
       hatched, eggHeat, onboardStep, hatchedAt, stage, cooldowns, wish, wishesDone, illness, exhausted,
       quests, journal, bestStreak, totalDays, jokers, nextWishAt, lastWishId, surpriseLog,
       away, tick, level, stageInfo, unlockedPages, welcomeGift, pendingBonusCoins,
-      features, tasteSeed, tastes, playsToday, mealBoostUntil, mealBoostActive, playDaysRewarded, returnGift, unlockEvent,
+      features, tasteSeed, tastes, appearance, playsToday, mealBoostUntil, mealBoostActive, playDaysRewarded, returnGift, unlockEvent,
       playMs, sessions, revealAt, ackUnlock,
       questsAllDone, questBonusReady, idleSuggestion,
       rename, resetGame, countPhoto, countGesture, claimBonus, claimQuest, claimQuestBonus, claimReturnGift, addJournal, countEvent,
@@ -1197,7 +1206,7 @@ export const useTamagotchiStore = defineStore(
         "hatched", "eggHeat", "onboardStep", "hatchedAt", "stage", "cooldowns", "wish", "wishesDone", "illness",
         "exhausted", "quests", "journal", "bestStreak", "totalDays", "jokers", "nextWishAt", "lastWishId", "surpriseLog",
         "welcomeGift", "features", "tasteSeed", "playsToday", "mealBoostUntil", "playDaysRewarded", "returnGift",
-        "playMs", "sessions", "revealAt", "unlockEvent",
+        "playMs", "sessions", "revealAt", "unlockEvent", "appearance",
       ],
       afterHydrate: (ctx) => { ctx.store.migrate?.(); },
     },
