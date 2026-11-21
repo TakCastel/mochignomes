@@ -1,7 +1,15 @@
 <template>
-  <!-- panneau des besoins : un rectangle blanc, deux colonnes ; médaillon rond à gauche,
-       libellé bleu marine puis jauge épaisse et brillante, humeur dans la dernière case -->
-  <section class="needs" aria-label="Besoins">
+  <!-- panneau des besoins : deux colonnes, médaillon rond à gauche, libellé bleu marine puis jauge ;
+       son bord bas épouse la bulle de la barre du bas (coin bas-gauche laissé libre pour elle).
+       L'humeur est à part, dans une pastille au-dessus. -->
+  <div class="stats">
+    <div class="mood" aria-live="polite">
+      <span class="mood-dot" :style="{ '--d': moodInfo[1] }" />
+      <span class="name">Humeur</span>
+      <span class="mood-v">{{ moodInfo[0] }}</span>
+    </div>
+    <div ref="wrap" class="shadow">
+  <section ref="panel" class="needs" :style="clipStyle" aria-label="Besoins">
     <button v-for="(n, i) in rows" :key="n.key" class="need" :class="['is-' + n.level, { 'is-up': bumped[n.key] }]" :style="{ '--i': i }" :aria-label="`${n.label} : ${Math.round(n.value)} sur 100`" @click="tap(n)">
       <span class="medal"><Icon :name="n.glyph" class="glyph" /></span>
       <span class="body">
@@ -9,18 +17,14 @@
         <span class="track"><span class="fill" :style="{ width: n.width + '%' }" /></span>
       </span>
     </button>
-    <div class="mood" :style="{ '--i': rows.length }" aria-live="polite">
-      <span class="mood-dot" :style="{ '--d': moodInfo[1] }" />
-      <span class="body">
-        <span class="name">Humeur</span>
-        <span class="mood-v">{{ moodInfo[0] }}</span>
-      </span>
-    </div>
   </section>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { computed, reactive, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
+import { navOrb, navBumpAt } from "~/composables/useNavOrb";
 import { MOOD_LABELS } from "~/lib/creatureLook";
 
 const { store, mood } = useCreatureMood();
@@ -75,23 +79,72 @@ function tap(n) {
   gameToast(text, n.icon);
   highlightAction(STAT_ACTION[n.key]);
 }
+
+// ---- bord bas qui épouse la bosse de la barre du bas ----
+const GAP = 7; // écart entre le panneau et la bosse
+const R = 16; // coins du panneau
+const panel = ref(null);
+const wrap = ref(null);
+const box = ref(null);
+function remeasure() {
+  const el = panel.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  box.value = { left: r.left, top: r.top, w: el.offsetWidth, h: el.offsetHeight };
+}
+const clipStyle = computed(() => {
+  const b = box.value;
+  if (!b || !b.w || !navOrb.on) return {};
+  const limit = navOrb.top - b.top - GAP; // haut de la barre, en coordonnées du panneau
+  const bottom = [];
+  for (let x = b.w; x >= 0; x -= 2) {
+    let y = b.h;
+    if (x < R) y -= R - Math.sqrt(R * R - (R - x) ** 2);
+    else if (x > b.w - R) y -= R - Math.sqrt(R * R - (x - (b.w - R)) ** 2);
+    y = Math.min(y, limit - navBumpAt(b.left + x));
+    bottom.push(`${x},${y.toFixed(1)}`);
+  }
+  const d = `M0,${R} Q0,0 ${R},0 L${b.w - R},0 Q${b.w},0 ${b.w},${R} L${bottom.join(" L")} Z`;
+  return { clipPath: `path("${d}")` };
+});
+let ro;
+onMounted(() => {
+  remeasure();
+  ro = new ResizeObserver(remeasure);
+  ro.observe(panel.value);
+  // la pile autour (tutoriel, etc.) peut déplacer le panneau sans le redimensionner
+  const stack = wrap.value?.parentElement?.parentElement;
+  if (stack) ro.observe(stack);
+  wrap.value?.addEventListener("animationend", remeasure);
+  window.addEventListener("resize", remeasure);
+});
+watch(() => navOrb.top, remeasure);
+onBeforeUnmount(() => {
+  ro?.disconnect();
+  window.removeEventListener("resize", remeasure);
+});
 </script>
 
 <style scoped>
-/* un seul panneau blanc opaque, filet fin */
+.stats { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+/* l'ombre est portée par l'enveloppe : elle suit la découpe du panneau */
+.shadow {
+  align-self: stretch;
+  filter: drop-shadow(0 0 0.5px rgba(30, 55, 100, 0.45)) drop-shadow(0 6px 12px rgba(30, 55, 100, 0.16));
+  animation: rise 0.5s var(--spring) both;
+}
+/* panneau blanc ; Santé en bas à droite, le coin bas-gauche est la place de la bulle « Maison » */
 .needs {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px 0;
-  padding: 4px;
+  padding: 4px 4px 6px;
   border-radius: 16px;
   background: var(--surface);
-  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
-  animation: rise 0.5s var(--spring) both;
 }
+.need:nth-child(5) { grid-column: 2; }
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
-.need,
-.mood {
+.need {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -185,11 +238,22 @@ function tap(n) {
 /* besoin critique : le médaillon palpite */
 .need.is-bad .medal { animation: alert 1.1s ease-in-out infinite; }
 @keyframes alert { 50% { transform: scale(1.15); } }
-/* humeur */
+/* humeur, à part : pastille blanche au-dessus du panneau */
+.mood {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px 5px 5px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px #d6dfea, 0 4px 10px rgba(30, 55, 100, 0.14);
+  animation: fade 0.4s ease-out 0.1s both;
+}
+.mood .name { font-size: 12px; color: var(--hud-ink-2); }
 .mood-dot {
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.55), var(--d) 60%);
   background-color: var(--d);
@@ -197,15 +261,14 @@ function tap(n) {
 }
 .mood-v {
   display: block;
-  height: 20px;
-  font: 700 16px/20px var(--font-title);
+  font: 700 15px/1 var(--font-title);
   color: var(--hud-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 @media (prefers-reduced-motion: reduce) {
-  .needs, .need, .mood, .need.is-bad .medal, .need.is-up .medal { animation: none; }
+  .shadow, .need, .mood, .need.is-bad .medal, .need.is-up .medal { animation: none; }
   .fill, .medal { transition: none; }
   .fill::after { animation: none; display: none; }
 }
