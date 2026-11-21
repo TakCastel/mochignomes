@@ -69,6 +69,6 @@ const rows = computed(() =>
 .text span { font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, var(--surface)); font-weight: 700; }
 .progress { --c: inherit; margin-top: 5px; }
 .count { font-weight: 800; font-size: 13px; color: color-mix(in srgb, var(--ink) 72%, var(--surface)); font-variant-numeric: tabular-nums; }
-.done .count { color: #2f9e44; }
+.done .count { color: var(--accent-ink); }
 .ok { width: 24px; height: 24px; }
 </style>

@@ -761,7 +761,7 @@ onBeforeUnmount(() => {
 .d-color { color: var(--ink-3); font-weight: 600; }
 .d-sub { margin: 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; }
 .ui-note { justify-content: center; }
-.err { margin: 0; text-align: center; font: 800 var(--t-md)/1.35 var(--font-text); color: #c42a24; }
+.err { margin: 0; text-align: center; font: 800 var(--t-md)/1.35 var(--font-text); color: var(--danger); }
 .shake { animation: shake 0.35s; }
 @keyframes shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-3px); } }
 .ui-actions .try { flex: 0 0 auto; }

@@ -54,13 +54,6 @@
           <span class="ui-tile-sub pal-label">{{ t.label }}</span>
         </button>
       </div>
-      <p class="sub-title">Décor</p>
-      <div class="palettes">
-        <button v-for="(p, key) in PALETTES" :key="key" class="ui-tile pal" :class="{ 'is-on': store.palette === key }" :aria-pressed="store.palette === key" @click="store.palette = key">
-          <span class="pal-chip" :style="{ background: `linear-gradient(135deg, ${p.sky.top}, ${p.world.grass[0]})` }" />
-          <span class="ui-tile-sub pal-label">{{ p.label }}</span>
-        </button>
-      </div>
     </section>
 
     <!-- Nouvelle partie -->
@@ -83,7 +76,7 @@
 
 <script setup>
 import { computed, ref } from "vue";
-import { PALETTES, THEMES, themeKey } from "~/lib/palettes";
+import { THEMES, themeKey } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
 const theme = computed(() => themeKey(store.ui));

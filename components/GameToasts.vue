@@ -107,7 +107,7 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
   background: var(--surface);
   color: var(--hud-ink);
   font: 600 16px/1.2 var(--font-title);
-  box-shadow: 0 12px 28px rgba(30, 55, 100, 0.22), 0 0 0 1px #d6dfea;
+  box-shadow: 0 12px 28px rgba(30, 55, 100, 0.22), 0 0 0 1px var(--ui-line);
 }
 .medal {
   flex: none;

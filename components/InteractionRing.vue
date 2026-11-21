@@ -499,7 +499,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border-radius: 999px;
   background: var(--hud-pill);
-  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 #fff, inset 0 0 0 1px var(--hud-line);
+  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 var(--glint), inset 0 0 0 1px var(--hud-line);
   transition: transform 0.4s var(--spring-strong), background 0.2s, box-shadow 0.2s;
 }
 .lbl {
@@ -532,11 +532,11 @@ onBeforeUnmount(() => {
   user-select: none;
   -webkit-user-drag: none;
   filter:
-    drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
-    drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
+    drop-shadow(2px 0 0 var(--halo)) drop-shadow(-2px 0 0 var(--halo))
+    drop-shadow(0 2px 0 var(--halo)) drop-shadow(0 -2px 0 var(--halo))
     drop-shadow(0 3px 3px rgba(30, 55, 100, 0.28));
 }
-.ic { width: 34px; height: 34px; color: var(--c2); filter: drop-shadow(0 0 2px #fff) drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25)); }
+.ic { width: 34px; height: 34px; color: var(--c2); filter: drop-shadow(0 0 2px var(--halo)) drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25)); }
 .ic :deep([opacity]) { opacity: 1; color: var(--c1); }
 
 .pill-btn:active .body { transform: scale(0.94); transition-duration: 0.08s; }
@@ -565,16 +565,16 @@ onBeforeUnmount(() => {
 }
 
 /* conseillée : liseré bleu ciel, sans pulsation lourde */
-.pill-btn.is-best .body { box-shadow: 0 0 0 2.5px var(--sky-hi), var(--hud-pill-shadow), inset 0 1px 0 #fff; }
+.pill-btn.is-best .body { box-shadow: 0 0 0 2.5px var(--sky-hi), var(--hud-pill-shadow), inset 0 1px 0 var(--glint); }
 /* envie de la créature : fond rose, liseré rose, point */
 .pill-btn.is-wanted .body {
   background: color-mix(in srgb, #fff5f8 var(--tint), var(--surface));
-  box-shadow: 0 0 0 2.5px #ff9ab8, 0 4px 10px rgba(255, 79, 134, 0.22), inset 0 1px 0 #fff;
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--love) 55%, var(--surface)), 0 4px 10px rgba(255, 79, 134, 0.22), inset 0 1px 0 var(--glint);
 }
 .is-wanted .lbl { color: var(--love-ink); }
 .dot { position: absolute; z-index: 3; top: 1px; right: 8px; width: 12px; height: 12px; border-radius: 50%; background: var(--love); box-shadow: 0 0 0 2px var(--surface); }
 .is-right .dot { right: auto; left: 8px; }
-.pill-btn.is-glow .body { box-shadow: 0 0 0 2.5px #ffc21a, 0 0 12px rgba(255, 194, 26, 0.6), inset 0 1px 0 #fff; }
+.pill-btn.is-glow .body { box-shadow: 0 0 0 2.5px #ffc21a, 0 0 12px rgba(255, 194, 26, 0.6), inset 0 1px 0 var(--glint); }
 /* tutoriel : la seule pilule pulse pour appeler le premier toucher */
 .pill-btn.is-pulse { animation: ring-pulse 1.1s ease-in-out infinite; }
 @keyframes ring-pulse { 50% { transform: scale(1.07); } }
@@ -593,7 +593,7 @@ onBeforeUnmount(() => {
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--surface);
-  color: #2a9a3a;
+  color: var(--accent-ink);
   font: 800 13px var(--font-title);
   white-space: nowrap;
   pointer-events: none;

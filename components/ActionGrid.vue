@@ -96,7 +96,7 @@ const list = computed(() => {
   padding: 0 6px 0 24px;
   border-radius: 999px;
   background: var(--hud-pill);
-  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 #fff;
+  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 var(--glint);
   transition: transform 0.4s var(--spring-strong), box-shadow 0.2s, background 0.2s;
 }
 .lbl {
@@ -130,11 +130,11 @@ const list = computed(() => {
   user-select: none;
   -webkit-user-drag: none;
   filter:
-    drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff)
-    drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff)
+    drop-shadow(2px 0 0 var(--halo)) drop-shadow(-2px 0 0 var(--halo))
+    drop-shadow(0 2px 0 var(--halo)) drop-shadow(0 -2px 0 var(--halo))
     drop-shadow(0 3px 3px rgba(30, 55, 100, 0.28));
 }
-.ic { width: 32px; height: 32px; color: var(--c2); filter: drop-shadow(0 0 2px #fff) drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25)); }
+.ic { width: 32px; height: 32px; color: var(--c2); filter: drop-shadow(0 0 2px var(--halo)) drop-shadow(0 2px 2px rgba(30, 55, 100, 0.25)); }
 .ic :deep([opacity]) { opacity: 1; color: var(--c1); }
 
 /* toucher : la pilule s'écrase, l'objet saute ; retour en rebond */
@@ -196,7 +196,7 @@ const list = computed(() => {
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--surface);
-  color: #2a9a3a;
+  color: var(--accent-ink);
   font: 800 13px var(--font-title);
   white-space: nowrap;
   pointer-events: none;
@@ -210,7 +210,7 @@ const list = computed(() => {
   75% { opacity: 1; }
   100% { transform: translate(calc(-50% + var(--fx)), -58px) scale(0.95); opacity: 0; }
 }
-.lock { position: absolute; z-index: 3; top: 2px; right: 4px; width: 14px; height: 14px; color: #9aa4b2; }
+.lock { position: absolute; z-index: 3; top: 2px; right: 4px; width: 14px; height: 14px; color: var(--ink-3); }
 .full .act { flex: 0 0 calc((100% - 2 * 8px) / 3); }
 
 /* Photo : bouton rond blanc */
@@ -224,7 +224,7 @@ const list = computed(() => {
   border: 0;
   border-radius: 50%;
   background: var(--hud-pill);
-  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 #fff;
+  box-shadow: var(--hud-pill-shadow), inset 0 1px 0 var(--glint);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.4s var(--spring-strong);

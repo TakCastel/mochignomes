@@ -82,12 +82,12 @@ const cards = computed(() => {
 <style scoped>
 .acts { padding-bottom: var(--s-2); }
 .card { align-items: center; padding: var(--s-3); }
-.card.ready:not(.is-love) { box-shadow: inset 0 0 0 2px #cdeebb, 0 4px 10px rgba(40, 55, 80, 0.08); }
+.card.ready:not(.is-love) { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 35%, var(--surface)), 0 4px 10px rgba(40, 55, 80, 0.08); }
 .card.soon { opacity: 0.7; }
 .card.soon .ui-thumb { filter: grayscale(0.8); }
 .ui-row-main > p { margin: 0; }
 .ui-row-main { gap: 3px; }
-.best { color: #c27f00; font-weight: 800; }
+.best { color: var(--coin-ink); font-weight: 800; }
 .mastery { color: var(--ink-3); }
 .mastery.done { color: var(--gem-ink); }
 .why { color: var(--warn-ink); font-weight: 800; }

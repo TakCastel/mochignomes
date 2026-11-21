@@ -71,7 +71,7 @@ function hello() {
   background: linear-gradient(180deg, color-mix(in srgb, #fff8e6 var(--tint), var(--surface)), color-mix(in srgb, #ffefc8 var(--tint), var(--surface)));
   text-align: left;
   font: 800 15px/1.3 var(--font-text);
-  color: #6b4a00;
+  color: var(--coin-ink);
 }
 .s-thumb { width: 40px; height: 40px; background: var(--surface); }
 .s-thumb .ic { width: 26px; height: 26px; color: var(--warn); }

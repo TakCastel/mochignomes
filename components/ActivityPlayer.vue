@@ -358,7 +358,8 @@ onBeforeUnmount(() => {
   padding: var(--s-3) var(--s-4);
   transform: translateX(-50%);
   border-radius: var(--r-md);
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--surface);
+  color: var(--ink);
   box-shadow: var(--sh-3);
   text-align: center;
   font: 800 15px/1.35 var(--font-text);
@@ -385,7 +386,7 @@ onBeforeUnmount(() => {
 .score {
   display: flex; align-items: baseline; gap: 6px;
   padding: 4px 20px; border-radius: var(--r-lg);
-  background: rgba(255, 255, 255, 0.95); box-shadow: var(--sh-3), var(--hl);
+  background: var(--surface); box-shadow: var(--sh-3), var(--hl);
   transition: transform 0.12s;
 }
 .score b { font-size: 40px; font-weight: 700; line-height: 1.1; color: var(--accent-lo); }
@@ -397,7 +398,7 @@ onBeforeUnmount(() => {
 }
 .combo {
   font: 700 24px var(--font-title); color: var(--warn);
-  text-shadow: 0 2px 0 #fff, 0 0 10px rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 0 var(--halo), 0 0 10px var(--halo);
   animation: combo 0.35s ease-out;
 }
 @keyframes combo { from { transform: scale(1.8); opacity: 0.2; } to { transform: scale(1); opacity: 1; } }
