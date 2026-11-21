@@ -31,7 +31,7 @@
           <span v-for="i in 14" :key="i" :style="confetti[i - 1]" />
         </div>
         <div class="medal"><Icon name="solar:heart-bold-duotone" class="medal-icon" /></div>
-        <h2 id="welcome-title">Elle est née !</h2>
+        <h2 id="welcome-title">Un mochignome est né !</h2>
         <!-- son apparence, découverte à l'éclosion (lib/appearance.js) -->
         <div v-if="look" class="reveal" :class="`r-${look.rarity}`">
           <span class="reveal-swatch" :style="{ background: look.swatch }" aria-hidden="true" />
@@ -49,7 +49,7 @@
           type="text"
           maxlength="14"
           autocomplete="off"
-          aria-label="Nom de ta créature"
+          aria-label="Nom de ton mochignome"
           @keyup.enter="validateName"
         >
         <button class="cta" type="button" @click="validateName">Enchanté·e, {{ cleanName }} !</button>

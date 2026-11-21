@@ -38,7 +38,7 @@ const fmt = (t) => new Date(t).toLocaleString("fr-FR", { day: "numeric", month: 
 
 // Partage natif sur téléphone, sinon téléchargement
 async function share(p) {
-  const fileName = `${store.name || "tamagotchi"}-${p.id}.jpg`;
+  const fileName = `${store.name || "mochignome"}-${p.id}.jpg`;
   try {
     const blob = await (await fetch(p.data)).blob();
     const file = new File([blob], fileName, { type: "image/jpeg" });

@@ -37,7 +37,7 @@
         <ul class="odds">
           <li v-for="r in oddsRows" :key="r.key"><span>{{ r.label }}</span><strong>{{ r.odds }}</strong></li>
         </ul>
-        <p class="odds-intro">Couleurs rares, oreilles et motifs (bicolore, taches, brillant) rendent une créature plus rare. Toutes sont aussi adorables !</p>
+        <p class="odds-intro">Couleurs rares, oreilles et motifs (bicolore, taches, brillant) rendent un mochignome plus rare. Tous sont aussi adorables !</p>
       </details>
     </section>
 

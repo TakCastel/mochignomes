@@ -1,32 +1,22 @@
-# 🐣 Tamagotchi
+# 🐣 Mochignomes
 
-A web application built with **Nuxt 3** and **Pinia** to take care of your own virtual Tamagotchi.  
+A web application built with **Nuxt 3**, **Pinia** and **Three.js** to take care of your own little mochignomes.  
 No accounts, no backend required — everything runs directly in the browser with persistent state!
 
 ---
 
 ## 🚀 Features
 
-- 🎮 **Available Actions**:
-
-  - Feed 🍞
-  - Clean 🧼
-  - Play 🎲
-  - Sleep 🌙
-  - Heal 💉
-
-- 📊 **Stats**:
-
-  - Hunger, Cleanliness, Fun, Energy, Health
-
-- 😊 **Emotions**:
-
-  - Happy, Grumpy, Sad, Sick, Tired, Sleeping, Dead
-
-- 🔥 **Highlights**:
-  - State persistence with **Pinia + persisted state**
-  - Fully responsive and playful UI with **Tailwind CSS**
-  - 100% original character design
+- 🌼 **A 3D mochignome in a meadow**: she reacts, talks, grows up (egg, baby, child, teen, adult) and lives with the time of day.
+- 🎮 **Care actions**: eat, wash, play, cuddle, sleep, heal, dance, take photos.
+- 📊 **Stats**: hunger, cleanliness, fun, energy, health, with moods (happy, grumpy, sad, sick, tired, sleeping...).
+- 😋 **Tastes**: each mochignome has her own likes and dislikes to discover.
+- 👗 **Outfits**: clothes and accessories bought in the shop, a wardrobe and a collection.
+- ⚽ **Activities**: mini-games in the meadow (race, football, TV on the sofa).
+- 🍳 **Cooking**: a fridge, recipes to discover and meals rated with stars.
+- 🏠 **Several mochignomes**: a house with nests to unlock; one in the meadow at a time, the others rest.
+- 📸 Album, journal, achievements, gentle reminders (notifications or calendar) and installable as a PWA.
+- 💾 State persistence with **Pinia + persisted state** (saves stay compatible across updates).
 
 ---
 
@@ -49,19 +39,15 @@ npm run dev
 
 ---
 
-## ☁️ Deployment on Vercel
+## ☁️ Déploiement sur Netlify
 
-1. Push your project to GitHub.
-2. Create an account on [Vercel](https://vercel.com/) if you don't have one.
-3. Import your GitHub repository into Vercel.
-4. (Optional) If you plan to add Firebase, configure these environment variables:
+Le jeu tourne entièrement dans le navigateur (`ssr: false`) et se publie comme un site statique.
+Tout est réglé dans `netlify.toml` (commande `npm run generate`, dossier `.output/public`, Node 22,
+redirection monopage, cache du service worker désactivé).
 
-```env
-NUXT_PUBLIC_FIREBASE_API_KEY=xxxx
-NUXT_PUBLIC_FIREBASE_PROJECT_ID=xxxx
-```
-
-5. Deploy and enjoy 🚀
+1. Sur [Netlify](https://app.netlify.com/) : **Add new site → Import an existing project → GitHub**, choisir le dépôt.
+2. Garder les réglages lus dans `netlify.toml` et lancer le déploiement.
+3. Chaque push sur `main` redéploie automatiquement.
 
 ---
 
@@ -69,6 +55,7 @@ NUXT_PUBLIC_FIREBASE_PROJECT_ID=xxxx
 
 - [Nuxt 3](https://nuxt.com/)
 - [Pinia](https://pinia.vuejs.org/)
+- [Three.js](https://threejs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 
 ---

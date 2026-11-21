@@ -132,7 +132,7 @@ export function useNotifications() {
       return r?.outcome === "accepted";
     },
     downloadIcs() {
-      const name = useTamagotchiStore().name || "ta créature";
+      const name = useTamagotchiStore().name || "ton mochignome";
       const blob = new Blob([buildIcs(st.settings.hour, name)], { type: "text/calendar;charset=utf-8" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);

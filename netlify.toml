@@ -1,0 +1,33 @@
+# Déploiement Netlify : jeu 100 % navigateur (ssr: false), généré en site statique
+[build]
+  command = "npm run generate"
+  publish = ".output/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Application monopage : toutes les adresses renvoient au jeu
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Le service worker et le manifeste doivent toujours être frais (mises à jour de la PWA)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Fichiers du build (noms avec empreinte) : cache long
+[[headers]]
+  for = "/_nuxt/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
