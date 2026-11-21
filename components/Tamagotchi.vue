@@ -189,6 +189,9 @@ function onGesture() { touched(); closeRing(); }
 
 // prio : 0 bavardage, 1 réaction (défaut), 2 réplique précise (voir creature3d say)
 const speaking = ref(false);
+// partagé : la carte du tutoriel (en haut) s'efface le temps qu'elle parle, sa bulle 3D passe dessous
+watch(speaking, (v) => (gameBus.speaking = v));
+onBeforeUnmount(() => (gameBus.speaking = false));
 let speakTimer = null;
 function onSpeech(ms) {
   speaking.value = true;

@@ -7,6 +7,7 @@ import { moodFromStats, morphFromStats } from "~/lib/creatureLook";
 
 export const gameBus = reactive({
   speech: null, // { text, id }
+  speaking: false, // sa bulle de parole (3D, sous l'interface) est affichée : les cartes du haut s'effacent
   command: null, // { type: "rotate" | "photo" | "react", value, id }
   page: null, // page plein écran : null (Maison) | "elle" | "jours" | "album" | "sac" | "boutique"
   pageTab: "", // onglet demandé à l'ouverture (Sac : tenues | collection ; Boutique : vetements | epicerie | objets)

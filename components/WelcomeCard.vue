@@ -59,7 +59,7 @@
 
   <!-- étapes 2 à 4 : on lui montre quoi faire, sans bloquer l'écran -->
   <Transition name="hint">
-    <div v-if="step >= 2 && step <= 4" :key="step" class="guide" role="status">
+    <div v-if="step >= 2 && step <= 4" :key="step" class="guide" :class="{ hush: gameBus.speaking }" role="status">
       <span class="guide-num">{{ step - 1 }}/3</span>
       <span class="guide-text">{{ guideText }}</span>
     </div>
@@ -82,6 +82,7 @@
 <script setup>
 import { computed, ref, watch } from "vue";
 import { appearanceText } from "~/lib/appearance";
+import { gameBus } from "~/composables/useCreatureMood";
 
 const { store } = useCreatureMood();
 
@@ -330,6 +331,8 @@ h2 { margin: 0; font: 700 30px "Fredoka", "Nunito", system-ui, sans-serif; }
   box-shadow: var(--ui-sh-3), 0 0 0 2px color-mix(in srgb, var(--accent) 45%, var(--surface));
   pointer-events: none;
 }
+.guide { transition: opacity 0.25s; }
+.guide.hush { opacity: 0; }
 .guide-num { flex: none; padding: 3px 9px; border-radius: 999px; background: var(--accent); color: #fff; font: 800 12px "Nunito", system-ui, sans-serif; }
 .guide-text { font: 700 14px/1.3 "Nunito", system-ui, sans-serif; color: var(--ink); }
 
