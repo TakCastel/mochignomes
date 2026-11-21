@@ -69,11 +69,11 @@
   <Transition name="fade">
     <div v-if="step === 5" class="overlay">
       <section class="card" role="dialog" aria-modal="true" aria-labelledby="promise-title">
-        <div class="medal"><Icon name="solar:hourglass-bold-duotone" class="medal-icon" /></div>
-        <h2 id="promise-title">À tout à l'heure !</h2>
-        <p class="lead">{{ store.name }} te dit : « Je reviens dans 2 minutes ! Repasse me voir, j'aurai sûrement une envie. »</p>
-        <p class="small">Elle grandit avec toi, et elle n'est jamais en danger : prends soin d'elle à ton rythme.</p>
-        <button class="cta" type="button" @click="finish">Compris !</button>
+        <div class="medal"><Icon name="solar:gift-bold-duotone" class="medal-icon" /></div>
+        <h2 id="promise-title">Bravo !</h2>
+        <p class="lead">{{ store.name }} te dit : « J'ai plein de choses à te montrer ! »</p>
+        <p class="small">Chaque nouveauté que tu essaies en débloque une autre. Elle grandit avec toi et n'est jamais en danger : prends soin d'elle à ton rythme.</p>
+        <button class="cta" type="button" @click="finish">C'est parti !</button>
       </section>
     </div>
   </Transition>

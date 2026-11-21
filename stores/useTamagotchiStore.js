@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { gameToast, gameSay, gameCommand } from "~/composables/useCreatureMood";
 import { dayPhase } from "~/lib/gameUi";
-import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_KEYS, stageFor, nextStage, stageDef } from "~/lib/growth";
+import { STAGE_ORDER, PAGE_UNLOCK_LEVEL, ACTION_UNLOCK_LEVEL, FEATURES, FEATURE_KEYS, CHAIN_IDLE_MIN, stageFor, nextStage, stageDef } from "~/lib/growth";
 import { pickWish } from "~/lib/wishes";
 import { awayLines } from "~/lib/dialogue";
 import { questsForDay, QUEST_BONUS } from "~/lib/quests";
@@ -823,18 +823,25 @@ export const useTamagotchiStore = defineStore(
     function featureDue(key, now) {
       const f = features.value;
       const lvl = topLevel.value;
-      const mins = hatchedAt.value ? ((now - hatchedAt.value) * speed.value) / 60000 : 0;
       const reach = lvl >= FEATURES[key].level;
+      const did = (k) => (counters.value[k] || 0) > 0;
+      // nouveauté précédente ignorée : la suivante arrive quand même, sans rester bloqué
+      const idle = playMs.value - (revealAt.value.play || 0) >= CHAIN_IDLE_MIN * 60000;
       switch (key) {
-        case "ballon": return mins >= 1.5 || reach;
-        // d'abord par la 1re partie de foot ; sinon, deux visites plus tard
-        case "coins": return f.ballon && ((counters.value["activite:foot"] || 0) > 0 || (reach && sessions.value - revealAt.value.session >= 2));
-        // les pièces servent tout de suite : Sac, puis Boutique juste après
-        case "sac": return f.coins && (mins >= 2 || reach);
-        case "boutique": return f.sac && (mins >= 3 || reach);
-        case "cuisine": return f.boutique && (mins >= 5 || reach);
-        case "tele": return f.cuisine && (mins >= 9 || reach);
-        case "defis": return f.tele && (mins >= 13 || reach);
+        // dès la fin du tutoriel
+        case "ballon": return true;
+        // la 1re partie de foot rapporte les premières pièces
+        case "coins": return f.ballon && (did("activite:foot") || idle || reach);
+        // les pièces servent tout de suite : le Sac (t-shirt offert)...
+        case "sac": return !!f.coins;
+        // ... Sac ouvert (le t-shirt est déjà sur elle) : la Boutique ouvre
+        case "boutique": return f.sac && (did("page:sac") || did("habillage") || idle || reach);
+        // Boutique visitée : la Cuisine (kit crêpes)
+        case "cuisine": return f.boutique && (did("page:boutique") || idle || reach);
+        // 1res crêpes : la Télé
+        case "tele": return f.cuisine && (did("cuisine") || idle || reach);
+        // 1er épisode : les Défis du jour
+        case "defis": return f.tele && (did("activite:tele") || idle || reach);
         case "collection": return f.tele && f.defis && (totalDays.value >= 2 || reach);
         case "course": case "etoiles": return f.collection && (totalDays.value >= 3 || reach);
         default: return false;
@@ -846,6 +853,8 @@ export const useTamagotchiStore = defineStore(
       const since = playMs.value - (revealAt.value.play || 0);
       const newSession = sessions.value > (revealAt.value.session || 0);
       const warm = playMs.value - sessionStartPlay >= SESSION_WARMUP_MS;
+      // chaîne de la première visite : tout de suite (au retour d'une visite, elle dit d'abord bonjour)
+      if (p.chain) return !newSession || warm || !Object.keys(features.value).length;
       if (newSession && warm) return true;
       if (!newSession && p.session) return since >= p.gap * 3 * 60000; // très longue visite
       return since >= p.gap * 60000 && (p.gap > 0 || warm);
