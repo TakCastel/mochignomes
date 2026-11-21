@@ -2,7 +2,9 @@
   <div class="ui-page elle">
     <!-- portrait, nom touchable pour renommer, stade -->
     <section class="ui-card portrait">
-      <div class="photo"><img src="/images/avatar.webp" alt="" width="96" height="96"></div>
+      <div class="photo" :class="{ live: portrait.live.value }" :style="look.color ? { '--av': look.color } : null">
+        <img :src="portrait.src.value" alt="" width="96" height="96">
+      </div>
       <div class="who">
         <form v-if="editing" class="rename" @submit.prevent="saveName">
           <input ref="input" v-model="draft" maxlength="16" aria-label="Nouveau nom" @keydown.esc="editing = false">
@@ -15,6 +17,28 @@
         <span class="stage">{{ stage.label }}</span>
         <span class="ui-tag mood" :style="{ '--c': moodInfo[1] }">{{ moodInfo[0] }}</span>
       </div>
+    </section>
+
+    <!-- son apparence, tirée à l'éclosion (lib/appearance.js), et les chances, en toute franchise -->
+    <section v-if="store.appearance" class="ui-card look">
+      <div class="look-row">
+        <span class="swatch" :style="{ background: lookText.swatch }" aria-hidden="true" />
+        <div class="look-main">
+          <strong class="look-name">{{ lookText.label }}</strong>
+          <span class="look-sub">{{ lookText.shape }}</span>
+        </div>
+        <span class="ui-tag" :style="{ '--c': lookText.rarityColor }">
+          <Icon v-if="look.rarity !== 'commune'" name="solar:stars-bold-duotone" class="ic" />{{ lookText.rarityLabel }}
+        </span>
+      </div>
+      <details class="how">
+        <summary>Chaque œuf est unique</summary>
+        <p class="odds-intro">Sa couleur et sa forme sont tirées au hasard à l'éclosion, et elle les garde toute sa vie. Les chances :</p>
+        <ul class="odds">
+          <li v-for="r in oddsRows" :key="r.key"><span>{{ r.label }}</span><strong>{{ r.odds }}</strong></li>
+        </ul>
+        <p class="odds-intro">Couleurs rares, oreilles et motifs (bicolore, taches, brillant) rendent une créature plus rare. Toutes sont aussi adorables !</p>
+      </details>
     </section>
 
     <p v-if="sulking" class="ui-note ui-note--violet">Elle boude en ce moment. Jouer avec elle l'apaise.</p>
@@ -81,9 +105,14 @@
 import { computed, nextTick, ref } from "vue";
 import { STATS, TRAIT_INFO } from "~/lib/gameUi";
 import { MOOD_LABELS } from "~/lib/creatureLook";
+import { appearanceText, oddsText, RARITY_INFO, RARITY_ODDS, ORIGINAL_APPEARANCE } from "~/lib/appearance";
 
 const { store, sulking, mood } = useCreatureMood();
 const stage = computed(() => store.stageInfo || { label: "", next: null });
+const portrait = useCreaturePortrait();
+const look = computed(() => store.appearance || ORIGINAL_APPEARANCE);
+const lookText = computed(() => appearanceText(look.value));
+const oddsRows = Object.entries(RARITY_ODDS).map(([key, p]) => ({ key, label: RARITY_INFO[key].label, odds: oddsText(p) }));
 const moodInfo = computed(() => MOOD_LABELS[mood.value] || ["", "#4fc3a1"]);
 const statRows = computed(() => STATS.map((s) => ({ ...s, value: store[s.key], width: Math.min(store[s.key], 100) })));
 const traitRows = computed(() =>
@@ -128,6 +157,18 @@ function saveName() {
   box-shadow: 0 0 0 4px #fff, 0 6px 14px rgba(40, 55, 80, 0.2);
 }
 .photo img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.12) translateY(4%); }
+.photo.live { background: linear-gradient(180deg, color-mix(in srgb, var(--av, #ffc98a) 18%, #fff), color-mix(in srgb, var(--av, #ffc98a) 42%, #fff)); }
+.photo.live img { transform: none; }
+.look-row { display: flex; align-items: center; gap: var(--s-3); }
+.swatch { flex: none; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 0 0 3px #fff, var(--sh-1); }
+.look-main { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.look-name { font: 700 var(--t-lg) / 1.15 var(--font-title); color: var(--ink); }
+.look-sub { font: 700 var(--t-sm) / 1.3 var(--font-text); color: var(--ink-3); }
+.look .ui-tag { flex: none; }
+.odds-intro { margin: var(--s-2) 0 0; font-weight: 700; }
+.odds { list-style: none; padding: 0 !important; }
+.odds li { display: flex; justify-content: space-between; gap: var(--s-2); padding: 2px 0; }
+.odds strong { font-family: var(--font-title); font-variant-numeric: tabular-nums; color: var(--ink); }
 .who { display: grid; gap: 4px; justify-items: start; min-width: 0; flex: 1; }
 .name {
   display: flex;

@@ -58,18 +58,22 @@
     <!-- Nouvelle partie -->
     <section class="ui-card block">
       <h3 class="ui-section-title"><Icon name="solar:refresh-bold" class="ic danger" />Nouvelle partie</h3>
-      <p class="ui-text">Une nouvelle créature remplace {{ store.name }} : jauges, caractère, niveau et succès repartent de zéro. Ses photos sont effacées.</p>
+      <p class="ui-text">Tout recommencer avec un nouvel œuf. <strong>Tout est effacé</strong> : {{ store.name }}, son niveau, ses goûts, ses photos, le Sac (pièces, vêtements, frigo), la collection et les nouveautés découvertes.</p>
       <button v-if="!confirming" class="ui-btn ui-btn--secondary ui-btn--sm start" @click="confirming = true">Recommencer…</button>
-      <div v-else class="ui-actions">
-        <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="confirming = false">Annuler</button>
-        <button class="ui-btn ui-btn--danger ui-btn--sm" @click="restart">Oui, recommencer</button>
+      <div v-else class="wipe">
+        <p class="ui-note ui-note--warn">C'est définitif, impossible de revenir en arrière. Pour confirmer, écris son nom : <strong>{{ store.name }}</strong></p>
+        <input v-model="typed" class="wipe-input" :placeholder="store.name" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Nom de la créature pour confirmer">
+        <div class="ui-actions">
+          <button class="ui-btn ui-btn--secondary ui-btn--sm" @click="cancelWipe">Annuler</button>
+          <button class="ui-btn ui-btn--danger ui-btn--sm" :disabled="!nameOk" @click="restart">Tout effacer</button>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { PALETTES } from "~/lib/palettes";
 
 const { store } = useCreatureMood();
@@ -101,12 +105,17 @@ function setHaptics(on) {
   if (on) navigator.vibrate?.(15);
 }
 const { clearPhotos } = useGallery();
+const typed = ref("");
+const norm = (v) => String(v || "").trim().toLocaleLowerCase("fr");
+const nameOk = computed(() => !!store.name && norm(typed.value) === norm(store.name));
+function cancelWipe() { confirming.value = false; typed.value = ""; }
+// Remise à zéro complète et définitive : tout est effacé au rechargement,
+// avant que la sauvegarde ne soit relue (voir plugins/00.saveFromCookie.client.ts)
 function restart() {
-  store.resetGame();
+  if (!nameOk.value) return;
   clearPhotos();
-  confirming.value = false;
-  gameBus.sheet = null;
-  gameToast(`Bienvenue à ${store.name} !`, "solar:heart-bold-duotone");
+  try { localStorage.setItem("tamagotchi-wipe", "1"); } catch { /* stockage indisponible */ }
+  window.location.replace(window.location.pathname);
 }
 </script>
 
@@ -148,4 +157,7 @@ input.field { flex: 1; min-width: 0; }
 .pal-chip { width: 36px; height: 36px; border-radius: 50%; box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 2px 2px rgba(255, 255, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.15); }
 .pal-label { color: var(--ink-2); font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
+.wipe { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-2); }
+.wipe-input { font: inherit; font-weight: 700; color: var(--ink, #2b3440); padding: 12px 14px; border: 0; border-radius: var(--r-md); background: var(--surface-2); box-shadow: inset 0 2px 4px rgba(30, 50, 80, 0.08); outline: none; min-height: 44px; }
+.wipe-input:focus { box-shadow: var(--sel-ring); }
 </style>
