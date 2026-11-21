@@ -192,6 +192,8 @@ onBeforeUnmount(() => {
   height: var(--nav-h, 64px);
   box-sizing: content-box;
   padding: 0 10px env(safe-area-inset-bottom, 0px);
+  /* la bosse dépasse au-dessus de la barre : on lui garde sa place pour ne rien cacher derrière */
+  margin-top: 24px; /* = BUMP_H */
 }
 .shape {
   position: absolute;
