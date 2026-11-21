@@ -76,8 +76,8 @@ function measure() {
   if (!el) return;
   const r = el.getBoundingClientRect();
   frame.value = {
-    ground: Math.round(r.bottom - Math.min(30, r.height * 0.12)),
-    size: Math.round(Math.min(r.height * 0.54, window.innerWidth * 0.46)),
+    ground: Math.round(r.bottom - Math.min(26, r.height * 0.10)),
+    size: Math.round(Math.min(r.height * 0.60, window.innerWidth * 0.50)),
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
@@ -149,7 +149,7 @@ body {
   /* tailles qui suivent la hauteur de l'écran */
   --tile: clamp(52px, 8.4vh, 72px);
   --gap: clamp(8px, 1.4vh, 12px);
-  --nav-h: 78px;
+  --nav-h: 64px;
 }
 .scene {
   position: absolute;
@@ -164,7 +164,7 @@ body {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(180deg, transparent 50%, rgba(248, 250, 252, 0.5) 64%, rgba(248, 250, 252, 0.9) 80%),
+    linear-gradient(180deg, transparent 62%, rgba(248, 250, 252, 0.55) 100%),
     radial-gradient(70% 40% at 75% 28%, var(--glow), transparent 70%),
     radial-gradient(130% 90% at 50% 45%, transparent 55%, var(--edge) 100%);
 }

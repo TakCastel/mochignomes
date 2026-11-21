@@ -3,15 +3,17 @@
     <!-- carte de profil : avatar (ouvre la page Elle), nom, niveau, stade, jours -->
     <div class="profile">
       <button class="avatar" :class="{ live: portrait.live.value }" :style="avatarStyle" :aria-label="`Voir ${store.name}`" @click="openPage('elle')">
-        <img :src="portrait.src.value" alt="" width="64" height="64">
+        <img :src="portrait.src.value" alt="" width="60" height="60">
       </button>
       <div class="info">
         <span class="name">{{ store.name || "..." }}</span>
         <span class="meta">{{ stageLabel }} · {{ days }}</span>
         <button class="level" :aria-label="`Niveau ${lvl.level}, ${lvl.into} sur ${lvl.need} points`" @click="explainLevel">
-          <Icon name="solar:leaf-bold-duotone" class="sprout" />
           <span class="lvl">Niv. {{ lvl.level }}</span>
-          <span class="track"><span :style="{ width: pct + '%' }" /></span>
+          <span class="track">
+            <span class="bar-fill" :style="{ width: pct + '%' }" />
+            <span class="xp">{{ lvl.into }}/{{ lvl.need }}</span>
+          </span>
         </button>
       </div>
     </div>
@@ -52,33 +54,31 @@ onMounted(() => store.initName());
   justify-content: space-between;
   gap: 10px;
 }
-/* carte blanche laiteuse */
+/* carte blanche opaque, filet fin */
 .profile {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
   flex: 1;
-  max-width: 260px;
+  max-width: 270px;
   padding: 6px 14px 6px 6px;
-  border-radius: 20px;
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: var(--glass-shadow), var(--glass-edge);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
   animation: slide-in 0.55s var(--spring) both;
 }
 @keyframes slide-in { from { opacity: 0; transform: translateX(-24px) scale(0.94); } }
 .avatar {
   flex: none;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   padding: 0;
   border: 3px solid #fff;
-  border-radius: 14px;
+  border-radius: 50%;
   overflow: hidden;
   background: linear-gradient(180deg, #ffe7c2, #ffc98a);
-  box-shadow: 0 3px 8px rgba(40, 55, 80, 0.18);
+  box-shadow: 0 0 0 1px #d6dfea, 0 3px 8px rgba(40, 55, 80, 0.18);
   cursor: pointer;
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.12) translateY(4%); }
@@ -86,15 +86,16 @@ onMounted(() => store.initName());
 .avatar.live img { transform: none; }
 .info { min-width: 0; flex: 1; display: grid; gap: 3px; }
 .name {
-  font: 700 18px/1.1 var(--font-title);
-  color: var(--sky-ink);
+  font: 600 19px/1.1 var(--font-title);
+  color: var(--hud-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.meta { font: 700 12px/1.2 var(--font-text); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { font: 700 13px/1.2 var(--font-text); color: var(--hud-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .level {
   width: 100%;
+  min-height: 20px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -103,28 +104,37 @@ onMounted(() => store.initName());
   background: none;
   cursor: pointer;
 }
-.sprout { flex: none; width: 18px; height: 18px; color: var(--accent); }
-.lvl { font: 800 12.5px var(--font-text); color: var(--ink-2); white-space: nowrap; }
+.lvl { font: 800 13px var(--font-text); color: var(--hud-ink); white-space: nowrap; }
+/* barre de niveau : même matière que les jauges (bleu ciel dégradé + reflet) */
 .track {
+  position: relative;
   flex: 1;
-  min-width: 40px;
-  height: 10px;
+  min-width: 56px;
+  height: 14px;
   border-radius: 999px;
-  background: var(--surface-3);
+  background: #d9e1ea;
   overflow: hidden;
-  box-shadow: inset 0 1px 2px rgba(40, 55, 80, 0.1);
+  box-shadow: inset 0 2px 3px rgba(40, 60, 90, 0.18);
 }
-.track span {
+.bar-fill {
   position: relative;
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--accent-hi), var(--accent));
+  background: linear-gradient(180deg, #8fd2ff, var(--sky) 55%, var(--sky-lo));
   transition: width 0.8s var(--spring);
 }
-/* reflet brillant sur la jauge */
-.track span::after { content: ""; position: absolute; left: 3px; right: 3px; top: 1px; height: 40%; border-radius: inherit; background: rgba(255, 255, 255, 0.55); }
-/* bouton rond givré cerclé de bleu ciel */
+.bar-fill::after { content: ""; position: absolute; left: 5px; right: 5px; top: 2px; height: 35%; border-radius: inherit; background: rgba(255, 255, 255, 0.55); }
+.xp {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 800 11px/1 var(--font-text);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(20, 50, 100, 0.65);
+}
+/* réglages : bouton rond blanc */
 .round {
   position: relative;
   display: grid;
@@ -133,22 +143,23 @@ onMounted(() => store.initName());
   height: 48px;
   border: 0;
   border-radius: 50%;
-  background: var(--glass-solid);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  box-shadow: 0 6px 18px rgba(30, 70, 120, 0.18), inset 0 0 0 2px rgba(124, 192, 245, 0.55), inset 0 2px 0 #fff;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(30, 55, 100, 0.14), 0 0 0 1px #d6dfea;
   cursor: pointer;
   transition: transform 0.4s var(--spring-strong);
   animation: pop-in 0.5s var(--spring-strong) 0.15s both;
 }
 @keyframes pop-in { from { opacity: 0; transform: scale(0.4); } }
-.round .ic { color: var(--sky-lo); transition: transform 0.6s var(--spring); }
+.round .ic { width: 26px; height: 26px; color: #2c4f9e; transition: transform 0.6s var(--spring); }
 .round:active .ic { transform: rotate(60deg); }
 .round:active, .avatar:active { transform: scale(0.9); transition-duration: 0.08s; }
 .avatar { transition: transform 0.4s var(--spring-strong); }
-.ic { width: 26px; height: 26px; color: #4a5260; }
 @media (max-width: 370px) {
-  .avatar { width: 52px; height: 52px; }
-  .name { font-size: 17px; }
+  .avatar { width: 54px; height: 54px; }
+  .name { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile, .round { animation: none; }
+  .bar-fill, .round, .avatar, .round .ic { transition: none; }
 }
 </style>

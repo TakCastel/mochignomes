@@ -1,8 +1,8 @@
 <template>
   <div class="toasts" aria-live="polite">
     <TransitionGroup name="toast">
-      <div v-for="t in gameBus.toasts" :key="t.id" class="toast">
-        <span class="ui-medal ui-medal--gold medal"><Icon :name="t.icon" class="ic" /></span>
+      <div v-for="t in shown" :key="t.id" class="toast">
+        <span class="medal" :style="{ '--c': tint(t)[0], '--c-lo': tint(t)[1] }"><Icon :name="t.icon" class="ic" /></span>
         <span class="txt">{{ t.text }}</span>
       </div>
     </TransitionGroup>
@@ -18,6 +18,23 @@ import { pick, growUpLine, ILL_START, RECOVERY } from "~/lib/dialogue";
 // Surveille succès et niveau : une notification à chaque nouveauté
 const { store } = useCreatureMood();
 const level = computed(() => levelInfo(store.xp).level);
+
+// 2 messages visibles au plus (les plus récents)
+const shown = computed(() => gameBus.toasts.slice(-2));
+// couleur du médaillon selon le type (déduit de l'icône et du texte) :
+// besoin = couleur de la jauge, succès/niveau = or, réussite = vert, sinon bleu ciel
+const NEED_ICON = { "solar:donut-bitten-bold-duotone": "hunger", "solar:waterdrop-bold-duotone": "cleanliness", "solar:football-bold-duotone": "fun", "solar:bolt-bold-duotone": "energy", "solar:heart-bold-duotone": "health" };
+const TIERS = [["#49c13a", "#2f9a24"], ["#f5c518", "#c49a08"], ["#ff9a26", "#d0700c"], ["#ea4338", "#b52a20"]];
+function tint(t) {
+  const need = NEED_ICON[t.icon];
+  if (need && !/^Niveau|^Succès|succès/.test(t.text)) {
+    const v = store[need];
+    return TIERS[v >= 60 ? 0 : v >= 40 ? 1 : v >= 20 ? 2 : 3];
+  }
+  if (/^Niveau|^Succès|succès/.test(t.text) || /star|cup|medal|crown|trophy/.test(t.icon)) return ["#ffc21a", "#d18a00"];
+  if (/check|confetti/.test(t.icon)) return ["#49c13a", "#2f9a24"];
+  return ["#4aa8f0", "#1d6fbf"];
+}
 
 watch(level, (lvl, old) => {
   if (old && lvl > old) {
@@ -67,36 +84,56 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
 </script>
 
 <style scoped>
-/* sous la carte de profil, dans le ciel libre (jamais par-dessus le profil) */
+/* centré sous la carte de profil, dans le ciel libre */
 .toasts {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px) + 84px);
+  top: calc(env(safe-area-inset-top, 0px) + 100px);
   left: 14px;
   right: 14px;
   z-index: 25;
   display: grid;
   justify-items: center;
-  gap: var(--s-2);
+  gap: 8px;
   pointer-events: none;
 }
 .toast {
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: 100%;
-  min-height: 48px;
-  padding: 6px 18px 6px 6px;
-  border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.97);
-  color: var(--ink);
-  font: 700 var(--t-lg)/1.25 var(--font-title);
-  box-shadow: var(--sh-3), var(--hl);
+  max-width: min(100%, 420px);
+  min-height: 52px;
+  padding: 6px 20px 6px 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--hud-ink);
+  font: 600 16px/1.2 var(--font-title);
+  box-shadow: 0 12px 28px rgba(30, 55, 100, 0.22), 0 0 0 1px #d6dfea;
 }
-.medal { width: 36px; height: 36px; box-shadow: 0 2px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5); }
-.medal .ic { width: 20px; height: 20px; }
-.txt { min-width: 0; }
-.toast-enter-active { transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.3s; }
+.medal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 28%, rgba(255, 255, 255, 0.5), var(--c) 55%, var(--c-lo));
+  background-color: var(--c);
+  box-shadow: 0 0 0 3px #fff, 0 2px 4px rgba(40, 60, 90, 0.3);
+}
+.medal .ic { width: 22px; height: 22px; color: #fff; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3)); }
+.txt {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.toast-enter-active { transition: transform 0.4s var(--spring), opacity 0.3s; }
 .toast-leave-active { transition: transform 0.3s, opacity 0.3s; }
-.toast-enter-from { transform: translateY(-20px) scale(0.6); opacity: 0; }
-.toast-leave-to { transform: translateY(-10px); opacity: 0; }
+.toast-enter-from { transform: translateY(14px) scale(0.9); opacity: 0; }
+.toast-leave-to { transform: translateY(-8px); opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter-active, .toast-leave-active { transition: opacity 0.2s; }
+  .toast-enter-from, .toast-leave-to { transform: none; }
+}
 </style>

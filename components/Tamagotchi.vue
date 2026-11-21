@@ -14,9 +14,28 @@
     <!-- bulle d'envie / besoin / petite phrase, au-dessus de sa tête -->
     <!-- une seule bulle : celle-ci s'efface tant qu'elle parle (bulle 3D) -->
     <div v-if="bubbleStyle && !activeActivity" v-show="!speaking" class="bubble-wrap" :style="bubbleStyle">
-      <WishBubble />
+      <WishBubble @pick="(k) => openRing(k)" />
       <span v-if="statusText" class="status" :class="{ ill: !!store.illness }">{{ statusText }}</span>
     </div>
+
+    <!-- menu d'interactions en arc autour d'elle (toucher la créature) -->
+    <InteractionRing
+      v-if="ring && info && !activeActivity"
+      :anchor="info"
+      :zoom="zoom"
+      :focus="ring.focus"
+      :min-top="frame?.minTop || 80"
+      @close="closeRing"
+      @picked="onPicked"
+    />
+
+    <ZoomControls
+      v-if="!fallback"
+      :zoom="zoom"
+      @in="creature?.zoomBy?.(1.25)"
+      @out="creature?.zoomBy?.(0.8)"
+      @reset="creature?.resetZoom?.()"
+    />
 
     <!-- gains et pertes qui s'envolent après une action -->
     <div class="deltas">
@@ -62,6 +81,30 @@ let meadow = null;
 const fallback = ref(false);
 const fallbackMessage = ref("");
 const reaction = ref(null);
+
+// menu d'interactions + zoom : états éphémères (rien n'est sauvegardé)
+const ring = ref(null); // { focus }
+const info = ref(null); // dernier onScreen : { x, y, r, top, bottom, visible }
+const zoom = ref(1);
+let lastTouch = Date.now();
+const touched = () => { lastTouch = Date.now(); };
+let ringClosedAt = 0;
+function closeRing() {
+  if (ring.value) { ring.value = null; ringClosedAt = Date.now(); }
+}
+function openRing(focus = null) {
+  const si = creature.value?.getScreenInfo?.();
+  if (si) info.value = si;
+  if (!info.value) return;
+  touched();
+  ring.value = { focus };
+}
+function onPicked() { touched(); }
+watch(ring, (r) => creature.value?.holdZoom?.(!!r));
+watch(() => [gameBus.activity, activeActivity.value], ([a, b]) => { if (a || b) closeRing(); });
+function onScreen(i) { info.value = i; }
+function onZoom(z) { zoom.value = z; }
+function onGesture() { touched(); closeRing(); }
 
 // prio : 0 bavardage, 1 réaction (défaut), 2 réplique précise (voir creature3d say)
 const speaking = ref(false);
@@ -145,8 +188,12 @@ const statusText = computed(() => {
 const bubbleStyle = computed(() => {
   const f = props.frame;
   if (!f || stageScale.value === 0) return null;
-  const head = f.ground - f.size * 1.12 * stageScale.value;
-  return { top: `${Math.max((f.minTop || 40) - 30, head - 14)}px` };
+  const floor = (f.minTop || 40) - 30;
+  if (info.value && info.value.visible !== false && Number.isFinite(info.value.top)) {
+    return { top: `${Math.max(floor, info.value.top - 14)}px` };
+  }
+  const head = f.ground - f.size * 1.12 * stageScale.value * Math.min(zoom.value, 1.6);
+  return { top: `${Math.max(floor, head - 14)}px` };
 });
 let chatter = null;
 
@@ -171,14 +218,20 @@ let deltaId = 0;
 function showDeltas(before) {
   const changed = STATS.filter((s) => Math.round(store[s.key] - before[s.key]) !== 0);
   const h = stage.value?.clientHeight || 400;
+  const w = stage.value?.clientWidth || 360;
+  const a = info.value;
+  const anchored = !!a && Number.isFinite(a.x) && Number.isFinite(a.top);
+  const baseY = anchored ? a.top - 10 - (ring.value ? 40 : 0) : h * 0.4;
+  const cx = anchored ? a.x - w / 2 : 0;
+  const gap = anchored ? 64 : 78;
   changed.forEach((s, i) => {
     const diff = Math.round(store[s.key] - before[s.key]);
     const id = ++deltaId;
     deltas.value.push({
       id, icon: s.icon, color: diff > 0 ? s.color : "#c0392b",
       text: (diff > 0 ? "+" : "") + diff,
-      x: (i - (changed.length - 1) / 2) * 78 + (Math.random() * 16 - 8),
-      y: h * 0.4,
+      x: cx + (i - (changed.length - 1) / 2) * gap + (Math.random() * 12 - 6),
+      y: baseY - Math.abs(i - (changed.length - 1) / 2) * 6,
     });
     setTimeout(() => (deltas.value = deltas.value.filter((d) => d.id !== id)), 1300);
   });
@@ -205,19 +258,66 @@ function listenToActions() {
   });
 }
 
-// Toucher la créature la chatouille
-function onPoke({ dead, asleep }) {
+// Toucher la créature ouvre son menu d'interactions (bascule) ; en rafale, elle réagit
+let touches = [];
+let burstPause = 0;
+function onPoke(p) {
+  const { dead, asleep } = p;
   try { if (!["0", "false", "off"].includes(localStorage.getItem("tamagotchi-haptics"))) navigator.vibrate?.(8); } catch { /* ignoré */ }
-  if (dead) return;
-  if (asleep) return say("Mmh... laisse-moi dormir");
-  const res = store.applyAction("chatouiller");
-  if (res && res.ok === false) react("chatouiller");
   store.countGesture("menu");
   emit("tap");
+  touched();
+  const now = Date.now();
+  if (Number.isFinite(p.x)) info.value = { x: p.x, y: p.y, r: p.r, top: p.top, bottom: p.bottom, visible: true };
+  if (now < burstPause) return;
+  touches = touches.filter((t) => now - t < 1200);
+  touches.push(now);
+  const n = touches.length;
+  if (!dead && !asleep) {
+    if (n === 3) {
+      creature.value?.hop?.(0.5);
+      say("Hihi, ça chatouille !", 1800, 1);
+      try { store.applyAction("chatouiller"); } catch { /* bonus, ignoré */ }
+    } else if (n === 6) {
+      creature.value?.rotateBy?.(Math.PI * 2);
+      say("Ahah ! Stop, stop !");
+      try { navigator.vibrate?.(20); } catch { /* ignoré */ }
+    } else if (n >= 10) {
+      touches = [];
+      burstPause = now + 3000;
+      closeRing();
+      react("bouderie");
+      say("Hop là, ça suffit, j'ai le hoquet !");
+      return;
+    }
+  }
+  // le menu vient de se fermer à cause de CE toucher (pointerdown hors menu) : bascule = il reste fermé
+  if (!ring.value && now - ringClosedAt < 650) return;
+  if (ring.value) {
+    // déjà ouvert : un toucher le ferme, mais en rafale il reste ouvert
+    if (n < 3) closeRing();
+    return;
+  }
+  if (n >= 3) return; // en rafale on ne rouvre pas à chaque toucher
+  if (asleep) say("Mmh... laisse-moi dormir");
+  ring.value = { focus: null };
+}
+
+// Appel : quand elle a un besoin et qu'on l'oublie, elle se manifeste
+let callTimer = null;
+function maybeCall() {
+  if (stageKey.value === "oeuf" || store.isSleeping || props.dead || store.health <= 0) return;
+  if (activeActivity.value || gameBus.activity || ring.value) return;
+  if (Date.now() - lastTouch < 30000) return;
+  if (!["hunger", "cleanliness", "fun", "energy"].some((k) => store[k] < 25)) return;
+  lastTouch = Date.now() - 15000; // pas de nouvel appel avant 15 s
+  creature.value?.hop?.(0.3);
+  say("Hé ! Viens me voir...", 2400, 0);
 }
 
 onMounted(async () => {
   listenToActions();
+  callTimer = setInterval(maybeCall, 8000);
   chatter = setInterval(() => { if (!reaction.value && stageKey.value !== "oeuf") say(idleLine(store, shownMood.value, MESSAGES[shownMood.value]), undefined, 0); }, 40000);
   try {
     const { createCreature, webglAvailable } = await import("~/lib/creature3d.js");
@@ -227,6 +327,9 @@ onMounted(async () => {
       onGround: (y) => emit("ground", y),
       onSpin: () => store.countGesture("tourner"),
       onSpeech,
+      onScreen,
+      onZoom,
+      onGesture,
       world: true,
     });
     creature.value.setAppearance(store.appearance);
@@ -241,11 +344,17 @@ onMounted(async () => {
       const { bindMeadowProps } = await import("~/lib/meadowProps.js");
       if (creature.value) meadow = bindMeadowProps(creature.value, { onLaunch: (id) => launchActivity(id) });
     } catch (e) { console.warn("Objets du pré indisponibles :", e); }
+    // contrôle visuel sans navigateur : ?menu=1 ouvre le menu après le chargement
+    try {
+      if (new URLSearchParams(window.location.search).get("menu") === "1") {
+        setTimeout(() => openRing(null), 1200);
+      }
+    } catch { /* ignoré */ }
     // tant qu'elle n'a jamais été chatouillée, elle invite à la toucher
     setTimeout(() => {
       if (stageKey.value === "oeuf") return;
       const firstTime = !(store.counters.menu > 0);
-      say(firstTime ? "Coucou ! Fais-moi un petit poke, ça me fait rire !" : idleLine(store, shownMood.value, MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
+      say(firstTime ? "Coucou ! Touche-moi pour voir ce que je peux faire !" : idleLine(store, shownMood.value, MESSAGES[shownMood.value]), firstTime ? 6000 : undefined);
     }, 600);
   } catch (e) {
     console.warn("Affichage 3D impossible, retour aux images :", e);
@@ -255,6 +364,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearInterval(chatter);
+  clearInterval(callTimer);
+  closeRing();
   clearTimeout(reactionTimer);
   clearTimeout(speakTimer);
   stopListening?.();
@@ -360,7 +471,7 @@ onBeforeUnmount(() => {
   0% { transform: translate(-50%, 10px) scale(0.6); opacity: 0; }
   15% { transform: translate(-50%, 0) scale(1.1); opacity: 1; }
   70% { opacity: 1; }
-  100% { transform: translate(-50%, -90px) scale(1); opacity: 0; }
+  100% { transform: translate(-50%, -70px) scale(1); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .delta { animation-duration: 2s; }
