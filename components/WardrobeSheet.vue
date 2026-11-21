@@ -35,14 +35,6 @@
       </button>
     </div>
 
-    <!-- sa réaction au dernier essayage -->
-    <Transition name="pop">
-      <p v-if="said" :key="said.id" class="ui-note" :class="said.mood === 'love' ? 'ui-note--love' : said.mood === 'dislike' ? '' : 'ui-note--accent'">
-        <Icon :name="MOOD_ICON[said.mood] || 'solar:chat-round-dots-bold-duotone'" class="ic" />
-        <span>« {{ said.line }} »</span>
-      </p>
-    </Transition>
-
     <!-- objets possédés pour cet emplacement -->
     <div v-if="items.length" class="grid">
       <button

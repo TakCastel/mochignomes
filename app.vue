@@ -83,16 +83,25 @@ function measure() {
   // studio : créature centrée dans la zone libre (un peu plus bas pour laisser la place à sa bulle),
   // avec de la marge sous les pieds pour les flèches au sol ; prairie : posée en bas comme avant
   const groundLow = r.bottom - Math.min(26, r.height * 0.10);
-  const ground = studioHome.value ? Math.min(r.bottom - 48, r.top + (r.height + size) / 2 + 28) : groundLow;
+  let ground = studioHome.value ? Math.min(r.bottom - 48, r.top + (r.height + size) / 2 + 28) : groundLow;
+  let shown = size;
+  // essayage en boutique : la créature se cadre entière au-dessus de la barre d'essayage
+  const tryTop = gameBus.tryTop;
+  if (tryTop && tryTop > r.top + 80) {
+    const free = tryTop - 16 - r.top;
+    shown = Math.round(Math.min(size, free * 0.78));
+    ground = r.top + (free + shown) / 2 + 10;
+  }
   frame.value = {
     ground: Math.round(ground),
-    size,
+    size: shown,
     // haut de la zone libre + hauteur d'une bulle : la bulle reste visible
     minTop: Math.round(r.top + 56),
   };
 }
 
 watch(studioHome, measure);
+watch(() => gameBus.tryTop, measure); // essayage en boutique : recadrage au-dessus de la barre
 
 onMounted(() => {
   // succès déjà vus : la 1re fois, tous ceux déjà gagnés (pas de pastille au démarrage)

@@ -189,7 +189,6 @@
             <p v-if="tasteHint" class="ui-note" :class="tasteHint.kind === 'love' ? 'ui-note--love' : 'ui-note--violet'">
               <Icon :name="tasteHint.icon" class="ic" />{{ tasteHint.text }}
             </p>
-            <p v-if="reactionLine" class="ui-bubble">« {{ reactionLine }} »</p>
             <p v-if="buyError" class="err" :class="{ shake: shakeKey }">{{ buyError }}</p>
 
             <div class="ui-actions">
@@ -213,7 +212,7 @@
 
       <!-- barre d'essayage : la fiche s'efface pour la voir en 3D -->
       <Transition name="slide">
-        <div v-if="trying && detail" class="try-bar" role="dialog" aria-label="Essayage">
+        <div v-if="trying && detail" ref="tryBar" class="try-bar" role="dialog" aria-label="Essayage">
           <div class="ui-kicker try-head">
             <Icon name="solar:eye-bold-duotone" class="ic" />
             <span>Essayage · {{ detailItem.label }} {{ colorLabel(detail.color) }}</span>
@@ -500,6 +499,7 @@ function wear() {
 const outfitPreview = useOutfitPreview();
 const canTry = computed(() => !!detail.value && !!outfitPreview.creature.value);
 const trying = ref(false);
+const tryBar = ref(null);
 let hiddenOverlay = null;
 
 function preview() {
@@ -519,10 +519,16 @@ function startTry() {
   // on efface la fenêtre de la boutique pour la voir en 3D
   hiddenOverlay = root.value?.closest(".overlay") || null;
   if (hiddenOverlay) hiddenOverlay.classList.add("shop-trying");
+  // la créature se recadre au-dessus de la barre d'essayage (app.vue lit gameBus.tryTop)
+  nextTick(() => {
+    const top = tryBar.value?.getBoundingClientRect().top;
+    if (trying.value && top) gameBus.tryTop = Math.round(top);
+  });
 }
 function stopTry() {
   if (!trying.value) return;
   trying.value = false;
+  gameBus.tryTop = 0;
   emit("tryon", false);
   if (hiddenOverlay) hiddenOverlay.classList.remove("shop-trying");
   hiddenOverlay = null;
