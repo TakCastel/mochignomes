@@ -18,6 +18,7 @@
         :tab="gameBus.pageTab || 'vetements'"
         :focus="gameBus.pageFocus"
         :focus-color="gameBus.pageFocusColor"
+        :slot-key="gameBus.pageSlot"
         @navigate="navigate"
       />
     </BaseSheet>

@@ -12,6 +12,7 @@ export const gameBus = reactive({
   pageTab: "", // onglet demandé à l'ouverture (Sac : tenues | collection ; Boutique : vetements | epicerie | objets)
   pageFocus: "", // élément mis en avant (vêtement, ingrédient, objet)
   pageFocusColor: "", // couleur présélectionnée (Boutique)
+  pageSlot: "", // emplacement présélectionné (Boutique : rayon Tête, Cou...)
   albumTab: "photos", // "photos" | "succes"
   highlight: null, // { action, id } : fait pulser une tuile d'action
   sheet: null, // fenêtre ouverte : null | "reglages" | "manger" | "cuisine" | "activites"
@@ -70,6 +71,7 @@ export function openPage(name, opts = {}) {
   gameBus.pageTab = opts.tab || "";
   gameBus.pageFocus = opts.focus || "";
   gameBus.pageFocusColor = opts.focusColor || "";
+  gameBus.pageSlot = opts.slot || "";
   gameBus.page = name;
 }
 export function closePage() {
@@ -77,6 +79,7 @@ export function closePage() {
   gameBus.pageTab = "";
   gameBus.pageFocus = "";
   gameBus.pageFocusColor = "";
+  gameBus.pageSlot = "";
 }
 export function openSheet(name) {
   if (!featureOpen(SHEET_FEATURE[name])) return;
@@ -117,7 +120,7 @@ export function navigate(e = {}) {
   if (to === "activites") return openSheet("activites");
   if (to === "activite") return launchActivity(e.focus);
   if (to === "album" && e.tab) gameBus.albumTab = e.tab;
-  return openPage(to, { tab: e.tab, focus: e.focus, focusColor: e.focusColor });
+  return openPage(to, { tab: e.tab, focus: e.focus, focusColor: e.focusColor, slot: e.slot });
 }
 export function highlightAction(action) {
   gameBus.page = null;
