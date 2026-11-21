@@ -1,23 +1,28 @@
 <template>
   <Transition name="pop">
-    <div v-if="away" class="overlay">
-      <section class="card" role="dialog" aria-modal="true" aria-labelledby="away-title">
-        <div class="medal"><Icon name="solar:heart-bold-duotone" class="medal-icon" /></div>
-        <h2 id="away-title">Pendant ton absence</h2>
-        <p class="since">{{ since }}</p>
+    <div v-if="away" class="ui-scrim away-scrim">
+      <section class="ui-dialog card" role="dialog" aria-modal="true" aria-labelledby="away-title">
+        <div class="ui-medal ui-medal--love medal"><Icon name="solar:heart-bold-duotone" class="ic" /></div>
+        <h2 id="away-title" class="ui-dialog-title">Pendant ton absence</h2>
+        <p class="ui-text">{{ since }}</p>
         <ul v-if="lines.length" class="lines">
-          <li v-for="(l, i) in lines" :key="i">{{ l }}</li>
+          <li v-for="(l, i) in lines" :key="i" class="ui-well">{{ l }}</li>
         </ul>
-        <div v-if="away.surprise" class="surprise">
-          <Icon :name="away.surprise.icon || 'solar:gift-bold-duotone'" class="s-icon" />
-          <span>{{ away.surprise.text }}</span>
+        <!-- surprises : même ligne pour le cadeau trouvé et les pièces gardées -->
+        <div v-if="away.surprise || store.returnGift > 0" class="surprises">
+          <div v-if="away.surprise" class="surprise">
+            <span class="ui-thumb s-thumb"><Icon :name="away.surprise.icon || 'solar:gift-bold-duotone'" class="ic" /></span>
+            <span>{{ away.surprise.text }}</span>
+          </div>
+          <!-- retour après une pause : un cadeau, jamais de reproche (versé en disant bonjour) -->
+          <div v-if="store.returnGift > 0" class="surprise">
+            <span class="ui-thumb s-thumb"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic ui-coin" /></span>
+            <span>Elle t'a gardé {{ store.returnGift }} pièces.</span>
+          </div>
         </div>
-        <!-- retour après une pause : un cadeau, jamais de reproche (versé en disant bonjour) -->
-        <div v-if="store.returnGift > 0" class="surprise">
-          <Icon name="solar:dollar-minimalistic-bold-duotone" class="s-icon" />
-          <span>Elle t'a gardé {{ store.returnGift }} pièces.</span>
+        <div class="ui-actions">
+          <button class="ui-btn ui-btn--primary cta" type="button" @click="hello">Coucou !</button>
         </div>
-        <button class="cta" type="button" @click="hello">Coucou !</button>
       </section>
     </div>
   </Transition>
@@ -48,75 +53,30 @@ function hello() {
 </script>
 
 <style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  grid-template-columns: minmax(0, 360px);
-  justify-content: center;
-  background: rgba(30, 40, 70, 0.45);
-}
-.card {
-  position: relative;
-  width: 100%;
-  padding: 54px 22px 22px;
-  border-radius: 34px;
-  text-align: center;
-  color: #2b3440;
-  background: linear-gradient(180deg, #ffffff, #eef3f8);
-  box-shadow: 0 8px 0 #cfd9e4, 0 24px 50px rgba(30, 40, 70, 0.4), inset 0 2px 0 #fff;
-}
-.medal {
-  position: absolute;
-  top: -42px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 28%, #ffc0d2, #ff6d8a 60%, #e03a64);
-  box-shadow: 0 0 0 6px #fff, 0 6px 0 6px #cfd9e4, 0 14px 24px rgba(30, 40, 70, 0.3);
-  animation: bob 2.4s ease-in-out infinite;
-}
-.medal-icon { width: 44px; height: 44px; color: #fff; }
+/* au-dessus de tout (bulles de la créature comprises) ; le flou calme la scène derrière */
+.away-scrim { z-index: 45; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.card { overflow: visible; margin-top: 40px; padding-top: 52px; }
+.medal { position: absolute; top: -36px; left: 50%; width: 76px; height: 76px; transform: translateX(-50%); box-shadow: 0 0 0 6px #fff, 0 4px 0 6px #e3e9f0, 0 12px 24px rgba(30, 40, 70, 0.3); animation: bob 2.4s ease-in-out infinite; }
+.medal .ic { width: 40px; height: 40px; }
 @keyframes bob { 50% { transform: translateX(-50%) translateY(-5px) rotate(-4deg); } }
-h2 { margin: 0; font: 700 26px "Fredoka", "Nunito", system-ui, sans-serif; }
-.since { margin: 4px 0 0; font-weight: 700; font-size: 14px; opacity: 0.7; }
-.lines { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; text-align: left; }
-.lines li { padding: 10px 14px; border-radius: 16px; background: #f1f5fa; font-weight: 700; font-size: 15px; line-height: 1.35; }
+.lines { width: 100%; margin: var(--s-1) 0 0; padding: 0; list-style: none; display: grid; gap: var(--s-2); text-align: left; }
+.lines li { padding: 10px var(--s-3); font: 700 15px/1.35 var(--font-text); color: var(--ink); }
+.surprises { width: 100%; display: grid; gap: var(--s-2); }
 .surprise {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: #fff3d9;
-  box-shadow: 0 0 0 2px #ffd88a;
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-2);
+  border-radius: var(--r-md);
+  background: linear-gradient(180deg, #fff8e6, #ffefc8);
   text-align: left;
-  font-weight: 800;
-  font-size: 15px;
+  font: 800 15px/1.3 var(--font-text);
+  color: #6b4a00;
 }
-.s-icon { flex: none; width: 28px; height: 28px; color: #e8892a; }
-.cta {
-  width: 100%;
-  min-height: 52px;
-  margin-top: 18px;
-  padding: 14px 18px;
-  border: 0;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #7fdc5a, #4fbf34);
-  color: #fff;
-  font: 700 18px "Fredoka", "Nunito", system-ui, sans-serif;
-  box-shadow: 0 5px 0 #3c9a22, 0 10px 18px rgba(30, 50, 80, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.35);
-  cursor: pointer;
-}
-.cta:active { transform: translateY(4px); box-shadow: 0 1px 0 #3c9a22; }
+.s-thumb { width: 40px; height: 40px; background: #fff; }
+.s-thumb .ic { width: 26px; height: 26px; color: var(--warn); }
+.s-thumb .ic.ui-coin { color: var(--coin); }
+.cta { min-height: 52px; font-size: var(--t-xl); border-radius: var(--r-pill); }
 .pop-enter-active { transition: opacity 0.25s; }
 .pop-enter-active .card { transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .pop-leave-active { transition: opacity 0.2s; }

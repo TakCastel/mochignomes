@@ -67,18 +67,20 @@ if (props.auto) {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 12px 5px 7px;
-  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 14px 0 8px;
+  border-radius: var(--r-pill);
   background: #fff;
-  color: #b07800;
-  font: 800 18px/1 "Fredoka", "Nunito", system-ui, sans-serif;
+  color: var(--coin-ink);
+  font: 700 var(--t-xl)/1 var(--font-title);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  box-shadow: 0 6px 16px rgba(40, 55, 80, 0.22), inset 0 -2px 0 rgba(240, 180, 40, 0.25);
+  box-shadow: var(--sh-3), var(--hl);
   animation: rise 1.4s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
-.gems .pill { color: #7a4fd6; box-shadow: 0 6px 16px rgba(40, 55, 80, 0.22), inset 0 -2px 0 rgba(150, 100, 240, 0.25); }
-.pill-ic { width: 22px; height: 22px; color: #f2b01e; }
-.gems .pill-ic { color: #a77bff; }
+.gems .pill { color: var(--gem-ink); }
+.pill-ic { width: 22px; height: 22px; color: var(--coin); }
+.gems .pill-ic { color: var(--gem); }
 .coin {
   position: absolute;
   left: -9px;
@@ -86,8 +88,8 @@ if (props.auto) {
   opacity: 0;
   animation: pop 0.9s ease-out var(--d) forwards;
 }
-.coin-ic { width: 18px; height: 18px; color: #f2b01e; filter: drop-shadow(0 2px 2px rgba(120, 80, 0, 0.25)); }
-.gems .coin-ic { color: #a77bff; }
+.coin-ic { width: 18px; height: 18px; color: var(--coin); filter: drop-shadow(0 2px 2px rgba(120, 80, 0, 0.25)); }
+.gems .coin-ic { color: var(--gem); }
 @keyframes rise {
   0% { transform: translate(-50%, 10px) scale(0.5); opacity: 0; }
   15% { transform: translate(-50%, -6px) scale(1.12); opacity: 1; }

@@ -12,13 +12,13 @@
     <!-- HUD -->
     <div v-if="phase === 'play' || phase === 'intro'" class="hud">
       <div class="hud-row">
-        <span class="hud-name"><Icon :name="act?.icon || 'solar:gamepad-bold-duotone'" class="hud-ic" />{{ act?.label }}</span>
-        <button class="hud-btn" aria-label="Pause" @click="pause(true)">
-          <Icon name="solar:pause-bold" class="hud-btn-ic" />
+        <span class="ui-chip hud-name"><Icon :name="act?.icon || 'solar:gamepad-bold-duotone'" class="ic" />{{ act?.label }}</span>
+        <button class="ui-icon-btn hud-btn" aria-label="Pause" @click="pause(true)">
+          <Icon name="solar:pause-bold" class="ic" />
         </button>
       </div>
       <div v-if="!act?.noScore" class="score" :class="{ pop: scorePop }">
-        <b>{{ score }}</b><small v-if="act?.scoreUnit">{{ act.scoreUnit }}</small>
+        <b class="ui-num">{{ score }}</b><small v-if="act?.scoreUnit">{{ act.scoreUnit }}</small>
       </div>
       <div v-if="hud.text" class="hud-text">{{ hud.text }}</div>
       <div v-if="hud.combo > 1" :key="hud.combo" class="combo">×{{ hud.combo }}</div>
@@ -34,59 +34,59 @@
 
     <!-- pause -->
     <div v-if="paused && phase === 'play'" class="center">
-      <div class="card">
-        <span class="badge"><Icon name="solar:pause-circle-bold-duotone" class="badge-ic" /></span>
-        <h3>En pause</h3>
-        <p class="muted">Elle t'attend.</p>
-        <div class="btns">
-          <button class="btn ghost" @click="stopNow">Arrêter</button>
-          <button class="btn" @click="resume">Reprendre</button>
+      <div class="ui-dialog card">
+        <span class="ui-medal"><Icon name="solar:pause-circle-bold-duotone" class="ic" /></span>
+        <h3 class="ui-dialog-title">En pause</h3>
+        <p class="ui-text">Elle t'attend.</p>
+        <div class="ui-actions">
+          <button class="ui-btn ui-btn--secondary" @click="stopNow">Arrêter</button>
+          <button class="ui-btn ui-btn--primary" @click="resume">Reprendre</button>
         </div>
       </div>
     </div>
 
     <!-- impossible de jouer -->
     <div v-if="phase === 'blocked'" class="center">
-      <div class="card">
-        <span class="badge soft"><Icon :name="act?.icon || 'solar:gamepad-bold-duotone'" class="badge-ic" /></span>
-        <h3>{{ act?.label || "Activité" }}</h3>
-        <p class="muted">{{ blockedReason }}</p>
-        <div class="btns">
-          <button class="btn" :class="{ ghost: blockedProp }" @click="close">Retour</button>
-          <button v-if="blockedProp" class="btn" @click="goShop">Voir la boutique</button>
+      <div class="ui-dialog card">
+        <span class="ui-medal ui-medal--soft"><Icon :name="act?.icon || 'solar:gamepad-bold-duotone'" class="ic" /></span>
+        <h3 class="ui-dialog-title">{{ act?.label || "Activité" }}</h3>
+        <p class="ui-text">{{ blockedReason }}</p>
+        <div class="ui-actions">
+          <button class="ui-btn" :class="blockedProp ? 'ui-btn--secondary' : 'ui-btn--primary'" @click="close">Retour</button>
+          <button v-if="blockedProp" class="ui-btn ui-btn--primary" @click="goShop">Voir la boutique</button>
         </div>
       </div>
     </div>
 
     <!-- résultat -->
     <div v-if="phase === 'result' && result" class="center">
-      <div class="card result">
-        <span class="badge" :class="{ gold: result.isRecord }">
-          <Icon :name="result.isRecord ? 'solar:cup-star-bold-duotone' : act?.icon || 'solar:star-bold-duotone'" class="badge-ic" />
+      <div class="ui-dialog card result">
+        <span class="ui-medal badge" :class="{ 'ui-medal--gold gold': result.isRecord }">
+          <Icon :name="result.isRecord ? 'solar:cup-star-bold-duotone' : act?.icon || 'solar:star-bold-duotone'" class="ic" />
         </span>
-        <h3>{{ result.title }}</h3>
+        <h3 class="ui-dialog-title">{{ result.title }}</h3>
         <div v-if="!act?.noScore" class="big">
-          <b>{{ result.score }}</b> <small>{{ act?.scoreUnit }}</small>
+          <b class="ui-num">{{ result.score }}</b> <small>{{ act?.scoreUnit }}</small>
         </div>
-        <p v-if="!act?.noScore" class="muted">Record : {{ result.best }}{{ act?.scoreUnit ? ` ${act.scoreUnit}` : "" }}</p>
-        <p v-if="result.line" class="line">« {{ result.line }} »</p>
+        <p v-if="!act?.noScore" class="ui-caption">Record : {{ result.best }}{{ act?.scoreUnit ? ` ${act.scoreUnit}` : "" }}</p>
+        <p v-if="result.line" class="ui-bubble line">« {{ result.line }} »</p>
 
         <div class="chips">
-          <span v-if="result.coins > 0" class="chip coin"><Icon name="solar:dollar-minimalistic-bold-duotone" class="chip-ic" />+{{ result.coins }}</span>
-          <span v-if="result.gems > 0" class="chip gem"><Icon name="solar:star-bold-duotone" class="chip-ic" />+{{ result.gems }} Étoile{{ result.gems > 1 ? "s" : "" }}</span>
-          <span v-for="g in result.gains" :key="g.key" class="chip" :style="{ '--c': g.color }">
-            <Icon :name="g.icon" class="chip-ic" />{{ g.n > 0 ? "+" : "" }}{{ g.n }}
+          <span v-if="result.coins > 0" class="ui-tag chip coin"><Icon name="solar:dollar-minimalistic-bold-duotone" class="ic" />+{{ result.coins }}</span>
+          <span v-if="result.gems > 0" class="ui-tag chip gem"><Icon name="solar:star-bold-duotone" class="ic" />+{{ result.gems }} Étoile{{ result.gems > 1 ? "s" : "" }}</span>
+          <span v-for="g in result.gains" :key="g.key" class="ui-tag chip" :style="{ '--c': g.color }">
+            <Icon :name="g.icon" class="ic" />{{ g.n > 0 ? "+" : "" }}{{ g.n }}
           </span>
-          <span v-for="i in result.ingredients" :key="i.id" class="chip food"><Icon :name="i.icon" class="chip-ic" />{{ i.label }} ×{{ i.n }}</span>
-          <span v-if="result.levelUp" class="chip lvl"><Icon name="solar:star-bold-duotone" class="chip-ic" />Niveau {{ store.level }} !</span>
+          <span v-for="i in result.ingredients" :key="i.id" class="ui-tag chip food"><Icon :name="i.icon" class="ic" />{{ i.label }} ×{{ i.n }}</span>
+          <span v-if="result.levelUp" class="ui-tag chip lvl"><Icon name="solar:star-bold-duotone" class="ic" />Niveau {{ store.level }} !</span>
         </div>
-        <p v-for="m in result.mastery" :key="m" class="mastery"><Icon name="solar:star-bold-duotone" class="m-ic" />Maîtrise : {{ m }}</p>
-        <p v-if="result.wishDone" class="note">Envie exaucée, elle est ravie !</p>
-        <p v-if="result.falloff < 1 && !act?.noScore" class="note">Elle préfère varier : les gains baissent un peu aujourd'hui.</p>
+        <p v-for="m in result.mastery" :key="m" class="ui-note ui-note--violet mastery"><Icon name="solar:star-bold-duotone" class="ic" />Maîtrise : {{ m }}</p>
+        <p v-if="result.wishDone" class="ui-note ui-note--love note">Envie exaucée, elle est ravie !</p>
+        <p v-if="result.falloff < 1 && !act?.noScore" class="ui-caption">Elle préfère varier : les gains baissent un peu aujourd'hui.</p>
 
-        <div class="btns">
-          <button class="btn ghost" @click="close">Retour</button>
-          <button v-if="canReplay" class="btn" @click="replay">Rejouer</button>
+        <div class="ui-actions">
+          <button class="ui-btn ui-btn--secondary" @click="close">Retour</button>
+          <button v-if="canReplay" class="ui-btn ui-btn--primary" @click="replay">Rejouer</button>
         </div>
       </div>
     </div>
@@ -342,8 +342,8 @@ onBeforeUnmount(() => {
   position: fixed;
   inset: 0;
   z-index: 40;
-  font-family: "Nunito", system-ui, sans-serif;
-  color: #2b3440;
+  font-family: var(--font-text);
+  color: var(--ink);
   pointer-events: auto;
   transition: background 0.25s;
 }
@@ -353,73 +353,61 @@ onBeforeUnmount(() => {
   left: 50%;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 18%);
   z-index: 3;
-  width: min(340px, calc(100% - 40px));
+  width: min(340px, calc(100% - 32px));
   margin: 0;
-  padding: 12px 16px;
+  padding: var(--s-3) var(--s-4);
   transform: translateX(-50%);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 8px 24px rgba(40, 55, 80, 0.2);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--sh-3);
   text-align: center;
-  font-weight: 800;
-  font-size: 15px;
+  font: 800 15px/1.35 var(--font-text);
   pointer-events: none;
 }
 .capture { position: absolute; inset: 0; touch-action: none; -webkit-tap-highlight-color: transparent; user-select: none; }
 
+/* HUD : mêmes marges que l'écran principal (14 px) */
 .hud {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
-  left: 16px;
-  right: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px));
+  left: 14px;
+  right: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   pointer-events: none;
 }
-.hud-row { width: 100%; display: flex; align-items: center; justify-content: space-between; }
-.hud-name {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px 6px 8px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 12px rgba(40, 55, 80, 0.14);
-  font-weight: 800; font-size: 14px;
-}
-.hud-ic { width: 22px; height: 22px; color: #3faa2e; }
-.hud-btn {
-  pointer-events: auto;
-  width: 42px; height: 42px; border: 0; border-radius: 50%;
-  display: grid; place-items: center;
-  background: rgba(255, 255, 255, 0.92); box-shadow: 0 4px 12px rgba(40, 55, 80, 0.14);
-  cursor: pointer;
-}
-.hud-btn-ic { width: 22px; height: 22px; color: #4a5565; }
+.hud-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.hud-name { cursor: default; color: var(--ink); max-width: calc(100% - 60px); overflow: hidden; text-overflow: ellipsis; }
+.hud-name .ic { width: 22px; height: 22px; color: var(--accent); }
+.hud-btn { pointer-events: auto; }
 .score {
   display: flex; align-items: baseline; gap: 6px;
-  padding: 4px 18px; border-radius: 20px;
-  background: rgba(255, 255, 255, 0.94); box-shadow: 0 6px 16px rgba(40, 55, 80, 0.16);
+  padding: 4px 20px; border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.95); box-shadow: var(--sh-3), var(--hl);
   transition: transform 0.12s;
 }
-.score b { font-size: 40px; font-weight: 900; line-height: 1.05; color: #2a9a3a; font-variant-numeric: tabular-nums; }
-.score small { font-size: 14px; font-weight: 800; color: #6a7585; }
+.score b { font-size: 40px; font-weight: 700; line-height: 1.1; color: var(--accent-lo); }
+.score small { font: 800 var(--t-md) var(--font-text); color: var(--ink-2); }
 .score.pop { transform: scale(1.18); }
 .hud-text {
-  padding: 4px 12px; border-radius: 999px;
-  background: rgba(43, 52, 64, 0.72); color: #fff; font-weight: 800; font-size: 13px;
+  padding: 5px 12px; border-radius: var(--r-pill);
+  background: rgba(43, 52, 64, 0.72); color: #fff; font: 800 13px var(--font-text);
 }
 .combo {
-  font-weight: 900; font-size: 22px; color: #ff8a3d;
+  font: 700 24px var(--font-title); color: var(--warn);
   text-shadow: 0 2px 0 #fff, 0 0 10px rgba(255, 255, 255, 0.9);
   animation: combo 0.35s ease-out;
 }
 @keyframes combo { from { transform: scale(1.8); opacity: 0.2; } to { transform: scale(1); opacity: 1; } }
-.timebar { width: min(220px, 60%); height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.7); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); }
-.timebar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #8fdc6a, #4fbf34); transition: width 0.3s linear; }
+.timebar { width: min(220px, 60%); height: 10px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.75); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); }
+.timebar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, var(--accent-hi), var(--accent)); transition: width 0.3s linear; }
 
 .count {
   position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%);
-  font-size: 96px; font-weight: 900; color: #fff;
-  text-shadow: 0 6px 0 #3faa2e, 0 10px 24px rgba(30, 60, 30, 0.35);
+  font: 700 96px var(--font-title); color: #fff;
+  text-shadow: 0 6px 0 var(--accent-lo), 0 10px 24px rgba(30, 60, 30, 0.35);
   pointer-events: none;
 }
 .pop-enter-active { transition: transform 0.3s cubic-bezier(0.2, 1.6, 0.4, 1), opacity 0.3s; }
@@ -427,55 +415,25 @@ onBeforeUnmount(() => {
 .pop-enter-from { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 .pop-leave-to { opacity: 0; }
 
-.center { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(30, 40, 50, 0.25); }
-.card {
-  width: min(360px, 100%);
-  padding: 22px 18px 16px;
-  border-radius: 26px;
-  background: linear-gradient(180deg, #ffffff 70%, #f3f7f2);
-  box-shadow: 0 18px 40px rgba(30, 40, 60, 0.3), inset 0 1px 0 #fff;
-  text-align: center;
-  animation: rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1);
+/* fenêtres : pause, impossible, résultat */
+.center {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+  background: var(--scrim);
 }
+.card { animation: rise 0.35s cubic-bezier(0.2, 1.3, 0.4, 1); }
 @keyframes rise { from { transform: translateY(30px) scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
-.card h3 { margin: 8px 0 2px; font-size: 22px; font-weight: 900; }
-.badge {
-  display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #a6ea85, #4fbf34 70%);
-  box-shadow: 0 5px 0 #2f8f22, inset 0 2px 0 rgba(255, 255, 255, 0.45);
-}
-.badge.gold { background: radial-gradient(circle at 38% 30%, #ffe27a, #ffb21a 70%); box-shadow: 0 5px 0 #c98200, inset 0 2px 0 rgba(255, 255, 255, 0.45); animation: wobble 0.9s ease-in-out 2; }
-.badge.soft { background: #eef3f7; box-shadow: none; }
-.badge-ic { width: 36px; height: 36px; color: #fff; }
-.badge.soft .badge-ic { color: #8a95a5; }
+.badge.gold { animation: wobble 0.9s ease-in-out 2; }
 @keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg) scale(1.08); } 75% { transform: rotate(10deg) scale(1.08); } }
-.big b { font-size: 52px; font-weight: 900; color: #2a9a3a; line-height: 1; }
-.big small { font-size: 16px; font-weight: 800; color: #6a7585; }
-.muted { margin: 4px 0; color: #6a7585; font-weight: 700; font-size: 14px; }
-.line { margin: 8px 0 0; font-weight: 800; color: #e0477f; font-size: 15px; }
-.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 14px 0 4px; }
-.chip {
-  --c: #4a5565;
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 5px 10px; border-radius: 999px;
-  background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--c);
-  font-weight: 900; font-size: 14px;
-}
-.chip-ic { width: 18px; height: 18px; }
-.chip.coin { --c: #d08a00; }
-.chip.gem { --c: #8a4dff; }
-.chip.food { --c: #e0477f; }
-.chip.lvl { --c: #2a9a3a; }
-.mastery { margin: 6px 0 0; font-weight: 800; color: #8a4dff; display: flex; align-items: center; justify-content: center; gap: 4px; }
-.m-ic { width: 18px; height: 18px; }
-.note { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: #6a7585; }
-.btns { display: flex; gap: 10px; margin-top: 16px; }
-.btn {
-  flex: 1; min-height: 48px; border: 0; border-radius: 16px;
-  background: linear-gradient(180deg, #6fd14c, #43b02a); color: #fff;
-  font: 900 16px/1 "Nunito", system-ui, sans-serif;
-  box-shadow: 0 4px 0 #2f8f22; cursor: pointer;
-}
-.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #2f8f22; }
-.btn.ghost { background: #f1f4f8; color: #4a5565; box-shadow: 0 4px 0 #d5dbe3; }
+.big { line-height: 1; }
+.big b { font-size: 52px; font-weight: 700; color: var(--accent-lo); }
+.big small { font: 800 var(--t-lg) var(--font-text); color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: var(--s-1) 0; }
+.chip { padding: 6px 11px; font: 700 15px var(--font-title); }
+.chip .ic { width: 18px; height: 18px; }
+.chip.coin { --c: #d99400; }
+.chip.gem { --c: var(--gem); }
+.chip.food { --c: var(--love); }
+.chip.lvl { --c: var(--accent-lo); }
+.mastery, .note { justify-content: center; width: 100%; }
 </style>

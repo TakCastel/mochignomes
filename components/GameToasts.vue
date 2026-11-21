@@ -2,8 +2,8 @@
   <div class="toasts" aria-live="polite">
     <TransitionGroup name="toast">
       <div v-for="t in gameBus.toasts" :key="t.id" class="toast">
-        <Icon :name="t.icon" class="icon" />
-        <span>{{ t.text }}</span>
+        <span class="ui-medal ui-medal--gold medal"><Icon :name="t.icon" class="ic" /></span>
+        <span class="txt">{{ t.text }}</span>
       </div>
     </TransitionGroup>
   </div>
@@ -54,40 +54,34 @@ watch(() => [store.xp, JSON.stringify(store.counters), Math.floor((store.lastUpd
 </script>
 
 <style scoped>
+/* sous la carte de profil, dans le ciel libre (jamais par-dessus le profil) */
 .toasts {
   position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 70px);
-  left: 0;
-  right: 0;
+  top: calc(env(safe-area-inset-top, 0px) + clamp(10px, 1.8vh, 18px) + 84px);
+  left: 14px;
+  right: 14px;
   z-index: 25;
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: var(--s-2);
   pointer-events: none;
 }
 .toast {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 16px 8px 10px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #fff8e0, #ffe39a);
-  color: #5a3200;
-  font-family: "Fredoka", "Nunito", system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 16px;
-  box-shadow: 0 4px 0 #d9a400, 0 10px 24px rgba(60, 30, 0, 0.3);
+  max-width: 100%;
+  min-height: 48px;
+  padding: 6px 18px 6px 6px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--ink);
+  font: 700 var(--t-lg)/1.25 var(--font-title);
+  box-shadow: var(--sh-3), var(--hl);
 }
-.icon {
-  width: 32px;
-  height: 32px;
-  padding: 6px;
-  box-sizing: border-box;
-  border-radius: 50%;
-  color: #fff;
-  background: radial-gradient(circle at 38% 30%, #ffe27a, #f0a500 70%);
-  box-shadow: 0 2px 0 #b07c00;
-}
+.medal { width: 36px; height: 36px; box-shadow: 0 2px 0 #d18a00, inset 0 2px 0 rgba(255, 255, 255, 0.5); }
+.medal .ic { width: 20px; height: 20px; }
+.txt { min-width: 0; }
 .toast-enter-active { transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.3s; }
 .toast-leave-active { transition: transform 0.3s, opacity 0.3s; }
 .toast-enter-from { transform: translateY(-20px) scale(0.6); opacity: 0; }

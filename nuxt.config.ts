@@ -90,5 +90,7 @@ export default defineNuxtConfig({
     "@fontsource/nunito/600.css",
     "@fontsource/nunito/700.css",
     "@fontsource/nunito/800.css",
+    // couche de design partagée (jetons + primitives .ui-*)
+    "~/assets/css/ui.css",
   ],
 });
