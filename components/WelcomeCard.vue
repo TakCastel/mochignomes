@@ -156,10 +156,11 @@ function later() {
 
 // --- étapes guidées : tout passe par le menu qui s'ouvre en la touchant (InteractionRing) ;
 // pendant le tutoriel il n'y propose que la pilule de l'étape, qui pulse ---
+// le menu est déjà ouvert (et le reste pendant tout le tutoriel) : on touche juste la pilule
 const GUIDE = {
-  2: () => `${store.name} a faim ! Touche-la, puis « Manger ».`,
-  3: () => `${store.name} s'ennuie. Touche-la, puis « Jouer ».`,
-  4: () => `Touche-la, puis « Chatouiller » pour la faire rire !`,
+  2: () => `${store.name} a faim ! Touche « Manger » pour la nourrir.`,
+  3: () => `${store.name} s'ennuie. Touche « Jouer » pour jouer avec elle.`,
+  4: () => `Touche « Chatouiller » pour la faire rire !`,
 };
 const guideText = computed(() => GUIDE[step.value]?.() || "");
 

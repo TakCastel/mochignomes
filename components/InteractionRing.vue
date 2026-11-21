@@ -360,6 +360,12 @@ function onIdle() {
 }
 
 const STAY = new Set(["calin", "chatouiller", "laver"]);
+// épinglé : tutoriel du début, ou tuto d'une nouveauté qui se fait ici (Foot, Télé…) : le menu reste ouvert,
+// toucher à côté ne le ferme pas (on découvrira plus tard comment l'ouvrir soi-même)
+const pinned = computed(() => !tutoDone.value || (!!props.focus && currentGuideStep(store)?.ring === props.focus));
+// fin du tutoriel (carte « Bravo ! ») : il se referme
+watch(() => store.onboardStep, (s) => { if (s === 5) requestClose(); });
+
 function pick(a) {
   if (closing.value) return;
   // catégorie : on ouvre ses choix ; « Retour » : on revient aux catégories
@@ -372,13 +378,15 @@ function pick(a) {
   }
   press(a);
   emit("picked", a.key);
+  // tutoriel : il reste ouvert et passe tout seul à la pilule de l'étape suivante
+  if (!tutoDone.value) { arm(6000); return; }
   if (STAY.has(a.key) && !store.isSleeping) arm(4000, true);
   else requestClose();
 }
 
 function onWindowPointer(e) {
   const r = rootEl.value;
-  if (r && !r.contains(e.target)) requestClose();
+  if (r && !r.contains(e.target) && !pinned.value) requestClose();
   else arm(6000);
 }
 function onKey(e) {
