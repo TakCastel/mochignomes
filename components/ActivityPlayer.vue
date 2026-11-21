@@ -123,8 +123,8 @@ const blockedReason = ref("");
 const blockedProp = ref(""); // objet manquant : lien vers la boutique (Objets)
 // conseil affiché pendant le 3-2-1 des premières parties
 const TIPS = {
-  foot: "Touche l'écran quand le cercle autour du ballon devient vert !",
-  course: "Touche pour sauter, glisse à gauche ou à droite pour changer de couloir.",
+  foot: "Clique quand le cercle autour du ballon devient vert !",
+  course: "Clique pour sauter, glisse à gauche ou à droite pour changer de couloir.",
 };
 const tip = computed(() => ((store.counters?.[`activite:${props.activityId}`] || 0) < 3 ? TIPS[props.activityId] || "" : ""));
 const result = ref(null);

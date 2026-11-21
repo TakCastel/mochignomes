@@ -3,7 +3,7 @@
   <Transition name="fade">
     <div v-if="step === 0" class="overlay egg-screen">
       <p class="top">{{ store.veteran ? "Un œuf de mochignome vient d'arriver dans la maison..." : "Un œuf vient d'arriver chez toi..." }}</p>
-      <button class="egg-btn" type="button" aria-label="Toucher l'œuf" @click="tap">
+      <button class="egg-btn" type="button" aria-label="Réchauffer l'œuf" @click="tap">
         <div class="egg" :class="[`crack-${crack}`, { wob, burst }]" :style="{ '--warm': heat / 12 }">
           <span class="spot s1" /><span class="spot s2" /><span class="spot s3" />
           <svg class="cracks" viewBox="0 0 100 130" aria-hidden="true">
@@ -15,7 +15,7 @@
         <span class="shadow" />
       </button>
       <div class="ui-bar meter" aria-hidden="true"><i :style="{ width: `${(heat / 12) * 100}%` }" /></div>
-      <p class="hint">{{ heat === 0 ? "Touche l'œuf pour le réchauffer !" : heat < 12 ? "Continue, il bouge !" : "Ça y est !" }}</p>
+      <p class="hint">{{ heat === 0 ? "Clique sur l'œuf pour le réchauffer !" : heat < 12 ? "Continue, il bouge !" : "Ça y est !" }}</p>
       <!-- 2e mochignome et suivants : l'œuf peut attendre au chaud, on retourne voir une autre -->
       <button v-if="backTo && heat < 12" class="ui-btn ui-btn--secondary ui-btn--sm later" type="button" @click="later">
         Plus tard, retourner voir {{ backTo.name }}
@@ -158,9 +158,9 @@ function later() {
 // pendant le tutoriel il n'y propose que la pilule de l'étape, qui pulse ---
 // le menu est déjà ouvert (et le reste pendant tout le tutoriel) : on touche juste la pilule
 const GUIDE = {
-  2: () => `${store.name} a faim ! Touche « Manger » pour la nourrir.`,
-  3: () => `${store.name} s'ennuie. Touche « Jouer » pour jouer avec elle.`,
-  4: () => `Touche « Chatouiller » pour la faire rire !`,
+  2: () => `${store.name} a faim ! Clique sur « Manger » pour la nourrir.`,
+  3: () => `${store.name} s'ennuie. Clique sur « Jouer » pour jouer avec elle.`,
+  4: () => `Clique sur « Chatouiller » pour la faire rire !`,
 };
 const guideText = computed(() => GUIDE[step.value]?.() || "");
 

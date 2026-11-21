@@ -79,6 +79,19 @@ const CATS = [
 // tutoriel (WelcomeCard, étapes 2 à 4) : une seule pilule, celle de l'étape
 const TUTO_KEY = { 2: "nourrir", 3: "jouer", 4: "chatouiller" };
 const tutoKey = computed(() => TUTO_KEY[store.onboardStep] || "chatouiller");
+// étape dont la pilule est montrée : la suivante attend que sa consigne (carte du tutoriel) soit à l'écran,
+// donc qu'elle ait fini de parler (« Trop bon ! » masque la carte) ; sinon « Jouer » arrivait avant « … s'ennuie »
+const tutoShown = ref(store.onboardStep);
+let tutoT = 0;
+watch(
+  () => [store.onboardStep, gameBus.speaking],
+  ([s, speaking]) => {
+    clearTimeout(tutoT);
+    if (s === tutoShown.value || speaking) return;
+    tutoT = setTimeout(() => (tutoShown.value = s), 600);
+  }
+);
+onBeforeUnmount(() => clearTimeout(tutoT));
 const level = ref(null); // null = catégories ; sinon clé de la catégorie ouverte
 const BACK = { key: "back", label: "Retour", icon: "solar:arrow-left-bold", color: ["#e3edf8", "#2c4f9e"], reason: null, cool: null, back: true };
 
@@ -133,7 +146,7 @@ const baseList = computed(() => {
   let keys = null;
   if (store.health <= 0) keys = ["soigner"];
   else if (store.isSleeping) keys = ["coucher", "calin"];
-  else if (!tutoDone.value) keys = [tutoKey.value];
+  else if (!tutoDone.value) keys = tutoShown.value === store.onboardStep ? [tutoKey.value] : [];
   if (keys) {
     return keys
       .map((k) => by[k])
