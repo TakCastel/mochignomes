@@ -135,16 +135,19 @@ export function highlightAction(action) {
 
 // Une seule carte à la fois sur l'écran principal, par ordre de priorité :
 // tutoriel (WelcomeCard) → retrouvailles (AwayCard) → nouveauté (UnlockCard) → rappels (NotifPrompt).
-// Les cartes de nouveauté et de rappels attendent aussi que l'écran principal soit libre
-// (aucune page, fenêtre ou activité ouverte).
+// La carte de nouveauté attend seulement la fin d'une activité ou d'un essayage (elle passe par-dessus les pages) ;
+// celle des rappels attend que l'écran principal soit libre (aucune page, fenêtre ou activité ouverte).
 export function useOverlayTurn() {
   const store = useTamagotchiStore();
   return computed(() => {
     if (!store.hatched || (store.onboardStep ?? 6) < 6) return "welcome";
     if (store.away) return "away";
-    if (gameBus.page || gameBus.sheet || gameBus.activity) return null;
+    if (gameBus.activity || gameBus.trying) return null;
+    // une nouveauté se montre aussi par-dessus une page (ex. la Boutique ouvre à la fin du tuto du Sac,
+    // dans le Sac) : sinon elle attendait qu'on revienne à l'accueil et passait inaperçue
     const ev = store.unlockEvent;
     if (ev && !ev.seen) return "unlock";
+    if (gameBus.page || gameBus.sheet) return null;
     return "notif";
   });
 }
