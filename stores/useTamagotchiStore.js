@@ -186,6 +186,10 @@ export const useTamagotchiStore = defineStore(
     const jokers = ref(0);
     const nextWishAt = ref(0);
     const lastWishId = ref("");
+    // envies récentes (exaucées, expirées, ou activité déjà faite) : pas de redite avant un moment
+    const recentWishes = new Map();
+    const WISH_REPEAT_MS = 20 * 60000;
+    const markRecentWish = (id, now = Date.now()) => { if (id) recentWishes.set(id, now); };
     const surpriseLog = ref({ day: "", n: 0 });
     // schéma 3
     const welcomeGift = ref(0); // pièces offertes aux parties existantes, versées au démarrage
@@ -679,6 +683,7 @@ export const useTamagotchiStore = defineStore(
       wishesDone.value += 1;
       count("envie");
       lastWishId.value = wish.value.id;
+      markRecentWish(wish.value.id, now);
       if (wishesDone.value === 1 || wishesDone.value % 5 === 0) {
         addJournal("envie", `Envie exaucée (${wishesDone.value} au total). Elle est ravie !`, "solar:chat-round-dots-bold-duotone");
       }
@@ -916,6 +921,7 @@ export const useTamagotchiStore = defineStore(
       if (reason) return { ok: false, reason, gains: {}, xp: 0, coins: 0, best: 0, isRecord: false, wishDone: false, levelUp: false, stageUp: null, reaction: null, falloff: 1, playsToday: 0 };
       // la première partie fait découvrir les pièces
       if (!features.value.coins) unlockFeature("coins");
+      markRecentWish(`activite:${id}`, now); // elle vient d'y jouer : pas d'envie de la même activité tout de suite
       const plays = playsOf(id);
       const reward = activityReward(id, score, plays);
       const r = tasteReactionFor("activity", id);
@@ -1132,6 +1138,7 @@ export const useTamagotchiStore = defineStore(
       if (!hatched.value || onboardStep.value < 6) return;
       if (wish.value && now >= wish.value.expiresAt) {
         lastWishId.value = wish.value.id;
+        markRecentWish(wish.value.id, now);
         wish.value = null; // expire sans pénalité
         scheduleWish(now);
         return;
@@ -1144,6 +1151,7 @@ export const useTamagotchiStore = defineStore(
         wish.value = pickWish({
           hunger: hunger.value, cleanliness: cleanliness.value, fun: fun.value, energy: energy.value, level: level.value,
           hatchedAt: hatchedAt.value, wish: null, lastWishId: lastWishId.value,
+          recentWishIds: [...recentWishes].filter(([, t]) => now - t < WISH_REPEAT_MS).map(([id]) => id),
           stage: stage.value, features: features.value, tastes: tastes.value, ...bag,
         }, now);
       }
