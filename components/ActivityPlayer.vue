@@ -22,7 +22,7 @@
       </div>
       <div v-if="hud.text" class="hud-text">{{ hud.text }}</div>
       <div v-if="hud.combo > 1" :key="hud.combo" class="combo">×{{ hud.combo }}</div>
-      <div v-if="hud.timeLeft != null && timeMax" class="timebar"><i :style="{ width: `${Math.max(0, Math.min(100, (hud.timeLeft / timeMax) * 100))}%` }" /></div>
+      <div v-if="hud.timeLeft != null && timeMax" class="ui-bar ui-bar--live timebar"><i :style="{ width: `${Math.max(0, Math.min(100, (hud.timeLeft / timeMax) * 100))}%` }" /></div>
     </div>
 
     <!-- 3-2-1 -->
@@ -401,8 +401,7 @@ onBeforeUnmount(() => {
   animation: combo 0.35s ease-out;
 }
 @keyframes combo { from { transform: scale(1.8); opacity: 0.2; } to { transform: scale(1); opacity: 1; } }
-.timebar { width: min(220px, 60%); height: 10px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.75); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); }
-.timebar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(180deg, var(--accent-hi), var(--accent)); transition: width 0.3s linear; }
+.timebar { width: min(220px, 60%); }
 
 .count {
   position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%);

@@ -116,7 +116,7 @@ const dislikes = computed(() => ["colorDislike", "foodDislike", "itemDislike"].m
 .ic.love { color: var(--love); }
 .ic.violet { color: var(--violet); }
 .bar { margin-bottom: var(--s-3); }
-.bar > i { background: linear-gradient(90deg, #ff9ec0, var(--love)); }
+.bar { --c: var(--love); }
 .list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
 .entry { min-height: 60px; padding: var(--s-2) 10px; }
 .entry.dis { background: color-mix(in srgb, #f5f1ff var(--tint), var(--surface)); box-shadow: inset 0 0 0 2px #e6dcff; }
